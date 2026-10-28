@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Opacity
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
@@ -69,7 +70,7 @@ enum class NavTab(val title: String, val icon: ImageVector) {
     HOME("Home", Icons.Default.Home),
     ADD("Add", Icons.Default.CameraAlt),
     CALENDAR("Calendar", Icons.Default.CalendarToday),
-    SETTINGS("Settings", Icons.Default.MoreHoriz)
+    SETTINGS("Profile", Icons.Default.Person)
 }
 
 enum class PlantFilter(val label: String) {

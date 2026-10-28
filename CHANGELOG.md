@@ -1,5 +1,12 @@
 # CHANGELOG.md - Project History
 
+## [2.3.0] - Immersive System Navigation Bar Hiding
+
+### Added
+- Configured sticky immersive mode in `Theme.kt` using `WindowInsetsCompat.Type.navigationBars()` to hide system navigation buttons (`<`, `O`, `|||`).
+- Matched system navigation bar color to Warm Ivory (`#F7F4E9`).
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [2.2.0] - Warm Ivory Theme Enforcement
 
 ### Fixed
