@@ -57,8 +57,8 @@ import androidx.compose.ui.unit.sp
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
-import app.vercel.stillleaf.ui.theme.terracotta
 import coil.compose.AsyncImage
 
 enum class NavTab(val title: String, val icon: ImageVector) {
@@ -78,12 +78,12 @@ enum class PlantFilter(val label: String) {
 fun PlantListScreen(
     plants: List<Plant>,
     subscriptionStatus: SubscriptionStatus,
+    currentTab: NavTab = NavTab.HOME,
     onPlantSelected: (Plant) -> Unit,
-    onAddPlantRequested: () -> Unit,
+    onNavTabSelected: (NavTab) -> Unit,
     onUpgradeRequested: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf(NavTab.HOME) }
     var selectedFilter by remember { mutableStateOf(PlantFilter.ALL) }
 
     val filteredPlants = remember(plants, selectedFilter) {
@@ -153,7 +153,7 @@ fun PlantListScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 NavTab.entries.forEach { tab ->
-                    val isSelected = selectedTab == tab
+                    val isSelected = currentTab == tab
                     val activeBgColor by animateColorAsState(
                         targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                         label = "TabBg"
@@ -161,10 +161,7 @@ fun PlantListScreen(
 
                     Surface(
                         onClick = {
-                            selectedTab = tab
-                            if (tab == NavTab.ADD) {
-                                onAddPlantRequested()
-                            }
+                            onNavTabSelected(tab)
                         },
                         shape = RoundedCornerShape(20.dp),
                         color = activeBgColor,
@@ -325,8 +322,8 @@ fun MockupPlantCard(
                 ) {
                     val statusColor = when (plant.healthStatusType) {
                         HealthStatusType.HEALTHY -> MaterialTheme.colorScheme.primary
-                        HealthStatusType.NEEDS_WATER -> MaterialTheme.colorScheme.terracotta
-                        HealthStatusType.NEEDS_FERTILIZER -> MaterialTheme.colorScheme.terracotta
+                        HealthStatusType.NEEDS_WATER -> AttentionTerracotta
+                        HealthStatusType.NEEDS_FERTILIZER -> AttentionTerracotta
                     }
 
                     val statusIcon = when (plant.healthStatusType) {

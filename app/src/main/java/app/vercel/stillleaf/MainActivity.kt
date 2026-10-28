@@ -23,8 +23,12 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.ui.component.BannerAdView
+import app.vercel.stillleaf.ui.screen.AddPlantScreen
+import app.vercel.stillleaf.ui.screen.CalendarScreen
+import app.vercel.stillleaf.ui.screen.NavTab
 import app.vercel.stillleaf.ui.screen.PlantDetailScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
+import app.vercel.stillleaf.ui.screen.SettingsScreen
 import app.vercel.stillleaf.ui.theme.StillLeafTheme
 import java.time.LocalDate
 
@@ -45,11 +49,16 @@ class MainActivity : ComponentActivity() {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
                 var plantList by remember { mutableStateOf(initialPlants) }
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
+                var currentTab by remember { mutableStateOf(NavTab.HOME) }
 
-                // Intercept system back button when viewing plant details
+                // Intercept system back button
                 if (selectedPlant != null) {
                     BackHandler {
                         selectedPlant = null
+                    }
+                } else if (currentTab != NavTab.HOME) {
+                    BackHandler {
+                        currentTab = NavTab.HOME
                     }
                 }
 
@@ -62,49 +71,87 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         Crossfade(
-                            targetState = selectedPlant,
-                            label = "ScreenTransition"
-                        ) { targetPlant ->
-                            if (targetPlant != null) {
-                                // Detailed Plant Profile View
-                                PlantDetailScreen(
-                                    plant = targetPlant,
-                                    subscriptionStatus = subscriptionStatus,
-                                    onBackRequested = {
-                                        selectedPlant = null
-                                    },
-                                    onUpgradeRequested = {
-                                        launchBillingUpgrade()
-                                    }
-                                )
-                            } else {
-                                // Main Botanical Sanctuary Dashboard (Matching Mockup)
-                                PlantListScreen(
-                                    plants = plantList,
-                                    subscriptionStatus = subscriptionStatus,
-                                    onPlantSelected = { plant ->
-                                        selectedPlant = plant
-                                    },
-                                    onAddPlantRequested = {
-                                        if (subscriptionStatus.isPro || plantList.size < subscriptionStatus.maxPlantsAllowed) {
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                "Opening Camera AI Plant Identifier...",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        } else {
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                "Free tier limit reached (2 plants max). Upgrade to Pro for unlimited plants!",
-                                                Toast.LENGTH_LONG
-                                            ).show()
+                            targetState = Pair(selectedPlant, currentTab),
+                            label = "MainScreenTransition"
+                        ) { (activePlant, activeTab) ->
+                            when {
+                                activePlant != null -> {
+                                    // 1. Detailed Plant Profile View
+                                    PlantDetailScreen(
+                                        plant = activePlant,
+                                        subscriptionStatus = subscriptionStatus,
+                                        onBackRequested = {
+                                            selectedPlant = null
+                                        },
+                                        onUpgradeRequested = {
                                             launchBillingUpgrade()
                                         }
-                                    },
-                                    onUpgradeRequested = {
-                                        launchBillingUpgrade()
-                                    }
-                                )
+                                    )
+                                }
+                                activeTab == NavTab.ADD -> {
+                                    // 2. Add / AI Plant Identification Screen
+                                    AddPlantScreen(
+                                        onBackRequested = {
+                                            currentTab = NavTab.HOME
+                                        },
+                                        onPlantAdded = { newPlant ->
+                                            plantList = listOf(newPlant) + plantList
+                                            currentTab = NavTab.HOME
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "“${newPlant.nickname}” saved to your Sanctuary!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    )
+                                }
+                                activeTab == NavTab.CALENDAR -> {
+                                    // 3. Care & Calendar Dashboard
+                                    CalendarScreen(
+                                        plants = plantList,
+                                        onBackRequested = {
+                                            currentTab = NavTab.HOME
+                                        }
+                                    )
+                                }
+                                activeTab == NavTab.SETTINGS -> {
+                                    // 4. Settings & Subscription Preferences
+                                    SettingsScreen(
+                                        subscriptionStatus = subscriptionStatus,
+                                        onBackRequested = {
+                                            currentTab = NavTab.HOME
+                                        },
+                                        onUpgradeRequested = {
+                                            launchBillingUpgrade()
+                                        }
+                                    )
+                                }
+                                else -> {
+                                    // 5. Main Botanical Sanctuary Dashboard (Matching User Mockup)
+                                    PlantListScreen(
+                                        plants = plantList,
+                                        subscriptionStatus = subscriptionStatus,
+                                        currentTab = currentTab,
+                                        onPlantSelected = { plant ->
+                                            selectedPlant = plant
+                                        },
+                                        onNavTabSelected = { tab ->
+                                            if (tab == NavTab.ADD && !subscriptionStatus.isPro && plantList.size >= subscriptionStatus.maxPlantsAllowed) {
+                                                Toast.makeText(
+                                                    this@MainActivity,
+                                                    "Free tier limit reached (2 plants max). Upgrade to Pro for unlimited plants!",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                launchBillingUpgrade()
+                                            } else {
+                                                currentTab = tab
+                                            }
+                                        },
+                                        onUpgradeRequested = {
+                                            launchBillingUpgrade()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

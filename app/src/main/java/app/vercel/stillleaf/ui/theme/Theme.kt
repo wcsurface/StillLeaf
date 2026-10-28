@@ -14,35 +14,35 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightZenColorScheme = lightColorScheme(
-    primary = PrimarySage,
-    onPrimary = PureWhiteSurface,
-    primaryContainer = SurfaceVariantCream,
-    onPrimaryContainer = DarkForestSage,
-    secondary = MutedOlive,
-    onSecondary = PureWhiteSurface,
-    secondaryContainer = SurfaceVariantCream,
-    onSecondaryContainer = OnSurfaceTextDark,
-    tertiary = EarthWarmAccent,
-    onTertiary = DarkForestSage,
-    background = OffWhiteBackground,
-    onBackground = OnSurfaceTextDark,
-    surface = PureWhiteSurface,
-    onSurface = OnSurfaceTextDark,
-    surfaceVariant = SurfaceVariantCream,
-    onSurfaceVariant = OnSurfaceMutedText,
+    primary = PrimaryOlive,
+    onPrimary = PureWhite,
+    primaryContainer = PaleSage,
+    onPrimaryContainer = DeepBotanicalGreen,
+    secondary = SageGreen,
+    onSecondary = PureWhite,
+    secondaryContainer = SoftCream,
+    onSecondaryContainer = PrimaryText,
+    tertiary = SoftMoss,
+    onTertiary = DeepBotanicalGreen,
+    background = WarmIvory,
+    onBackground = PrimaryText,
+    surface = PureCream,
+    onSurface = PrimaryText,
+    surfaceVariant = SoftCream,
+    onSurfaceVariant = SecondaryText,
     outline = SubtleBorderStroke
 )
 
 private val DarkZenColorScheme = darkColorScheme(
-    primary = DarkPrimarySage,
+    primary = SoftMoss,
     onPrimary = DarkBackground,
     primaryContainer = DarkSurfaceVariant,
     onPrimaryContainer = DarkOnSurfaceText,
-    secondary = MutedOlive,
+    secondary = SageGreen,
     onSecondary = DarkBackground,
     secondaryContainer = DarkSurfaceVariant,
     onSecondaryContainer = DarkOnSurfaceText,
-    tertiary = EarthWarmAccent,
+    tertiary = PaleSage,
     onTertiary = DarkBackground,
     background = DarkBackground,
     onBackground = DarkOnSurfaceText,
@@ -53,8 +53,17 @@ private val DarkZenColorScheme = darkColorScheme(
     outline = DarkSurfaceVariant
 )
 
-val ColorScheme.terracotta: Color
-    get() = TerracottaSoft
+val ColorScheme.wateringAmber: Color
+    get() = WateringAmber
+
+val ColorScheme.attentionTerracotta: Color
+    get() = AttentionTerracotta
+
+val ColorScheme.healthyGreen: Color
+    get() = HealthyGreen
+
+val ColorScheme.deepBotanicalGreen: Color
+    get() = DeepBotanicalGreen
 
 @Composable
 fun StillLeafTheme(

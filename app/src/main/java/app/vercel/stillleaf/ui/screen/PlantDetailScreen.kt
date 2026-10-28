@@ -69,7 +69,7 @@ import app.vercel.stillleaf.data.model.CareTaskType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.data.model.SubscriptionStatus
-import app.vercel.stillleaf.ui.theme.terracotta
+import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import coil.compose.AsyncImage
 
 @Composable
@@ -189,8 +189,8 @@ fun PlantDetailScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 shape = MaterialTheme.shapes.medium,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.terracotta.copy(alpha = 0.12f)),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.terracotta.copy(alpha = 0.3f))
+                colors = CardDefaults.cardColors(containerColor = AttentionTerracotta.copy(alpha = 0.12f)),
+                border = BorderStroke(1.dp, AttentionTerracotta.copy(alpha = 0.3f))
             ) {
                 Row(
                     modifier = Modifier
@@ -204,7 +204,7 @@ fun PlantDetailScreen(
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.terracotta,
+                                tint = AttentionTerracotta,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -224,7 +224,7 @@ fun PlantDetailScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onUpgradeRequested,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.terracotta)
+                        colors = ButtonDefaults.buttonColors(containerColor = AttentionTerracotta)
                     ) {
                         Text("Upgrade", color = Color.White)
                     }

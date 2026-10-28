@@ -1,5 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [1.3.0] - Mockup Recreation & Lakki Reddy Typography
+
+### Added
+- Integrated **Lakki Reddy** downloadable font via `androidx.compose.ui.text.googlefonts` for the logo header and top navigation buttons.
+- Recreated user's mockup homepage layout:
+  - **STILL LEAF** logo text in Lakki Reddy + `"Healthy plants. Happier days."` slogan.
+  - Floating top navigation pill container with **Home**, **Add**, **Calendar**, and **Settings** tabs with Lakki Reddy typography.
+  - **My Plants** header + `All`, `Indoor`, `Outdoor` interactive filter chips.
+  - 2-Column plant card grid matching mockup items (*Monstera Deliciosa*, *Snake Plant*, *Basil*, *Lavender*) with custom location badges and color-coded health status tags (*Healthy*, *Needs Water*, *Needs Fertilizer*).
+
 ## [1.2.0] - Main Plant Sanctuary Dashboard & Back Navigation
 
 ### Added
