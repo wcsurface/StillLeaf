@@ -58,7 +58,11 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
+import app.vercel.stillleaf.ui.theme.DeepBotanicalGreen
+import app.vercel.stillleaf.ui.theme.HealthyGreen
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
+import app.vercel.stillleaf.ui.theme.PrimaryOlive
+import app.vercel.stillleaf.ui.theme.WateringAmber
 import coil.compose.AsyncImage
 
 enum class NavTab(val title: String, val icon: ImageVector) {
@@ -113,7 +117,7 @@ fun PlantListScreen(
                 Icon(
                     imageVector = Icons.Default.Spa,
                     contentDescription = "Still Leaf Logo",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = DeepBotanicalGreen,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -121,7 +125,7 @@ fun PlantListScreen(
                     text = "STILL LEAF",
                     fontFamily = LakkiReddyFontFamily,
                     fontSize = 32.sp,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = DeepBotanicalGreen,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -321,8 +325,8 @@ fun MockupPlantCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     val statusColor = when (plant.healthStatusType) {
-                        HealthStatusType.HEALTHY -> MaterialTheme.colorScheme.primary
-                        HealthStatusType.NEEDS_WATER -> AttentionTerracotta
+                        HealthStatusType.HEALTHY -> HealthyGreen
+                        HealthStatusType.NEEDS_WATER -> WateringAmber
                         HealthStatusType.NEEDS_FERTILIZER -> AttentionTerracotta
                     }
 
