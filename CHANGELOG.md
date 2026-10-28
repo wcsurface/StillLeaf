@@ -1,5 +1,12 @@
 # CHANGELOG.md - Project History
 
+## [1.2.0] - Main Plant Sanctuary Dashboard & Back Navigation
+
+### Added
+- Developed `PlantListScreen.kt` featuring a 2-column grid layout of user plants, capacity counters (Free 2/2 vs Pro Member badge), and an AI Camera scanner FAB button.
+- Updated `PlantDetailScreen.kt` with a circular top-left back button (`←`) to navigate back to the main sanctuary dashboard seamlessly.
+- Integrated `Crossfade` animation and Android `BackHandler` in `MainActivity.kt` to allow tapping any plant card to view its details and tapping back (or back gesture) to return to the plant gallery.
+
 ## [1.1.0] - Platform Configuration & GitHub Push
 
 ### Added
@@ -8,7 +15,7 @@
 - Created `backend/.env.example` safe configuration template.
 - Built Fastify/Express server entry point (`backend/src/server.ts`), routes (`plantRoutes.ts`, `billingRoutes.ts`), `package.json`, and `tsconfig.json`.
 - Created private GitHub repository `https://github.com/wcsurface/StillLeaf`.
-- Pushed all 115 objects and 70 project source files to `https://github.com/wcsurface/StillLeaf.git` (`main` branch).
+- Pushed all project source files to `https://github.com/wcsurface/StillLeaf.git` (`main` branch).
 
 ## [1.0.0-alpha] - Initial Project Foundation
 

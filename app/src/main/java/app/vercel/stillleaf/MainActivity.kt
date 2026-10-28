@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import app.vercel.stillleaf.billing.BillingManager
 import app.vercel.stillleaf.data.model.CareRequirement
+import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.ui.component.BannerAdView
@@ -77,7 +78,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             } else {
-                                // Main Botanical Sanctuary Dashboard
+                                // Main Botanical Sanctuary Dashboard (Matching Mockup)
                                 PlantListScreen(
                                     plants = plantList,
                                     subscriptionStatus = subscriptionStatus,
@@ -168,7 +169,7 @@ class MainActivity : ComponentActivity() {
 
         val monstera = Plant(
             id = "monstera_1",
-            nickname = "Monstera Queen",
+            nickname = "Monstera Deliciosa",
             botanicalName = "Monstera deliciosa",
             commonName = "Swiss Cheese Plant",
             primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
@@ -183,42 +184,81 @@ class MainActivity : ComponentActivity() {
                 trimIntervalDays = 90,
                 careInsight = "Thrives in gentle ambient light. Let top 2 inches of soil dry before watering."
             ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
             photos = monsteraPhotos
         )
 
-        val figPhotos = listOf(
-            PlantPhoto(
-                id = "p4",
-                plantId = "fig_1",
-                photoUrl = "https://images.unsplash.com/photo-1530968464165-7a1861cbaf9f?auto=format&fit=crop&w=800&q=80",
-                dateTaken = today.minusDays(90),
-                ageInDays = 0,
-                note = "Repotted in terra cotta vessel with perlite soil.",
-                isQuarterlyMilestone = true,
-                milestoneTitle = "Day 0 - Repotted"
-            )
-        )
-
-        val fiddleFig = Plant(
-            id = "fig_1",
-            nickname = "Fiddle Fig",
-            botanicalName = "Ficus lyrata",
-            commonName = "Fiddle-Leaf Fig",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1530968464165-7a1861cbaf9f?auto=format&fit=crop&w=800&q=80",
-            dateAdded = today.minusDays(90),
+        val snakePlant = Plant(
+            id = "snake_1",
+            nickname = "Snake Plant",
+            botanicalName = "Sansevieria trifasciata",
+            commonName = "Mother-in-law's Tongue",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?auto=format&fit=crop&w=800&q=80",
+            dateAdded = today.minusDays(120),
             careRequirements = CareRequirement(
-                sunlight = "Direct Bright Light",
-                idealTemperature = "18°C - 24°C",
-                idealHumidity = "50% - 70%",
-                waterIntervalDays = 10,
-                feedIntervalDays = 30,
-                rotateIntervalDays = 7,
-                trimIntervalDays = 90,
-                careInsight = "Avoid moving position frequently. Dust glossy leaves regularly to maximize photosynthesis."
+                sunlight = "Low to Bright Indirect Light",
+                idealTemperature = "15°C - 29°C",
+                idealHumidity = "30% - 50%",
+                waterIntervalDays = 14,
+                feedIntervalDays = 60,
+                rotateIntervalDays = 30,
+                trimIntervalDays = 180,
+                careInsight = "Extremely drought-tolerant. Soil should dry out completely between waterings."
             ),
-            photos = figPhotos
+            location = "Indoor • Office",
+            healthStatusType = HealthStatusType.NEEDS_WATER,
+            healthStatusText = "Needs Water",
+            photos = emptyList()
         )
 
-        return listOf(monstera, fiddleFig)
+        val basil = Plant(
+            id = "basil_1",
+            nickname = "Basil",
+            botanicalName = "Ocimum basilicum",
+            commonName = "Sweet Basil",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=800&q=80",
+            dateAdded = today.minusDays(45),
+            careRequirements = CareRequirement(
+                sunlight = "Full Sunlight 6+ hours",
+                idealTemperature = "20°C - 30°C",
+                idealHumidity = "40% - 60%",
+                waterIntervalDays = 3,
+                feedIntervalDays = 14,
+                rotateIntervalDays = 7,
+                trimIntervalDays = 14,
+                careInsight = "Pinch top leaves regularly to encourage bushy, aromatic growth."
+            ),
+            location = "Outdoor • Patio",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
+            photos = emptyList()
+        )
+
+        val lavender = Plant(
+            id = "lavender_1",
+            nickname = "Lavender",
+            botanicalName = "Lavandula angustifolia",
+            commonName = "English Lavender",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1528183429752-a97d0bf99b5a?auto=format&fit=crop&w=800&q=80",
+            dateAdded = today.minusDays(60),
+            careRequirements = CareRequirement(
+                sunlight = "Full Direct Sunlight",
+                idealTemperature = "18°C - 28°C",
+                idealHumidity = "30% - 40%",
+                waterIntervalDays = 7,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Requires well-draining lean soil. Apply organic bloom booster fertilizer for fragrant purple spikes."
+            ),
+            location = "Outdoor • Garden",
+            healthStatusType = HealthStatusType.NEEDS_FERTILIZER,
+            healthStatusText = "Needs Fertilizer",
+            photos = emptyList()
+        )
+
+        return listOf(monstera, snakePlant, basil, lavender)
     }
 }
