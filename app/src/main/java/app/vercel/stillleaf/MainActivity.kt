@@ -85,6 +85,20 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onUpgradeRequested = {
                                             launchBillingUpgrade()
+                                        },
+                                        onEditPlantRequested = { targetPlant, newNickname, newLocation ->
+                                            val updatedPlant = targetPlant.copy(
+                                                nickname = newNickname,
+                                                location = newLocation
+                                            )
+                                            plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                            selectedPlant = updatedPlant
+                                            Toast.makeText(this@MainActivity, "Updated ${updatedPlant.nickname}!", Toast.LENGTH_SHORT).show()
+                                        },
+                                        onDeletePlantRequested = { targetPlant ->
+                                            plantList = plantList.filter { it.id != targetPlant.id }
+                                            selectedPlant = null
+                                            Toast.makeText(this@MainActivity, "Removed ${targetPlant.nickname} from Sanctuary", Toast.LENGTH_SHORT).show()
                                         }
                                     )
                                 }

@@ -23,18 +23,23 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,8 +47,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -70,6 +79,7 @@ import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
+import app.vercel.stillleaf.ui.theme.PillShape
 import coil.compose.AsyncImage
 
 @Composable
@@ -78,6 +88,8 @@ fun PlantDetailScreen(
     subscriptionStatus: SubscriptionStatus,
     onBackRequested: () -> Unit,
     onUpgradeRequested: () -> Unit,
+    onEditPlantRequested: (Plant, String, String) -> Unit = { _, _, _ -> },
+    onDeletePlantRequested: (Plant) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -86,6 +98,11 @@ fun PlantDetailScreen(
     // Track task completion locally for micro-interaction
     val taskCompletionState = remember { mutableStateMapOf<CareTaskType, Boolean>() }
     var selectedComparisonPhoto by remember { mutableStateOf<PlantPhoto?>(null) }
+
+    // Dialog & Modal states
+    var showNourishModal by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -159,7 +176,7 @@ fun PlantDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Healthy • 180 Days Active",
+                            text = "${plant.healthStatusText} • ${plant.location}",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -234,7 +251,7 @@ fun PlantDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 2. Care Requirement Chips
+        // 2. Environment Care Chips - 2 Cards Wide Stacked (2x2 Grid)
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 text = "Environment & Care Profile",
@@ -245,38 +262,45 @@ fun PlantDetailScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(end = 16.dp)
+            // Row 1: Light & Water
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                item {
-                    CareChip(
-                        icon = Icons.Default.LightMode,
-                        label = "Light",
-                        value = plant.careRequirements.sunlight
-                    )
-                }
-                item {
-                    CareChip(
-                        icon = Icons.Default.WaterDrop,
-                        label = "Water",
-                        value = "Every ${plant.careRequirements.waterIntervalDays}d"
-                    )
-                }
-                item {
-                    CareChip(
-                        icon = Icons.Default.Spa,
-                        label = "Nourish",
-                        value = "Every ${plant.careRequirements.feedIntervalDays}d"
-                    )
-                }
-                item {
-                    CareChip(
-                        icon = Icons.Default.Opacity,
-                        label = "Humidity",
-                        value = plant.careRequirements.idealHumidity
-                    )
-                }
+                CareChip(
+                    icon = Icons.Default.LightMode,
+                    label = "Light",
+                    value = plant.careRequirements.sunlight,
+                    modifier = Modifier.weight(1f)
+                )
+                CareChip(
+                    icon = Icons.Default.WaterDrop,
+                    label = "Water",
+                    value = "Every ${plant.careRequirements.waterIntervalDays}d",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Row 2: Nourish (Clickable Modal) & Humidity
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                CareChip(
+                    icon = Icons.Default.Spa,
+                    label = "Nourish",
+                    value = "Every ${plant.careRequirements.feedIntervalDays}d (Tap Info)",
+                    modifier = Modifier.weight(1f),
+                    onClick = { showNourishModal = true }
+                )
+                CareChip(
+                    icon = Icons.Default.Opacity,
+                    label = "Humidity",
+                    value = plant.careRequirements.idealHumidity,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             // AI Insight summary
@@ -326,9 +350,10 @@ fun PlantDetailScreen(
                 taskType = CareTaskType.FEED,
                 icon = Icons.Default.Spa,
                 title = "Nourish & Feed",
-                subtitle = "Apply diluted organic fertilizer",
+                subtitle = "Apply diluted organic fertilizer (Tap for info)",
                 isCompleted = taskCompletionState[CareTaskType.FEED] ?: false,
                 onCompleteToggle = {
+                    showNourishModal = true
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     taskCompletionState[CareTaskType.FEED] = !(taskCompletionState[CareTaskType.FEED] ?: false)
                 }
@@ -406,7 +431,124 @@ fun PlantDetailScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // 5. Edit Plant & Delete Plant Buttons Row
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                text = "Plant Management",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Edit Plant Button
+                Button(
+                    onClick = { showEditDialog = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Edit Plant", fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Delete Plant Button
+                OutlinedButton(
+                    onClick = { showDeleteConfirmation = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = PillShape,
+                    border = BorderStroke(1.dp, AttentionTerracotta),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AttentionTerracotta)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Delete Plant", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(40.dp))
+    }
+
+    // Modal 1: Nourishment Requirements Popup Dialog
+    if (showNourishModal) {
+        NourishDetailsDialog(
+            plant = plant,
+            onDismiss = { showNourishModal = false }
+        )
+    }
+
+    // Modal 2: Edit Plant Dialog
+    if (showEditDialog) {
+        EditPlantDialog(
+            plant = plant,
+            onDismiss = { showEditDialog = false },
+            onSave = { updatedNickname, updatedLocation ->
+                showEditDialog = false
+                onEditPlantRequested(plant, updatedNickname, updatedLocation)
+            }
+        )
+    }
+
+    // Modal 3: Delete Confirmation Dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = AttentionTerracotta,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "Delete Plant?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to remove “${plant.nickname}” from your Sanctuary? This will also delete all care logs and growth photos.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        onDeletePlantRequested(plant)
+                        onBackRequested()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AttentionTerracotta)
+                ) {
+                    Text("Delete", fontWeight = FontWeight.Bold, color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel", fontWeight = FontWeight.Bold)
+                }
+            }
+        )
     }
 
     // Side-by-Side Milestone Comparison Modal
@@ -426,24 +568,29 @@ fun PlantDetailScreen(
 fun CareChip(
     icon: ImageVector,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
-        shape = MaterialTheme.shapes.small,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        modifier = modifier.then(
+            if (onClick != null) Modifier.clickable { onClick() } else Modifier
+        )
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(
                     text = label,
@@ -453,10 +600,234 @@ fun CareChip(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun NourishDetailsDialog(
+    plant: Plant,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Spa,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Nourishment Care",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "${plant.nickname} (${plant.botanicalName})",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Fertilizer Formula Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Recommended Formula",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = plant.careRequirements.nourishType,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Exact Dosage Card
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = "Dosage & Application Amount",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = plant.careRequirements.nourishAmount,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Botanical Tip
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .padding(top = 2.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Tip: Always moisten topsoil with plain water before applying fertilizer to prevent nutrient burn on delicate root structures.",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Got It", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EditPlantDialog(
+    plant: Plant,
+    onDismiss: () -> Unit,
+    onSave: (updatedNickname: String, updatedLocation: String) -> Unit
+) {
+    var nickname by remember { mutableStateOf(plant.nickname) }
+    var location by remember { mutableStateOf(plant.location) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Edit Plant Details",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = nickname,
+                    onValueChange = { nickname = it },
+                    label = { Text("Plant Nickname") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Location (e.g. Indoor • Living Room)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        onSave(nickname, location)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Save Changes", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
