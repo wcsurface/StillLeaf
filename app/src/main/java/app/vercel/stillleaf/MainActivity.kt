@@ -99,6 +99,22 @@ class MainActivity : ComponentActivity() {
                                             plantList = plantList.filter { it.id != targetPlant.id }
                                             selectedPlant = null
                                             Toast.makeText(this@MainActivity, "Removed ${targetPlant.nickname} from Sanctuary", Toast.LENGTH_SHORT).show()
+                                        },
+                                        onDiagnosisCreated = { targetPlant, diagnosisResult, scheduleOnCalendar ->
+                                            val updatedPlant = targetPlant.copy(
+                                                activeDiagnosis = diagnosisResult,
+                                                healthStatusType = HealthStatusType.NEEDS_WATER,
+                                                healthStatusText = "Treatment Active"
+                                            )
+                                            plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                            selectedPlant = updatedPlant
+
+                                            val msg = if (scheduleOnCalendar) {
+                                                "Diagnosis saved & Special Care Treatment scheduled on Calendar!"
+                                            } else {
+                                                "Diagnosis saved to ${updatedPlant.nickname}'s profile!"
+                                            }
+                                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
                                         }
                                     )
                                 }

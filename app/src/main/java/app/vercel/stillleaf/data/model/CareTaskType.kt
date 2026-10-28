@@ -5,5 +5,6 @@ enum class CareTaskType(val displayName: String, val defaultIntervalDays: Int) {
     FEED("Nourish", 30),
     ROTATE("Rotate", 14),
     TRIM("Prune", 90),
-    PHOTO("Photograph", 90)
+    PHOTO("Photograph", 90),
+    SPECIAL_TREATMENT("Special Care", 7)
 }

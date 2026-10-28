@@ -26,6 +26,7 @@ data class Plant(
     val location: String = "Indoor • Living Room",
     val healthStatusType: HealthStatusType = HealthStatusType.HEALTHY,
     val healthStatusText: String = "Healthy",
+    val activeDiagnosis: PlantDiagnosis? = null,
     val photos: List<PlantPhoto> = emptyList(),
     val recentLogs: List<CareLog> = emptyList()
 )
