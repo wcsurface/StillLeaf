@@ -1,5 +1,17 @@
 # CHANGELOG.md - Project History
 
+## [2.1.0] - Strict Color Palette Alignment
+
+### Added
+- Refined color system across all screens to strictly match brand specifications:
+  - Background: Warm Ivory (`#F7F4E9`).
+  - Secondary Surfaces: Soft Cream (`#F0EDDF`).
+  - Elevated Cards: Pure Cream (`#FBF9F1`).
+  - Primary Control & Active Filters: Primary Olive (`#596B45`).
+  - Brand Logo & Major Headings: Deep Botanical Green (`#34452F`).
+  - Status Indicators: Healthy Green (`#587C4B`), Watering Amber (`#D88935`), Attention Terracotta (`#B96D4D`).
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [2.0.0] - Complete Still Leaf Application Redesign
 
 ### Added
@@ -10,4 +22,3 @@
 - Created Identify & Add Plant Screen (`AddPlantScreen.kt`) with camera frame, AI Vision analysis state, plant result details, location selector, and "Save to Sanctuary" action.
 - Created Settings Screen (`SettingsScreen.kt`) with Pro upgrade banner ($4.99), notification toggles, and security overview.
 - Updated Plant Detail Screen (`PlantDetailScreen.kt`) with back button (`←`), environment chips, interactive task cards with haptic feedback, and 3-month growth gallery with comparison modal.
-- Verified build compatibility with `gradle_build("app:assembleDebug")` and pushed all changes live to GitHub (`main` branch).
