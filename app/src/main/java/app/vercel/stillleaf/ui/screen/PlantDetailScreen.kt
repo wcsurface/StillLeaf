@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCut
@@ -75,6 +76,7 @@ import coil.compose.AsyncImage
 fun PlantDetailScreen(
     plant: Plant,
     subscriptionStatus: SubscriptionStatus,
+    onBackRequested: () -> Unit,
     onUpgradeRequested: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -111,13 +113,29 @@ fun PlantDetailScreen(
                     .background(
                         Brush.verticalGradient(
                             colors = listOf(
+                                Color.Black.copy(alpha = 0.4f),
                                 Color.Transparent,
                                 Color.Black.copy(alpha = 0.6f)
                             ),
-                            startY = 100f
+                            startY = 0f
                         )
                     )
             )
+
+            // Back button overlay
+            IconButton(
+                onClick = onBackRequested,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 12.dp, top = 12.dp)
+                    .background(Color.Black.copy(alpha = 0.4f), shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back to Sanctuary",
+                    tint = Color.White
+                )
+            }
 
             // Title & Badges on top of image
             Column(

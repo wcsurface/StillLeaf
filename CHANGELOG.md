@@ -1,5 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [1.1.0] - Platform Configuration & GitHub Push
+
+### Added
+- Configured `.gitignore` to strictly exclude `.env`, `backend/.env`, and secret keys.
+- Created `backend/.env` with provided OpenAI, Cloudflare R2 S3 (`9dada...`), JWT secret, and platform tokens.
+- Created `backend/.env.example` safe configuration template.
+- Built Fastify/Express server entry point (`backend/src/server.ts`), routes (`plantRoutes.ts`, `billingRoutes.ts`), `package.json`, and `tsconfig.json`.
+- Created private GitHub repository `https://github.com/wcsurface/StillLeaf`.
+- Pushed all 115 objects and 70 project source files to `https://github.com/wcsurface/StillLeaf.git` (`main` branch).
+
 ## [1.0.0-alpha] - Initial Project Foundation
 
 ### Added
