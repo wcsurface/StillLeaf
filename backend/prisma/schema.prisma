@@ -1,0 +1,95 @@
+// Prisma Schema for Still Leaf Backend Platform
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SubscriptionStatus {
+  FREE
+  PRO
+}
+
+enum CareTaskType {
+  WATER
+  FEED
+  ROTATE
+  TRIM
+  PHOTO
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  fcmToken           String?
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  plants Plant[]
+
+  @@index([email])
+  @@index([subscriptionStatus])
+}
+
+model Plant {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nickname         String
+  botanicalName    String
+  commonName       String
+  careRequirements Json // { sunlight: string, waterIntervalDays: number, feedIntervalDays: number, rotateIntervalDays: number, trimIntervalDays: number, careInsight: string }
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  photos      PlantPhoto[]
+  careLogs    CareLog[]
+  sharedCards SharedCard[]
+
+  @@index([userId])
+  @@index([botanicalName])
+}
+
+model PlantPhoto {
+  id                   String   @id @default(uuid())
+  plantId              String
+  plant                Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  photoUrl             String
+  takenAt              DateTime @default(now())
+  note                 String?
+  isQuarterlyMilestone Boolean  @default(false)
+
+  @@index([plantId])
+  @@index([takenAt])
+}
+
+model CareLog {
+  id          String       @id @default(uuid())
+  plantId     String
+  plant       Plant        @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  taskType    CareTaskType
+  completedAt DateTime     @default(now())
+
+  @@index([plantId])
+  @@index([completedAt])
+  @@index([taskType])
+}
+
+model SharedCard {
+  id         String   @id @default(uuid())
+  plantId    String
+  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  slug       String   @unique
+  ogImageUrl String
+  isPublic   Boolean  @default(true)
+  views      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([slug])
+  @@index([plantId])
+}
