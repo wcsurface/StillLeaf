@@ -58,6 +58,9 @@ class MainActivity : ComponentActivity() {
         // Initialize Notification Channels for Daily Care Reminders & 90-Day Milestones
         app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
 
+        // Initialize Zen Background Music (Gentle Bamboo Breeze) at low volume
+        app.vercel.stillleaf.util.BackgroundMusicManager.startMusic(applicationContext)
+
         billingManager = BillingManager(applicationContext)
 
         setContent {
@@ -349,8 +352,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        app.vercel.stillleaf.util.BackgroundMusicManager.resumeMusic(applicationContext)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        app.vercel.stillleaf.util.BackgroundMusicManager.pauseMusic()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        app.vercel.stillleaf.util.BackgroundMusicManager.stopMusic()
         if (::billingManager.isInitialized) {
             billingManager.endConnection()
         }

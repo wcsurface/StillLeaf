@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -64,6 +65,7 @@ import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
+import app.vercel.stillleaf.util.BackgroundMusicManager
 import app.vercel.stillleaf.util.CareNotificationManager
 
 @Composable
@@ -82,6 +84,9 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
 
+    var musicEnabled by remember {
+        mutableStateOf(BackgroundMusicManager.isMusicEnabled(context))
+    }
     var notificationsEnabled by remember {
         mutableStateOf(CareNotificationManager.isDailyRemindersEnabled(context))
     }
@@ -313,6 +318,30 @@ fun SettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Audio & Music Settings Section
+                Text(
+                    text = "Zen Sanctuary Audio",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = CreamyOffWhite
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SettingToggleRow(
+                    icon = Icons.Default.MusicNote,
+                    title = "Zen Ambient Background Music",
+                    subtitle = "Gentle Bamboo Breeze ambient audio (low volume)",
+                    checked = musicEnabled,
+                    onCheckedChange = { isChecked ->
+                        musicEnabled = isChecked
+                        BackgroundMusicManager.setMusicEnabled(context, isChecked)
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Notifications & Reminders Section
                 Text(
                     text = "Notifications & Reminders",
                     style = MaterialTheme.typography.titleMedium,
