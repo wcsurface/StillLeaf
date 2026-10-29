@@ -397,6 +397,39 @@ fun PlantDetailScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Context-Aware Zen Botanical Affiliate Card
+        val affiliateItem = remember(plant) {
+            val sunlight = plant.careRequirements.sunlight.lowercase()
+            val name = plant.commonName.lowercase()
+
+            when {
+                name.contains("succulent") || name.contains("cactus") || name.contains("snake") -> app.vercel.stillleaf.ui.component.AffiliateItem(
+                    title = "Organic Desert Succulent & Cactus Potting Mix",
+                    brand = "FoxFarm Ocean Forest",
+                    recommendationNote = "Fast-draining perlite blend ideal for ${plant.nickname} to prevent root moisture rot.",
+                    affiliateUrl = "https://amazon.com/dp/B001I49Q98?tag=stillleaf-20"
+                )
+                sunlight.contains("low") || sunlight.contains("indoor") -> app.vercel.stillleaf.ui.component.AffiliateItem(
+                    title = "Full Spectrum Clip-On LED Grow Light with Timer",
+                    brand = "SANSI Botanical",
+                    recommendationNote = "Simulates gentle morning sunlight for indoor ${plant.nickname} in low-light rooms.",
+                    affiliateUrl = "https://amazon.com/dp/B07TKKG84E?tag=stillleaf-20"
+                )
+                else -> app.vercel.stillleaf.ui.component.AffiliateItem(
+                    title = "Chunky Premium Aroid & Tropical Potting Bark Blend",
+                    brand = "Sustee Botanical Co.",
+                    recommendationNote = "Aerated potting mix that balances aeration and root hydration for ${plant.nickname}.",
+                    affiliateUrl = "https://amazon.com/dp/B08NX3T6LH?tag=stillleaf-20"
+                )
+            }
+        }
+
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            app.vercel.stillleaf.ui.component.ZenAffiliateCard(item = affiliateItem)
+        }
+
         Spacer(modifier = Modifier.height(28.dp))
 
         // 4. 3-Month Visual Growth Gallery (Horizontal Timeline)

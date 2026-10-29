@@ -2,11 +2,16 @@ package app.vercel.stillleaf.data.model
 
 enum class SubscriptionStatus {
     FREE,
-    PRO;
+    MONTHLY,
+    ANNUAL,
+    LIFETIME;
 
     val isPro: Boolean
-        get() = this == PRO
+        get() = this != FREE
 
     val maxPlantsAllowed: Int
-        get() = if (isPro) Int.MAX_VALUE else 2
+        get() = if (isPro) Int.MAX_VALUE else 3
+
+    val freeScansRemaining: Int
+        get() = if (isPro) Int.MAX_VALUE else 3
 }

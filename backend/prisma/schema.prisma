@@ -1,5 +1,3 @@
-// Prisma Schema for Still Leaf Backend Platform
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -9,56 +7,63 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum SubscriptionStatus {
+enum SubscriptionTier {
   FREE
-  PRO
+  MONTHLY
+  ANNUAL
+  LIFETIME
 }
 
-enum CareTaskType {
+enum TaskType {
   WATER
   FEED
   ROTATE
   TRIM
   PHOTO
-  SPECIAL_TREATMENT
+  REPOTTING
 }
 
 model User {
-  id                 String             @id @default(uuid())
-  email              String             @unique
-  passwordHash       String?
-  displayName        String?
-  avatarUrl          String?
-  authProvider       String             @default("EMAIL") // "EMAIL" or "GOOGLE"
-  fcmToken           String?
-  subscriptionStatus SubscriptionStatus @default(FREE)
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  plants Plant[]
+  id                    String           @id @default(uuid())
+  email                 String           @unique
+  passwordHash          String?
+  displayName           String?
+  avatarUrl             String?
+  authProvider          String           @default("EMAIL")
+  fcmToken              String?
+  tier                  SubscriptionTier @default(FREE)
+  freeScansRemaining    Int              @default(3)
+  playPurchaseToken     String?
+  subscriptionExpiresAt DateTime?
+  plants                Plant[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   @@index([email])
-  @@index([subscriptionStatus])
+  @@index([tier])
 }
 
 model Plant {
-  id               String   @id @default(uuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  nickname         String
-  botanicalName    String
-  commonName       String
-  location         String   @default("Indoor • Living Room")
-  careRequirements Json // { sunlight: string, waterIntervalDays: number, feedIntervalDays: number, rotateIntervalDays: number, trimIntervalDays: number, careInsight: string }
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  photos      PlantPhoto[]
-  careLogs    CareLog[]
-  sharedCards SharedCard[]
+  id                  String       @id @default(uuid())
+  userId              String
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nickname            String
+  botanicalName       String
+  commonName          String
+  sunlightRequirement String       @default("Bright Indirect Light")
+  idealTemperature    String?
+  idealHumidity       String?
+  waterIntervalDays   Int          @default(7)
+  feedIntervalDays    Int          @default(30)
+  rotateIntervalDays  Int          @default(14)
+  trimIntervalDays    Int          @default(60)
+  careSummary         String?      @db.Text
+  photos              PlantPhoto[]
+  careLogs            CareLog[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   @@index([userId])
-  @@index([botanicalName])
 }
 
 model PlantPhoto {
@@ -66,36 +71,35 @@ model PlantPhoto {
   plantId              String
   plant                Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
   photoUrl             String
+  imageKey             String   @default("")
   takenAt              DateTime @default(now())
-  note                 String?
   isQuarterlyMilestone Boolean  @default(false)
+  note                 String?
 
-  @@index([plantId])
-  @@index([takenAt])
+  @@index([plantId, takenAt])
 }
 
 model CareLog {
-  id          String       @id @default(uuid())
+  id          String   @id @default(uuid())
   plantId     String
-  plant       Plant        @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  taskType    CareTaskType
-  completedAt DateTime     @default(now())
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  taskType    TaskType
+  completedAt DateTime @default(now())
+  notes       String?
 
-  @@index([plantId])
-  @@index([completedAt])
-  @@index([taskType])
+  @@index([plantId, completedAt])
 }
 
-model SharedCard {
-  id         String   @id @default(uuid())
-  plantId    String
-  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  slug       String   @unique
-  ogImageUrl String
-  isPublic   Boolean  @default(true)
-  views      Int      @default(0)
-  createdAt  DateTime @default(now())
+model AffiliateProduct {
+  id                 String   @id @default(uuid())
+  category           String   // e.g., "SOIL_AROID", "GROW_LIGHT", "MOISTURE_METER", "FERTILIZER_ORGANIC"
+  title              String
+  brand              String
+  recommendationNote String   @db.Text
+  affiliateUrl       String
+  imageUrl           String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
 
-  @@index([slug])
-  @@index([plantId])
+  @@index([category])
 }

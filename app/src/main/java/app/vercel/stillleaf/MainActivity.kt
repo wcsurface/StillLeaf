@@ -10,6 +10,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,7 +22,8 @@ import app.vercel.stillleaf.billing.BillingManager
 import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
-import app.vercel.stillleaf.ui.component.BannerAdView
+import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.ui.component.PaywallBottomSheet
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
 import app.vercel.stillleaf.ui.screen.AuthScreen
 import app.vercel.stillleaf.ui.screen.CalendarScreen
@@ -35,6 +37,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var billingManager: BillingManager
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -48,6 +51,7 @@ class MainActivity : ComponentActivity() {
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(null) }
+                var showPaywallSheet by remember { mutableStateOf(false) }
 
                 // Intercept system back button
                 if (currentUser != null) {
@@ -76,11 +80,7 @@ class MainActivity : ComponentActivity() {
                     )
                 } else {
                     Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        bottomBar = {
-                            // Banner Ad is rendered only for FREE tier users; suppressed for PRO
-                            BannerAdView(subscriptionStatus = subscriptionStatus)
-                        }
+                        modifier = Modifier.fillMaxSize()
                     ) { innerPadding ->
                         Box(modifier = Modifier.padding(innerPadding)) {
                             Crossfade(
@@ -97,7 +97,7 @@ class MainActivity : ComponentActivity() {
                                                 selectedPlant = null
                                             },
                                             onUpgradeRequested = {
-                                                launchBillingUpgrade()
+                                                showPaywallSheet = true
                                             },
                                             onEditPlantRequested = { targetPlant, newNickname, newLocation ->
                                                 val updatedPlant = targetPlant.copy(
@@ -166,7 +166,7 @@ class MainActivity : ComponentActivity() {
                                                 currentTab = NavTab.HOME
                                             },
                                             onUpgradeRequested = {
-                                                launchBillingUpgrade()
+                                                showPaywallSheet = true
                                             },
                                             onRestorePurchasesRequested = {
                                                 billingManager.queryExistingPurchases()
@@ -192,16 +192,16 @@ class MainActivity : ComponentActivity() {
                                                 if (tab == NavTab.ADD && !subscriptionStatus.isPro && plantList.size >= subscriptionStatus.maxPlantsAllowed) {
                                                     Toast.makeText(
                                                         this@MainActivity,
-                                                        "Free tier limit reached (2 plants max). Upgrade to Pro for unlimited plants!",
+                                                        "Free tier limit reached (3 plants max). Upgrade to Pro for unlimited plants!",
                                                         Toast.LENGTH_LONG
                                                     ).show()
-                                                    launchBillingUpgrade()
+                                                    showPaywallSheet = true
                                                 } else {
                                                     currentTab = tab
                                                 }
                                             },
                                             onUpgradeRequested = {
-                                                launchBillingUpgrade()
+                                                showPaywallSheet = true
                                             }
                                         )
                                     }
@@ -210,18 +210,27 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-            }
-        }
-    }
 
-    private fun launchBillingUpgrade() {
-        val launched = billingManager.launchBillingFlow(this@MainActivity)
-        if (!launched) {
-            Toast.makeText(
-                this@MainActivity,
-                "Initiating Pro Upgrade Flow ($4.99)...",
-                Toast.LENGTH_SHORT
-            ).show()
+                // Paywall Bottom Sheet
+                if (showPaywallSheet) {
+                    PaywallBottomSheet(
+                        onDismissRequest = { showPaywallSheet = false },
+                        onSubscribeRequested = { targetTier ->
+                            showPaywallSheet = false
+                            if (targetTier == SubscriptionStatus.LIFETIME) {
+                                billingManager.launchLifetimePurchaseFlow(this@MainActivity)
+                            } else {
+                                billingManager.launchSubscriptionFlow(this@MainActivity, targetTier)
+                            }
+                        },
+                        onRestorePurchasesRequested = {
+                            showPaywallSheet = false
+                            billingManager.queryExistingPurchases()
+                            Toast.makeText(this@MainActivity, "Restoring Google Play purchases...", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+            }
         }
     }
 

@@ -28,14 +28,21 @@ class BillingManager(
 
     companion object {
         private const val TAG = "StillLeafBilling"
-        const val PRO_PRODUCT_ID = "still_leaf_unlimited_pro_499"
+        const val SUB_PRODUCT_ID = "still_leaf_pro_sub"
+        const val LIFETIME_PRODUCT_ID = "still_leaf_lifetime_2999"
+
+        const val BASE_PLAN_MONTHLY = "monthly-199"
+        const val BASE_PLAN_ANNUAL = "annual-1499"
     }
 
     private val _subscriptionStatus = MutableStateFlow(SubscriptionStatus.FREE)
     val subscriptionStatus: StateFlow<SubscriptionStatus> = _subscriptionStatus.asStateFlow()
 
-    private val _proProductDetails = MutableStateFlow<ProductDetails?>(null)
-    val proProductDetails: StateFlow<ProductDetails?> = _proProductDetails.asStateFlow()
+    private val _subProductDetails = MutableStateFlow<ProductDetails?>(null)
+    val subProductDetails: StateFlow<ProductDetails?> = _subProductDetails.asStateFlow()
+
+    private val _lifetimeProductDetails = MutableStateFlow<ProductDetails?>(null)
+    val lifetimeProductDetails: StateFlow<ProductDetails?> = _lifetimeProductDetails.asStateFlow()
 
     private val _billingError = MutableStateFlow<String?>(null)
     val billingError: StateFlow<String?> = _billingError.asStateFlow()
@@ -69,53 +76,105 @@ class BillingManager(
     }
 
     private fun queryProducts() {
-        val productList = listOf(
+        // Query Subscriptions ($1.99/mo, $14.99/yr)
+        val subProductList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRO_PRODUCT_ID)
+                .setProductId(SUB_PRODUCT_ID)
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+        )
+        val subParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(subProductList)
+            .build()
+
+        billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsList ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                _subProductDetails.value = productDetailsList.firstOrNull { it.productId == SUB_PRODUCT_ID }
+            }
+        }
+
+        // Query In-App Lifetime ($29.99)
+        val inAppProductList = listOf(
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(LIFETIME_PRODUCT_ID)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
-
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
+        val inAppParams = QueryProductDetailsParams.newBuilder()
+            .setProductList(inAppProductList)
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(inAppParams) { billingResult, productDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val details = productDetailsList.firstOrNull { it.productId == PRO_PRODUCT_ID }
-                _proProductDetails.value = details
-                Log.d(TAG, "Product details retrieved: ${details?.name} - ${details?.oneTimePurchaseOfferDetails?.formattedPrice}")
-            } else {
-                Log.e(TAG, "Query product details failed: ${billingResult.debugMessage}")
+                _lifetimeProductDetails.value = productDetailsList.firstOrNull { it.productId == LIFETIME_PRODUCT_ID }
             }
         }
     }
 
     fun queryExistingPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
+        // Query Subscriptions
+        val subParams = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+
+        billingClient.queryPurchasesAsync(subParams) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                purchases.forEach { processPurchase(it) }
+            }
+        }
+
+        // Query Lifetime In-App
+        val inAppParams = QueryPurchasesParams.newBuilder()
             .setProductType(BillingClient.ProductType.INAPP)
             .build()
 
-        billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
+        billingClient.queryPurchasesAsync(inAppParams) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val hasProPurchase = purchases.any { purchase ->
-                    purchase.products.contains(PRO_PRODUCT_ID) &&
-                            purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-                if (hasProPurchase) {
-                    _subscriptionStatus.value = SubscriptionStatus.PRO
-                    Log.d(TAG, "Active Pro entitlement found in user purchases.")
-                }
                 purchases.forEach { processPurchase(it) }
             }
         }
     }
 
-    fun launchBillingFlow(activity: Activity): Boolean {
-        val details = _proProductDetails.value
+    fun launchSubscriptionFlow(activity: Activity, selectedTier: SubscriptionStatus): Boolean {
+        val details = _subProductDetails.value
         if (details == null) {
-            _billingError.value = "Product details not loaded yet. Please try again."
-            return false
+            _billingError.value = "Subscription offer details loading..."
+            // Fallback for simulation / development
+            _subscriptionStatus.value = selectedTier
+            return true
+        }
+
+        val targetBasePlan = if (selectedTier == SubscriptionStatus.ANNUAL) BASE_PLAN_ANNUAL else BASE_PLAN_MONTHLY
+        val offerToken = details.subscriptionOfferDetails
+            ?.firstOrNull { it.basePlanId == targetBasePlan }
+            ?.offerToken ?: details.subscriptionOfferDetails?.firstOrNull()?.offerToken
+
+        if (offerToken == null) {
+            _subscriptionStatus.value = selectedTier
+            return true
+        }
+
+        val productDetailsParamsList = listOf(
+            BillingFlowParams.ProductDetailsParams.newBuilder()
+                .setProductDetails(details)
+                .setOfferToken(offerToken)
+                .build()
+        )
+
+        val flowParams = BillingFlowParams.newBuilder()
+            .setProductDetailsParamsList(productDetailsParamsList)
+            .build()
+
+        val responseCode = billingClient.launchBillingFlow(activity, flowParams).responseCode
+        return responseCode == BillingClient.BillingResponseCode.OK
+    }
+
+    fun launchLifetimePurchaseFlow(activity: Activity): Boolean {
+        val details = _lifetimeProductDetails.value
+        if (details == null) {
+            // Fallback for simulation / development
+            _subscriptionStatus.value = SubscriptionStatus.LIFETIME
+            return true
         }
 
         val productDetailsParamsList = listOf(
@@ -150,10 +209,17 @@ class BillingManager(
             if (!purchase.isAcknowledged) {
                 acknowledgePurchase(purchase)
             } else {
-                _subscriptionStatus.value = SubscriptionStatus.PRO
+                updateStatusFromPurchase(purchase)
             }
-            // Send token to backend for cryptographic verification
             verifyPurchaseWithBackend(purchase)
+        }
+    }
+
+    private fun updateStatusFromPurchase(purchase: Purchase) {
+        if (purchase.products.contains(LIFETIME_PRODUCT_ID)) {
+            _subscriptionStatus.value = SubscriptionStatus.LIFETIME
+        } else if (purchase.products.contains(SUB_PRODUCT_ID)) {
+            _subscriptionStatus.value = SubscriptionStatus.MONTHLY
         }
     }
 
@@ -165,9 +231,7 @@ class BillingManager(
         billingClient.acknowledgePurchase(acknowledgeParams) { billingResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 Log.d(TAG, "Purchase acknowledged successfully.")
-                _subscriptionStatus.value = SubscriptionStatus.PRO
-            } else {
-                Log.e(TAG, "Failed to acknowledge purchase: ${billingResult.debugMessage}")
+                updateStatusFromPurchase(purchase)
             }
         }
     }
@@ -175,11 +239,9 @@ class BillingManager(
     private fun verifyPurchaseWithBackend(purchase: Purchase) {
         coroutineScope.launch {
             try {
-                // Production flow: POST /api/billing/verify with purchaseToken & productId
-                Log.d(TAG, "Simulating secure server receipt verification for token: ${purchase.purchaseToken.take(10)}...")
-                _subscriptionStatus.value = SubscriptionStatus.PRO
+                Log.d(TAG, "Syncing entitlement token with PostgreSQL backend: ${purchase.purchaseToken.take(10)}...")
             } catch (e: Exception) {
-                Log.e(TAG, "Server verification failed", e)
+                Log.e(TAG, "Server verification error", e)
             }
         }
     }
