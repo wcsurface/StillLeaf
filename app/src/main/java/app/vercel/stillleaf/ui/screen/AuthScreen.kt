@@ -2,6 +2,7 @@ package app.vercel.stillleaf.ui.screen
 
 import android.accounts.AccountManager
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +53,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -62,10 +65,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.AuthUser
-import app.vercel.stillleaf.ui.theme.DeepBotanicalGreen
+import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
 import app.vercel.stillleaf.ui.theme.PillShape
+import app.vercel.stillleaf.ui.theme.SurfaceWhite
 
 enum class AuthMode {
     SIGN_IN,
@@ -123,312 +128,323 @@ fun AuthScreen(
         showGoogleAccountModal = true
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(40.dp))
+    Box(modifier = modifier.fillMaxSize()) {
+        // 1. Background Image (bg_auth_profile)
+        Image(
+            painter = painterResource(R.drawable.bg_auth_profile),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
-        // Brand Logo & Header
+        // 2. Screen Content
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.Spa,
-                contentDescription = "Still Leaf Logo",
-                tint = DeepBotanicalGreen,
-                modifier = Modifier.size(56.dp)
-            )
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "STILL LEAF",
-                fontFamily = LakkiReddyFontFamily,
-                fontSize = 38.sp,
-                color = DeepBotanicalGreen,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Healthy plants. Happier days.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = PillShape
+            // Brand Logo & Header with Lighter Fonts
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Sign in to access your Botanical Sanctuary",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                Icon(
+                    imageVector = Icons.Default.Spa,
+                    contentDescription = "Still Leaf Logo",
+                    tint = CreamyOffWhite,
+                    modifier = Modifier.size(56.dp)
                 )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-        // Auth Form Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                // Sign In / Register Mode Pill Selector
+                Text(
+                    text = "STILL LEAF",
+                    fontFamily = LakkiReddyFontFamily,
+                    fontSize = 38.sp,
+                    color = CreamyOffWhite,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Healthy plants. Happier days.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CreamyOffWhite.copy(alpha = 0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = SurfaceWhite.copy(alpha = 0.2f),
                     shape = PillShape,
-                    modifier = Modifier.fillMaxWidth()
+                    border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(4.dp)
-                    ) {
-                        Surface(
-                            onClick = { authMode = AuthMode.SIGN_IN },
-                            shape = PillShape,
-                            color = if (authMode == AuthMode.SIGN_IN) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = "Sign In",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (authMode == AuthMode.SIGN_IN) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = 10.dp)
-                            )
-                        }
-
-                        Surface(
-                            onClick = { authMode = AuthMode.REGISTER },
-                            shape = PillShape,
-                            color = if (authMode == AuthMode.REGISTER) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = "Create Account",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (authMode == AuthMode.REGISTER) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = 10.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Sign in to access your Botanical Sanctuary",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = CreamyOffWhite,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-                // Error Message Callout
-                if (errorMessage != null) {
+            // Auth Form Card (Creamy White for high contrast readability)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.95f)),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    // Sign In / Register Mode Pill Selector
                     Surface(
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = PillShape,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = errorMessage!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(12.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp)
+                        ) {
+                            Surface(
+                                onClick = { authMode = AuthMode.SIGN_IN },
+                                shape = PillShape,
+                                color = if (authMode == AuthMode.SIGN_IN) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Sign In",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (authMode == AuthMode.SIGN_IN) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
+                            }
 
-                // Name Field (Register Only)
-                if (authMode == AuthMode.REGISTER) {
+                            Surface(
+                                onClick = { authMode = AuthMode.REGISTER },
+                                shape = PillShape,
+                                color = if (authMode == AuthMode.REGISTER) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Create Account",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (authMode == AuthMode.REGISTER) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(vertical = 10.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Error Message Callout
+                    if (errorMessage != null) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = errorMessage!!,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
+                    }
+
+                    // Name Field (Register Only)
+                    if (authMode == AuthMode.REGISTER) {
+                        OutlinedTextField(
+                            value = nameInput,
+                            onValueChange = { nameInput = it },
+                            label = { Text("Display Name / Gardener Title") },
+                            leadingIcon = {
+                                Icon(imageVector = Icons.Default.Person, contentDescription = null)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Email Field
                     OutlinedTextField(
-                        value = nameInput,
-                        onValueChange = { nameInput = it },
-                        label = { Text("Display Name / Gardener Title") },
-                        leadingIcon = {
-                            Icon(imageVector = Icons.Default.Person, contentDescription = null)
+                        value = emailInput,
+                        onValueChange = {
+                            emailInput = it
+                            errorMessage = null
                         },
+                        label = { Text("Email Address") },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Email, contentDescription = null)
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary
                         )
                     )
+
                     Spacer(modifier = Modifier.height(12.dp))
-                }
 
-                // Email Field
-                OutlinedTextField(
-                    value = emailInput,
-                    onValueChange = {
-                        emailInput = it
-                        errorMessage = null
-                    },
-                    label = { Text("Email Address") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Email, contentDescription = null)
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    // Password Field
+                    OutlinedTextField(
+                        value = passwordInput,
+                        onValueChange = {
+                            passwordInput = it
+                            errorMessage = null
+                        },
+                        label = { Text("Password") },
+                        leadingIcon = {
+                            Icon(imageVector = Icons.Default.Lock, contentDescription = null)
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = "Toggle password visibility"
+                                )
+                            }
+                        },
+                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                // Password Field
-                OutlinedTextField(
-                    value = passwordInput,
-                    onValueChange = {
-                        passwordInput = it
-                        errorMessage = null
-                    },
-                    label = { Text("Password") },
-                    leadingIcon = {
-                        Icon(imageVector = Icons.Default.Lock, contentDescription = null)
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                            Icon(
-                                imageVector = if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = "Toggle password visibility"
+                    // Primary Action Button (Sign In / Register)
+                    if (isLoading) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    } else {
+                        Button(
+                            onClick = {
+                                if (emailInput.isBlank() || passwordInput.isBlank()) {
+                                    errorMessage = "Please enter your email and password."
+                                    return@Button
+                                }
+
+                                isLoading = true
+                                errorMessage = null
+
+                                // Simulate Database Auth Response
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    isLoading = false
+                                    val authenticatedUser = AuthUser(
+                                        id = "usr_${System.currentTimeMillis()}",
+                                        email = emailInput.trim(),
+                                        displayName = if (authMode == AuthMode.REGISTER && nameInput.isNotBlank()) nameInput else emailInput.split("@")[0],
+                                        authProvider = "EMAIL",
+                                        token = "jwt_session_${System.currentTimeMillis()}"
+                                    )
+                                    onAuthSuccess(authenticatedUser)
+                                }, 800)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = PillShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(
+                                text = if (authMode == AuthMode.SIGN_IN) "Sign In with Email" else "Create Sanctuary Account",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
                         }
-                    },
-                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                    )
-                )
+                    }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                // Primary Action Button (Sign In / Register)
-                if (isLoading) {
+                    // Divider Or
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = "  or  ",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
                     }
-                } else {
-                    Button(
-                        onClick = {
-                            if (emailInput.isBlank() || passwordInput.isBlank()) {
-                                errorMessage = "Please enter your email and password."
-                                return@Button
-                            }
 
-                            isLoading = true
-                            errorMessage = null
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                            // Simulate Database Auth Response
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                isLoading = false
-                                val authenticatedUser = AuthUser(
-                                    id = "usr_${System.currentTimeMillis()}",
-                                    email = emailInput.trim(),
-                                    displayName = if (authMode == AuthMode.REGISTER && nameInput.isNotBlank()) nameInput else emailInput.split("@")[0],
-                                    authProvider = "EMAIL",
-                                    token = "jwt_session_${System.currentTimeMillis()}"
-                                )
-                                onAuthSuccess(authenticatedUser)
-                            }, 800)
-                        },
+                    // Google Sign In Button
+                    OutlinedButton(
+                        onClick = { launchGoogleSignIn() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface)
                     ) {
-                        Text(
-                            text = if (authMode == AuthMode.SIGN_IN) "Sign In with Email" else "Create Sanctuary Account",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Divider Or
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
-                    Text(
-                        text = "  or  ",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Google Sign In Button
-                OutlinedButton(
-                    onClick = { launchGoogleSignIn() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = PillShape,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    colors = ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        // Official Google 'G' Symbol Text Badge
-                        Surface(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = CircleShape,
-                            modifier = Modifier.size(22.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "G",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                            // Official Google 'G' Symbol Text Badge
+                            Surface(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = CircleShape,
+                                modifier = Modifier.size(22.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "G",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Continue with Google",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Continue with Google",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(40.dp))
+        }
     }
 
     // Google Account Picker Dialog

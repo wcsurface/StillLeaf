@@ -3,6 +3,7 @@ package app.vercel.stillleaf.ui.screen
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,14 +48,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.CareTaskType
 import app.vercel.stillleaf.data.model.Plant
+import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.PillShape
+import app.vercel.stillleaf.ui.theme.SurfaceWhite
 import coil.compose.AsyncImage
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -105,39 +109,39 @@ fun CalendarScreen(
         listOf(
             CalendarTaskItem(
                 id = "t1",
-                plant = p1 ?: plants.first(),
+                plant = p1 ?: plants.firstOrNull() ?: Plant(id = "dummy", nickname = "Sanctuary Plant", botanicalName = "", commonName = "", primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80", dateAdded = LocalDate.now(), careRequirements = app.vercel.stillleaf.data.model.CareRequirement("Light", "20C", "50%", 7, 30, 14, 60, "Care"), location = "Indoor"),
                 taskType = CareTaskType.WATER,
-                taskName = "Water ${p1?.nickname ?: "Monstera Deliciosa"}",
+                taskName = "Water ${p1?.nickname ?: "Sanctuary Plant"}",
                 location = p1?.location ?: "Indoor • Living Room",
                 isCompleted = taskCompletionState["t1"] ?: true
             ),
             CalendarTaskItem(
                 id = "t2",
-                plant = p2 ?: plants.first(),
+                plant = p2 ?: plants.firstOrNull() ?: Plant(id = "dummy", nickname = "Sanctuary Plant", botanicalName = "", commonName = "", primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80", dateAdded = LocalDate.now(), careRequirements = app.vercel.stillleaf.data.model.CareRequirement("Light", "20C", "50%", 7, 30, 14, 60, "Care"), location = "Indoor"),
                 taskType = CareTaskType.FEED,
-                taskName = "Fertilize ${p3?.nickname ?: "Basil"}",
+                taskName = "Fertilize ${p3?.nickname ?: "Patio Herb"}",
                 location = p3?.location ?: "Outdoor • Patio",
                 isCompleted = taskCompletionState["t2"] ?: false
             ),
             CalendarTaskItem(
                 id = "t3",
-                plant = p3 ?: plants.first(),
+                plant = p3 ?: plants.firstOrNull() ?: Plant(id = "dummy", nickname = "Sanctuary Plant", botanicalName = "", commonName = "", primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80", dateAdded = LocalDate.now(), careRequirements = app.vercel.stillleaf.data.model.CareRequirement("Light", "20C", "50%", 7, 30, 14, 60, "Care"), location = "Indoor"),
                 taskType = CareTaskType.TRIM,
-                taskName = "Trim ${p4?.nickname ?: "Lavender"}",
+                taskName = "Trim ${p4?.nickname ?: "Garden Lavender"}",
                 location = p4?.location ?: "Outdoor • Garden",
                 isCompleted = taskCompletionState["t3"] ?: false
             ),
             CalendarTaskItem(
                 id = "t4",
-                plant = p4 ?: plants.first(),
+                plant = p4 ?: plants.firstOrNull() ?: Plant(id = "dummy", nickname = "Sanctuary Plant", botanicalName = "", commonName = "", primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80", dateAdded = LocalDate.now(), careRequirements = app.vercel.stillleaf.data.model.CareRequirement("Light", "20C", "50%", 7, 30, 14, 60, "Care"), location = "Indoor"),
                 taskType = CareTaskType.WATER,
-                taskName = "Water ${p2?.nickname ?: "Snake Plant"}",
+                taskName = "Water ${p2?.nickname ?: "Office Succulent"}",
                 location = p2?.location ?: "Indoor • Office",
                 isCompleted = taskCompletionState["t4"] ?: true
             ),
             CalendarTaskItem(
                 id = "t5",
-                plant = p1 ?: plants.first(),
+                plant = p1 ?: plants.firstOrNull() ?: Plant(id = "dummy", nickname = "Sanctuary Plant", botanicalName = "", commonName = "", primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80", dateAdded = LocalDate.now(), careRequirements = app.vercel.stillleaf.data.model.CareRequirement("Light", "20C", "50%", 7, 30, 14, 60, "Care"), location = "Indoor"),
                 taskType = CareTaskType.WATER,
                 taskName = "Check Soil Moisture",
                 location = "Indoor • Bedroom",
@@ -149,183 +153,192 @@ fun CalendarScreen(
     val completedCount = sampleTasks.count { taskCompletionState[it.id] == true }
     val totalCount = sampleTasks.size
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        // 1. Screen Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = onBackRequested) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(24.dp)
+    Box(modifier = modifier.fillMaxSize()) {
+        // 1. Background Image (bg_calendar)
+        Image(
+            painter = painterResource(R.drawable.bg_calendar),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 2. Screen Content
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Screen Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = onBackRequested) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = CreamyOffWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Text(
+                    text = "Care & Calendar",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = CreamyOffWhite
                 )
+
+                IconButton(onClick = {}) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = "Full Calendar",
+                        tint = CreamyOffWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
-            Text(
-                text = "Care & Calendar",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.CalendarMonth,
-                    contentDescription = "Full Calendar",
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(24.dp)
-                )
+            // Horizontal Weekly Calendar Selector
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                weekDays.forEachIndexed { index, date ->
+                    val isSelected = index == selectedDayIndex
+                    val weekdayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+                    val dayOfMonth = date.dayOfMonth.toString()
+
+                    val bgColor by animateColorAsState(
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else SurfaceWhite.copy(alpha = 0.2f),
+                        animationSpec = tween(durationMillis = 200),
+                        label = "DayBg"
+                    )
+
+                    Surface(
+                        onClick = { selectedDayIndex = index },
+                        shape = RoundedCornerShape(16.dp),
+                        color = bgColor,
+                        border = if (isSelected) null else BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.3f)),
+                        modifier = Modifier
+                            .width(44.dp)
+                            .height(68.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = weekdayName,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else CreamyOffWhite.copy(alpha = 0.9f),
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = dayOfMonth,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else CreamyOffWhite,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-        // 2. Horizontal Weekly Calendar Selector
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            weekDays.forEachIndexed { index, date ->
-                val isSelected = index == selectedDayIndex
-                val weekdayName = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                val dayOfMonth = date.dayOfMonth.toString()
-
-                val bgColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    animationSpec = tween(durationMillis = 200),
-                    label = "DayBg"
+            // Today's Tasks Section Header & Progress Counter Pill
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Today's Tasks",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = CreamyOffWhite
                 )
 
                 Surface(
-                    onClick = { selectedDayIndex = index },
-                    shape = RoundedCornerShape(16.dp),
-                    color = bgColor,
-                    modifier = Modifier
-                        .width(44.dp)
-                        .height(68.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = weekdayName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = dayOfMonth,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 16.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // 3. Today's Tasks Section Header & Progress Counter Pill
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Today's Tasks",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = PillShape
-            ) {
-                Text(
-                    text = "$completedCount/$totalCount",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // 4. Individual Care Task Cards List
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(sampleTasks, key = { it.id }) { task ->
-                val isCompleted = taskCompletionState[task.id] ?: false
-
-                CalendarTaskCard(
-                    task = task,
-                    isCompleted = isCompleted,
-                    onToggleCompletion = {
-                        taskCompletionState[task.id] = !isCompleted
-                    }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 5. View Full Calendar Wide Button
-                Button(
-                    onClick = {},
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
+                    color = SurfaceWhite.copy(alpha = 0.25f),
                     shape = PillShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(
-                            text = "View Full Calendar",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    Text(
+                        text = "$completedCount/$totalCount",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = CreamyOffWhite,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Individual Care Task Cards List
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(sampleTasks, key = { it.id }) { task ->
+                    val isCompleted = taskCompletionState[task.id] ?: false
+
+                    CalendarTaskCard(
+                        task = task,
+                        isCompleted = isCompleted,
+                        onToggleCompletion = {
+                            taskCompletionState[task.id] = !isCompleted
+                        }
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // View Full Calendar Wide Button
+                    Button(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Spacer(modifier = Modifier.width(20.dp))
+                            Text(
+                                text = "View Full Calendar",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
         }
     }
@@ -343,7 +356,7 @@ fun CalendarTaskCard(
             .height(80.dp)
             .clickable { onToggleCompletion() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.95f)),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
