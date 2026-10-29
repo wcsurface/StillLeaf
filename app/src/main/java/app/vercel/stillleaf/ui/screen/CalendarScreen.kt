@@ -76,6 +76,7 @@ fun CalendarScreen(
     plants: List<Plant>,
     onBackRequested: () -> Unit,
     onNavTabSelected: (NavTab) -> Unit = {},
+    onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(2) } // Default to Wednesday/current day
@@ -326,7 +327,14 @@ fun CalendarScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Footer Links & Copyright
+                    app.vercel.stillleaf.ui.component.StillLeafFooter(
+                        onLegalRequested = onLegalRequested
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }

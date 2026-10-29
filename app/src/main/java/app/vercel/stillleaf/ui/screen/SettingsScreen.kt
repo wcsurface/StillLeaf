@@ -68,6 +68,7 @@ fun SettingsScreen(
     onSignInRequested: () -> Unit = {},
     onSignOutRequested: () -> Unit = {},
     onNavTabSelected: (NavTab) -> Unit = {},
+    onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -308,50 +309,14 @@ fun SettingsScreen(
                     onCheckedChange = { milestoneRemindersEnabled = it }
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                Text(
-                    text = "Security & Privacy",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = CreamyOffWhite
+                // Footer Links & Copyright
+                app.vercel.stillleaf.ui.component.StillLeafFooter(
+                    onLegalRequested = onLegalRequested
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Surface(
-                    color = SurfaceWhite.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Shield,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                text = "Cloudflare R2 & Private Encryption",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Your plant photos are safely encrypted and private.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

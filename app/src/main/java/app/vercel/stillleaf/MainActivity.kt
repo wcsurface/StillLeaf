@@ -24,10 +24,12 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.data.repository.PlantPersistenceManager
+import app.vercel.stillleaf.ui.component.LegalTab
 import app.vercel.stillleaf.ui.component.PaywallBottomSheet
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
 import app.vercel.stillleaf.ui.screen.AuthScreen
 import app.vercel.stillleaf.ui.screen.CalendarScreen
+import app.vercel.stillleaf.ui.screen.LegalInfoScreen
 import app.vercel.stillleaf.ui.screen.NavTab
 import app.vercel.stillleaf.ui.screen.PlantDetailScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(null) }
                 var showPaywallSheet by remember { mutableStateOf(false) }
+                var activeLegalTab by remember { mutableStateOf<LegalTab?>(null) }
 
                 // Helper to update plant list & persist to disk
                 fun updateAndPersistPlants(newList: List<Plant>) {
@@ -66,7 +69,11 @@ class MainActivity : ComponentActivity() {
 
                 // Intercept system back button
                 if (currentUser != null) {
-                    if (selectedPlant != null) {
+                    if (activeLegalTab != null) {
+                        BackHandler {
+                            activeLegalTab = null
+                        }
+                    } else if (selectedPlant != null) {
                         BackHandler {
                             selectedPlant = null
                         }
@@ -88,6 +95,12 @@ class MainActivity : ComponentActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+                    )
+                } else if (activeLegalTab != null) {
+                    // Legal Info Screen (Terms, Privacy, FAQ)
+                    LegalInfoScreen(
+                        initialTab = activeLegalTab!!,
+                        onBackRequested = { activeLegalTab = null }
                     )
                 } else {
                     Scaffold(
@@ -154,6 +167,9 @@ class MainActivity : ComponentActivity() {
                                             onNavTabSelected = { tab ->
                                                 currentTab = tab
                                             },
+                                            onLegalRequested = { tab ->
+                                                activeLegalTab = tab
+                                            },
                                             onPlantAdded = { newPlant ->
                                                 val updatedList = listOf(newPlant) + plantList
                                                 updateAndPersistPlants(updatedList)
@@ -175,6 +191,9 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavTabSelected = { tab ->
                                                 currentTab = tab
+                                            },
+                                            onLegalRequested = { tab ->
+                                                activeLegalTab = tab
                                             }
                                         )
                                     }
@@ -188,6 +207,9 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavTabSelected = { tab ->
                                                 currentTab = tab
+                                            },
+                                            onLegalRequested = { tab ->
+                                                activeLegalTab = tab
                                             },
                                             onUpgradeRequested = {
                                                 showPaywallSheet = true
@@ -226,6 +248,9 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onUpgradeRequested = {
                                                 showPaywallSheet = true
+                                            },
+                                            onLegalRequested = { tab ->
+                                                activeLegalTab = tab
                                             }
                                         )
                                     }

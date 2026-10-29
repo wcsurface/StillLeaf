@@ -109,6 +109,7 @@ fun AddPlantScreen(
     onBackRequested: () -> Unit,
     onPlantAdded: (Plant) -> Unit,
     onNavTabSelected: (NavTab) -> Unit = {},
+    onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -554,7 +555,12 @@ fun AddPlantScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                // Footer Links & Copyright
+                app.vercel.stillleaf.ui.component.StillLeafFooter(
+                    onLegalRequested = onLegalRequested
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }

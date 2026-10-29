@@ -88,6 +88,7 @@ fun PlantListScreen(
     onNavTabSelected: (NavTab) -> Unit,
     onSignInRequested: () -> Unit = {},
     onUpgradeRequested: () -> Unit,
+    onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedFilter by remember { mutableStateOf(PlantFilter.ALL) }
@@ -250,6 +251,11 @@ fun PlantListScreen(
                     }
                 }
             }
+
+            // Footer Links & Copyright
+            app.vercel.stillleaf.ui.component.StillLeafFooter(
+                onLegalRequested = onLegalRequested
+            )
         }
     }
 }
