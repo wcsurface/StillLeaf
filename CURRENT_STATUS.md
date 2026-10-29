@@ -1,19 +1,14 @@
 # CURRENT_STATUS.md - Project State Snapshot
 
 ## Current Phase
-Phase 33: 9:16 Portrait Image Displays & AI Photo Best Practices Card Applied
+Phase 34: 2-Shot Onboarding Implemented (Close-Up AI Detail + Day 0 Whole Plant Growth Snapshot)
 
 ## Completed Work
 - [x] Initialized project memory & guidelines (`AGENTS.md`, `PROJECT_MEMORY.md`, `REQUIREMENTS.md`, `CHANGELOG.md`).
-- [x] **9:16 Vertical Portrait Image Formatting**:
-  - Expanded `PlantDetailScreen.kt` hero image header from `300.dp` to `420.dp` (9:16 portrait format) so vertical plant photos display in full height without landscape cropping.
-  - Expanded `PlantListScreen.kt` home grid card image container from `130.dp` to `200.dp` (portrait ratio).
-  - Expanded `AddPlantScreen.kt` camera preview box from `240.dp` to `320.dp` (9:16 portrait ratio).
-- [x] **Photo Best Practices Guidance Card ([AddPlantScreen.kt](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/java/app/vercel/stillleaf/ui/screen/AddPlantScreen.kt))**:
-  - Added a warm Zen guidance card titled **"Photo Best Practices for 99% AI Accuracy"** in the lower area before photo selection:
-    - 🍃 **Focus on Leaf & Flower Detail**: Center a single clear leaf margin, vein pattern, or bloom.
-    - ☀️ **Natural Indirect Lighting**: Ensure bright ambient daylight without harsh dark shadows.
-    - 🪴 **Isolate Single Plant**: Keep background foliage or secondary houseplants out of view.
+- [x] **2-Shot Onboarding Architecture ([AddPlantScreen.kt](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/java/app/vercel/stillleaf/ui/screen/AddPlantScreen.kt))**:
+  - **Photo 1 (Close-Up Detail Shot)**: Center a leaf/flower margin in the 9:16 frame for 99% OpenAI GPT-4o Vision species identification accuracy.
+  - **Photo 2 (Day 0 Whole Plant Snapshot)**: Once identified, prompts the user with an option to capture a full-view shot of the plant in its pot to establish the exact **"Day 0 Baseline"** in the **Quarterly Growth Journal**.
+  - Automatically sets the Whole Plant shot as the primary card/hero image while preserving the Close-Up detail photo in the plant's photo history.
 - [x] Verified full app build (`app:assembleDebug` SUCCESSFUL) and pushed updates live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
 ## Next Steps

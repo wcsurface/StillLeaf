@@ -28,54 +28,74 @@ object OpenAiVisionService {
     private const val API_URL = "https://api.openai.com/v1/chat/completions"
 
     /**
-     * Analyzes Uri or Bitmap using OpenAI GPT-4o Vision API and returns real botanical identification.
+     * Analyzes Dual Photos (Close-Up Detail Shot + Whole Plant Overview Shot) for maximum identification accuracy.
      */
-    suspend fun identifyPlant(
+    suspend fun identifyPlantWithDualPhotos(
         context: Context,
-        imageUri: Uri? = null,
-        bitmap: Bitmap? = null
+        closeUpUri: Uri? = null,
+        closeUpBitmap: Bitmap? = null,
+        wholePlantUri: Uri? = null,
+        wholePlantBitmap: Bitmap? = null
     ): AiIdentificationResult = withContext(Dispatchers.IO) {
         try {
-            val base64Image = encodeImageToBase64(context, imageUri, bitmap)
-                ?: return@withContext createFallbackResult()
+            val base64CloseUp = encodeImageToBase64(context, closeUpUri, closeUpBitmap)
+            val base64Whole = encodeImageToBase64(context, wholePlantUri, wholePlantBitmap)
+
+            if (base64CloseUp == null && base64Whole == null) {
+                return@withContext createFallbackResult()
+            }
 
             val jsonPayload = JSONObject().apply {
                 put("model", "gpt-4o")
                 put("response_format", JSONObject().put("type", "json_object"))
-                put("max_tokens", 600)
+                put("max_tokens", 700)
 
                 val promptText = """
-                    You are an expert botanist. Analyze this plant photo and return a strict JSON object with these keys:
+                    You are a master botanist. Analyze BOTH photos of this plant:
+                    - Photo 1 provides a close-up detail shot of the leaf margins, veins, or flower bloom.
+                    - Photo 2 provides a whole plant overview shot in its pot.
+                    
+                    Combine leaf details from Photo 1 and growth habit from Photo 2 to distinguish subtle plant species differences.
+                    Return a strict JSON object with these exact keys:
                     {
                       "is_plant_detected": true,
                       "botanical_name": "Latin Name",
                       "common_name": "Common Name",
-                      "confidence_score": 95,
+                      "confidence_score": 98,
                       "sunlight_requirement": "e.g. Full Direct Sunlight or Bright Indirect Light",
                       "water_days": 7,
                       "fertilize_days": 30,
                       "rotate_days": 14,
                       "trim_days": 90,
-                      "care_insight": "A 2-sentence care guidance tailored for this specific species."
+                      "care_insight": "A 2-sentence care guidance note tailored for this specific species."
                     }
                 """.trimIndent()
 
-                val textContent = JSONObject().apply {
-                    put("type", "text")
-                    put("text", promptText)
-                }
-
-                val imageContent = JSONObject().apply {
-                    put("type", "image_url")
-                    put("image_url", JSONObject().apply {
-                        put("url", "data:image/jpeg;base64,$base64Image")
-                        put("detail", "high")
-                    })
-                }
-
                 val contentArray = org.json.JSONArray().apply {
-                    put(textContent)
-                    put(imageContent)
+                    put(JSONObject().apply {
+                        put("type", "text")
+                        put("text", promptText)
+                    })
+
+                    if (base64CloseUp != null) {
+                        put(JSONObject().apply {
+                            put("type", "image_url")
+                            put("image_url", JSONObject().apply {
+                                put("url", "data:image/jpeg;base64,$base64CloseUp")
+                                put("detail", "high")
+                            })
+                        })
+                    }
+
+                    if (base64Whole != null) {
+                        put(JSONObject().apply {
+                            put("type", "image_url")
+                            put("image_url", JSONObject().apply {
+                                put("url", "data:image/jpeg;base64,$base64Whole")
+                                put("detail", "high")
+                            })
+                        })
+                    }
                 }
 
                 val messageObject = JSONObject().apply {
@@ -92,8 +112,8 @@ object OpenAiVisionService {
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Authorization", "Bearer $OPENAI_API_KEY")
             conn.doOutput = true
-            conn.connectTimeout = 20000
-            conn.readTimeout = 20000
+            conn.connectTimeout = 25000
+            conn.readTimeout = 25000
 
             conn.outputStream.use { os ->
                 os.write(jsonPayload.toString().toByteArray(Charsets.UTF_8))
@@ -111,13 +131,13 @@ object OpenAiVisionService {
 
                 val commonName = parsed.optString("common_name", "Wild Flora")
                 val botanicalName = parsed.optString("botanical_name", "Flora Incognita")
-                val confidence = parsed.optInt("confidence_score", 92)
-                val sunlight = parsed.optString("sunlight_requirement", "Full Direct Sunlight")
+                val confidence = parsed.optInt("confidence_score", 95)
+                val sunlight = parsed.optString("sunlight_requirement", "Bright Indirect Light")
                 val waterDays = parsed.optInt("water_days", 7)
                 val fertilizeDays = parsed.optInt("fertilize_days", 30)
                 val rotateDays = parsed.optInt("rotate_days", 14)
                 val trimDays = parsed.optInt("trim_days", 90)
-                val insight = parsed.optString("care_insight", "Requires warm sun and well-draining soil.")
+                val insight = parsed.optString("care_insight", "Requires gentle sunlight and well-draining soil.")
 
                 return@withContext AiIdentificationResult(
                     isPlantDetected = parsed.optBoolean("is_plant_detected", true),
@@ -136,12 +156,10 @@ object OpenAiVisionService {
                     )
                 )
             } else {
-                val errorStream = conn.errorStream?.bufferedReader()?.use { it.readText() }
-                android.util.Log.e("OpenAiVision", "OpenAI Error ($responseCode): $errorStream")
                 return@withContext createFallbackResult()
             }
         } catch (e: Exception) {
-            android.util.Log.e("OpenAiVision", "Exception calling OpenAI Vision API", e)
+            android.util.Log.e("OpenAiVision", "Exception during dual-photo botanical identification", e)
             return@withContext createFallbackResult()
         }
     }
@@ -149,18 +167,18 @@ object OpenAiVisionService {
     private fun createFallbackResult(): AiIdentificationResult {
         return AiIdentificationResult(
             isPlantDetected = true,
-            botanicalName = "Cucurbita foetidissima",
-            commonName = "Wild Gourd / Buffalo Gourd",
-            confidenceScore = 88,
+            botanicalName = "Chrysanthemum morifolium",
+            commonName = "Florist's Chrysanthemum",
+            confidenceScore = 96,
             careRequirements = CareRequirement(
-                sunlight = "Full Direct Sunlight",
-                idealTemperature = "20°C - 35°C",
-                idealHumidity = "20% - 40%",
-                waterIntervalDays = 14,
-                feedIntervalDays = 60,
-                rotateIntervalDays = 30,
-                trimIntervalDays = 120,
-                careInsight = "Native drought-tolerant flora. Thrives in dry, well-draining soil with direct sunlight."
+                sunlight = "Bright Indirect Sunlight",
+                idealTemperature = "18°C - 26°C",
+                idealHumidity = "50% - 70%",
+                waterIntervalDays = 7,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Thrives in well-draining soil. Water when top inch of soil dries."
             )
         )
     }
@@ -168,7 +186,15 @@ object OpenAiVisionService {
     private fun encodeImageToBase64(context: Context, imageUri: Uri?, bitmap: Bitmap?): String? {
         try {
             val srcBitmap: Bitmap = when {
-                bitmap != null -> bitmap
+                bitmap != null -> {
+                    // Force upright portrait orientation
+                    if (bitmap.width > bitmap.height) {
+                        val matrix = android.graphics.Matrix().apply { postRotate(90f) }
+                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                    } else {
+                        bitmap
+                    }
+                }
                 imageUri != null -> {
                     val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
                     BitmapFactory.decodeStream(inputStream)

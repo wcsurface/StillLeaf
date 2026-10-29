@@ -767,7 +767,7 @@ fun DiagnosePlantDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "AI Health Diagnostic",
+                            text = "Botanical Health Diagnostic",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -855,7 +855,7 @@ fun DiagnosePlantDialog(
                         ) {
                             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("OpenAI Vision Analyzing Ailment...", fontWeight = FontWeight.Bold)
+                            Text("Analyzing Symptoms & Foliage...", fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Button(
@@ -886,7 +886,7 @@ fun DiagnosePlantDialog(
                             shape = PillShape,
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text("Analyze & Diagnose with AI", fontWeight = FontWeight.Bold)
+                            Text("Analyze & Diagnose Plant Health", fontWeight = FontWeight.Bold)
                         }
                     }
                 } else {

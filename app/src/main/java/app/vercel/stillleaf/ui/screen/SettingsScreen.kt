@@ -238,7 +238,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = if (subscriptionStatus.isPro) "Enjoy unlimited botanical tracking, AI vision analysis, and an ad-free experience." else "Upgrade to Still Leaf Pro ($1.99/mo, $14.99/yr, or $29.99 lifetime) for unlimited plants.",
+                            text = if (subscriptionStatus.isPro) "Enjoy unlimited botanical tracking, health diagnostics, and a peaceful ad-free experience." else "Upgrade to Still Leaf Pro ($1.99/mo, $14.99/yr, or $29.99 lifetime) for unlimited plants.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

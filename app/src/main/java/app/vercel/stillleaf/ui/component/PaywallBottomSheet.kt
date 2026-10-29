@@ -121,7 +121,7 @@ fun PaywallBottomSheet(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Unlock unlimited plants, unlimited AI vision scans, and 90-day growth milestone exports.",
+                text = "Unlock unlimited plants, unlimited botanical scans, and 90-day growth milestone exports.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -138,7 +138,7 @@ fun PaywallBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     FeatureCheckRow("Unlimited Sanctuary Plant Profiles", "Free tier limited to 3 plants")
-                    FeatureCheckRow("Unlimited AI GPT-4o Vision Scans", "Free tier limited to 3 total scans")
+                    FeatureCheckRow("Unlimited Botanical Scans & Diagnostics", "Free tier limited to 3 total scans")
                     FeatureCheckRow("90-Day Growth Milestone Exports", "High-res timelapse exports")
                     FeatureCheckRow("Zen Ad-Free Experience", "Zero banners or marketing interruptions")
                 }
