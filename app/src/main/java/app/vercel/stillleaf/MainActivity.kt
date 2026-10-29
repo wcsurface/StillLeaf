@@ -23,6 +23,7 @@ import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.data.repository.PlantPersistenceManager
 import app.vercel.stillleaf.ui.component.PaywallBottomSheet
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
 import app.vercel.stillleaf.ui.screen.AuthScreen
@@ -47,11 +48,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
-                var plantList by remember { mutableStateOf<List<Plant>>(emptyList()) }
+
+                // Load saved plants from persistent disk storage
+                val restoredPlants = remember { PlantPersistenceManager.loadPlantsLocally(applicationContext) }
+                var plantList by remember { mutableStateOf<List<Plant>>(restoredPlants) }
+
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(null) }
                 var showPaywallSheet by remember { mutableStateOf(false) }
+
+                // Helper to update plant list & persist to disk
+                fun updateAndPersistPlants(newList: List<Plant>) {
+                    plantList = newList
+                    PlantPersistenceManager.savePlantsLocally(applicationContext, newList)
+                }
 
                 // Intercept system back button
                 if (currentUser != null) {
@@ -104,12 +115,14 @@ class MainActivity : ComponentActivity() {
                                                     nickname = newNickname,
                                                     location = newLocation
                                                 )
-                                                plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                val updatedList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                updateAndPersistPlants(updatedList)
                                                 selectedPlant = updatedPlant
                                                 Toast.makeText(this@MainActivity, "Updated ${updatedPlant.nickname}!", Toast.LENGTH_SHORT).show()
                                             },
                                             onDeletePlantRequested = { targetPlant ->
-                                                plantList = plantList.filter { it.id != targetPlant.id }
+                                                val updatedList = plantList.filter { it.id != targetPlant.id }
+                                                updateAndPersistPlants(updatedList)
                                                 selectedPlant = null
                                                 Toast.makeText(this@MainActivity, "Removed ${targetPlant.nickname} from Sanctuary", Toast.LENGTH_SHORT).show()
                                             },
@@ -119,7 +132,8 @@ class MainActivity : ComponentActivity() {
                                                     healthStatusType = HealthStatusType.NEEDS_WATER,
                                                     healthStatusText = "Treatment Active"
                                                 )
-                                                plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                val updatedList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                updateAndPersistPlants(updatedList)
                                                 selectedPlant = updatedPlant
 
                                                 val msg = if (scheduleOnCalendar) {
@@ -141,7 +155,8 @@ class MainActivity : ComponentActivity() {
                                                 currentTab = tab
                                             },
                                             onPlantAdded = { newPlant ->
-                                                plantList = listOf(newPlant) + plantList
+                                                val updatedList = listOf(newPlant) + plantList
+                                                updateAndPersistPlants(updatedList)
                                                 currentTab = NavTab.HOME
                                                 Toast.makeText(
                                                     this@MainActivity,
