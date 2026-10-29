@@ -1,7 +1,10 @@
 package app.vercel.stillleaf.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,20 +48,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import app.vercel.stillleaf.data.api.AiIdentificationResult
+import app.vercel.stillleaf.data.api.OpenAiVisionService
 import app.vercel.stillleaf.data.model.CareRequirement
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.ui.theme.PillShape
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @Composable
@@ -67,17 +76,33 @@ fun AddPlantScreen(
     onPlantAdded: (Plant) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     var isAnalyzing by remember { mutableStateOf(false) }
-    var hasAnalyzed by remember { mutableStateOf(false) }
+    var aiResult by remember { mutableStateOf<AiIdentificationResult?>(null) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    var nicknameInput by remember { mutableStateOf("Monstera Deliciosa") }
+    var nicknameInput by remember { mutableStateOf("") }
     var locationInput by remember { mutableStateOf("Indoor • Living Room") }
 
     val defaultSamplePhoto = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
     val scrollState = rememberScrollState()
+
+    // Helper to trigger OpenAI Vision API Analysis
+    fun analyzeImage(uri: Uri? = null, bitmap: Bitmap? = null) {
+        coroutineScope.launch {
+            isAnalyzing = true
+            aiResult = null
+
+            val result = OpenAiVisionService.identifyPlant(context, uri, bitmap)
+            aiResult = result
+            nicknameInput = result.commonName
+            isAnalyzing = false
+        }
+    }
 
     // 1. Gallery Photo Picker Launcher
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -86,13 +111,7 @@ fun AddPlantScreen(
         if (uri != null) {
             selectedImageUri = uri
             capturedBitmap = null
-            isAnalyzing = true
-            hasAnalyzed = false
-            // Simulate AI Processing on uploaded image
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                isAnalyzing = false
-                hasAnalyzed = true
-            }, 1200)
+            analyzeImage(uri = uri)
         }
     }
 
@@ -103,13 +122,22 @@ fun AddPlantScreen(
         if (bitmap != null) {
             capturedBitmap = bitmap
             selectedImageUri = null
-            isAnalyzing = true
-            hasAnalyzed = false
-            // Simulate AI Processing on captured photo
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                isAnalyzing = false
-                hasAnalyzed = true
-            }, 1200)
+            analyzeImage(bitmap = bitmap)
+        }
+    }
+
+    // 3. Camera Permission Launcher to prevent crashes
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            try {
+                cameraLauncher.launch(null)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Could not open camera preview.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "Camera permission is required to take plant photos.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -175,7 +203,7 @@ fun AddPlantScreen(
                             modifier = Modifier.fillMaxSize()
                         )
                     }
-                    hasAnalyzed -> {
+                    aiResult != null -> {
                         AsyncImage(
                             model = defaultSamplePhoto,
                             contentDescription = "Scanned Plant",
@@ -211,7 +239,20 @@ fun AddPlantScreen(
             ) {
                 Button(
                     onClick = {
-                        cameraLauncher.launch(null)
+                        val hasCameraPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (hasCameraPermission) {
+                            try {
+                                cameraLauncher.launch(null)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Opening camera...", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -285,7 +326,8 @@ fun AddPlantScreen(
             }
 
             // AI Identification Results Card
-            if (hasAnalyzed && !isAnalyzing) {
+            val result = aiResult
+            if (result != null && !isAnalyzing) {
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Card(
@@ -316,7 +358,7 @@ fun AddPlantScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "96% Confidence",
+                                        text = "${result.confidenceScore}% Confidence",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -325,7 +367,7 @@ fun AddPlantScreen(
                             }
 
                             Text(
-                                text = "AI Verified",
+                                text = "OpenAI GPT-4o Verified",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -334,13 +376,13 @@ fun AddPlantScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Monstera Deliciosa",
+                            text = result.commonName,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Monstera deliciosa (Swiss Cheese Plant)",
+                            text = result.botanicalName,
                             style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -382,21 +424,12 @@ fun AddPlantScreen(
                                 val photoUrl = selectedImageUri?.toString() ?: defaultSamplePhoto
                                 val newPlant = Plant(
                                     id = "plant_${System.currentTimeMillis()}",
-                                    nickname = nicknameInput.ifBlank { "Monstera Deliciosa" },
-                                    botanicalName = "Monstera deliciosa",
-                                    commonName = "Swiss Cheese Plant",
+                                    nickname = nicknameInput.ifBlank { result.commonName },
+                                    botanicalName = result.botanicalName,
+                                    commonName = result.commonName,
                                     primaryPhotoUrl = photoUrl,
                                     dateAdded = LocalDate.now(),
-                                    careRequirements = CareRequirement(
-                                        sunlight = "Bright Indirect Light",
-                                        idealTemperature = "18°C - 27°C",
-                                        idealHumidity = "60% - 80%",
-                                        waterIntervalDays = 7,
-                                        feedIntervalDays = 30,
-                                        rotateIntervalDays = 14,
-                                        trimIntervalDays = 90,
-                                        careInsight = "Thrives in gentle ambient light. Keep topsoil lightly moist."
-                                    ),
+                                    careRequirements = result.careRequirements,
                                     location = locationInput.ifBlank { "Indoor • Living Room" },
                                     healthStatusType = HealthStatusType.HEALTHY,
                                     healthStatusText = "Healthy"
