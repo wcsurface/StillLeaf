@@ -51,8 +51,8 @@ class CareNotificationReceiver : BroadcastReceiver() {
                 }
 
                 val notification = NotificationCompat.Builder(context, CareNotificationManager.CHANNEL_CARE_REMINDERS)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("🌿 Morning Care Sanctuary")
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle("🌿 Plant Care")
                     .setContentText(bodyText)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(bodyText))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -68,7 +68,7 @@ class CareNotificationReceiver : BroadcastReceiver() {
                 val bodyText = "It's time for $plantName's quarterly growth photo! Capture a snapshot to celebrate its 90-day progress."
 
                 val notification = NotificationCompat.Builder(context, CareNotificationManager.CHANNEL_MILESTONES)
-                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("📷 90-Day Growth Milestone!")
                     .setContentText(bodyText)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(bodyText))

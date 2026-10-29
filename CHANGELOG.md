@@ -1,15 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [7.5.0] - Daily Care & 90-Day Milestone Notification System
+
+### Added
+- Created `CareNotificationManager.kt` and `CareNotificationReceiver.kt` for scheduled notifications.
+- Added Android 13+ `POST_NOTIFICATIONS` runtime permission request upon enabling notification toggles in `SettingsScreen.kt`.
+- Connected Settings toggles to `AlarmManager` for daily 8:00 AM care reminders and 90-day growth photo check-ins.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [7.4.0] - Home & Auth Screen Footer Legal Links & Copyright Integration
 
 ### Added
-- Embedded `StillLeafFooter` into `PlantListScreen.kt` (spans full 2 columns at the bottom of the plant sanctuary grid).
-- Embedded `StillLeafFooter` into `AuthScreen.kt` below the authentication form card.
-- Users on Home and Login pages can now tap `Terms of Service`, `Privacy Policy`, or `FAQ` and view complete compliant policies and dynamic Surface Apps copyright info.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [7.3.0] - Full-Screen Immersive Status Bar Hiding
-
-### Added
-- Configured `WindowInsetsControllerCompat` in `MainActivity.kt` to hide the system status bar across the app.
+- Embedded `StillLeafFooter` into `PlantListScreen.kt` and `AuthScreen.kt`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
