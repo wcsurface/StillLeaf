@@ -1,9 +1,14 @@
 package app.vercel.stillleaf.ui.screen
 
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,17 +21,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Spa
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,12 +49,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.vercel.stillleaf.data.model.CareRequirement
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
@@ -69,11 +70,48 @@ fun AddPlantScreen(
     var isAnalyzing by remember { mutableStateOf(false) }
     var hasAnalyzed by remember { mutableStateOf(false) }
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
     var nicknameInput by remember { mutableStateOf("Monstera Deliciosa") }
     var locationInput by remember { mutableStateOf("Indoor • Living Room") }
 
-    val samplePhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
+    val defaultSamplePhoto = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
     val scrollState = rememberScrollState()
+
+    // 1. Gallery Photo Picker Launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+            capturedBitmap = null
+            isAnalyzing = true
+            hasAnalyzed = false
+            // Simulate AI Processing on uploaded image
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                isAnalyzing = false
+                hasAnalyzed = true
+            }, 1200)
+        }
+    }
+
+    // 2. Take Photo Camera Launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+            selectedImageUri = null
+            isAnalyzing = true
+            hasAnalyzed = false
+            // Simulate AI Processing on captured photo
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                isAnalyzing = false
+                hasAnalyzed = true
+            }, 1200)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -120,47 +158,60 @@ fun AddPlantScreen(
                     .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), shape = RoundedCornerShape(20.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                if (hasAnalyzed) {
-                    AsyncImage(
-                        model = samplePhotoUrl,
-                        contentDescription = "Scanned Plant",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Camera",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
+                when {
+                    capturedBitmap != null -> {
+                        Image(
+                            bitmap = capturedBitmap!!.asImageBitmap(),
+                            contentDescription = "Captured Camera Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "Position plant leaf inside camera frame",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    selectedImageUri != null -> {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = "Selected Gallery Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
+                    }
+                    hasAnalyzed -> {
+                        AsyncImage(
+                            model = defaultSamplePhoto,
+                            contentDescription = "Scanned Plant",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                    else -> {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Camera",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Take a photo or pick an image from gallery",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Action Buttons Row
+            // Action Buttons Row: "Take Photo" & "Gallery"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
                     onClick = {
-                        isAnalyzing = true
-                        hasAnalyzed = false
-                        // Simulate AI processing
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            isAnalyzing = false
-                            hasAnalyzed = true
-                        }, 1200)
+                        cameraLauncher.launch(null)
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -171,13 +222,15 @@ fun AddPlantScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Scan Photo", fontWeight = FontWeight.Bold)
+                        Text("Take Photo", fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Button(
                     onClick = {
-                        hasAnalyzed = true
+                        galleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -326,12 +379,13 @@ fun AddPlantScreen(
                         // Save Button
                         Button(
                             onClick = {
+                                val photoUrl = selectedImageUri?.toString() ?: defaultSamplePhoto
                                 val newPlant = Plant(
                                     id = "plant_${System.currentTimeMillis()}",
                                     nickname = nicknameInput.ifBlank { "Monstera Deliciosa" },
                                     botanicalName = "Monstera deliciosa",
                                     commonName = "Swiss Cheese Plant",
-                                    primaryPhotoUrl = samplePhotoUrl,
+                                    primaryPhotoUrl = photoUrl,
                                     dateAdded = LocalDate.now(),
                                     careRequirements = CareRequirement(
                                         sunlight = "Bright Indirect Light",
