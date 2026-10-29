@@ -1,6 +1,7 @@
 package app.vercel.stillleaf.ui.screen
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -62,13 +63,26 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import app.vercel.stillleaf.data.api.AiIdentificationResult
 import app.vercel.stillleaf.data.api.OpenAiVisionService
-import app.vercel.stillleaf.data.model.CareRequirement
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
+import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.ui.theme.PillShape
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
+
+fun saveBitmapToCacheUri(context: Context, bitmap: Bitmap): Uri? {
+    return try {
+        val file = File(context.cacheDir, "captured_plant_${System.currentTimeMillis()}.jpg")
+        file.outputStream().use { out ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        }
+        Uri.fromFile(file)
+    } catch (e: Exception) {
+        null
+    }
+}
 
 @Composable
 fun AddPlantScreen(
@@ -121,7 +135,10 @@ fun AddPlantScreen(
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
             capturedBitmap = bitmap
-            selectedImageUri = null
+            val cacheUri = saveBitmapToCacheUri(context, bitmap)
+            if (cacheUri != null) {
+                selectedImageUri = cacheUri
+            }
             analyzeImage(bitmap = bitmap)
         }
     }
@@ -134,7 +151,7 @@ fun AddPlantScreen(
             try {
                 cameraLauncher.launch(null)
             } catch (e: Exception) {
-                Toast.makeText(context, "Could not open camera preview.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Opening camera...", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(context, "Camera permission is required to take plant photos.", Toast.LENGTH_SHORT).show()
@@ -199,14 +216,6 @@ fun AddPlantScreen(
                         AsyncImage(
                             model = selectedImageUri,
                             contentDescription = "Selected Gallery Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
-                    aiResult != null -> {
-                        AsyncImage(
-                            model = defaultSamplePhoto,
-                            contentDescription = "Scanned Plant",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -415,9 +424,24 @@ fun AddPlantScreen(
                         // Save Button
                         Button(
                             onClick = {
-                                val photoUrl = selectedImageUri?.toString() ?: defaultSamplePhoto
+                                val plantId = "plant_${System.currentTimeMillis()}"
+                                val photoUrl = selectedImageUri?.toString()
+                                    ?: (if (capturedBitmap != null) saveBitmapToCacheUri(context, capturedBitmap!!)?.toString() else null)
+                                    ?: defaultSamplePhoto
+
+                                val initialMilestonePhoto = PlantPhoto(
+                                    id = "photo_${System.currentTimeMillis()}",
+                                    plantId = plantId,
+                                    photoUrl = photoUrl,
+                                    dateTaken = LocalDate.now(),
+                                    ageInDays = 0,
+                                    note = "Day 0 - Initial Sanctuary Entry",
+                                    isQuarterlyMilestone = true,
+                                    milestoneTitle = "Day 0 - Welcome"
+                                )
+
                                 val newPlant = Plant(
-                                    id = "plant_${System.currentTimeMillis()}",
+                                    id = plantId,
                                     nickname = nicknameInput.ifBlank { result.commonName },
                                     botanicalName = result.botanicalName,
                                     commonName = result.commonName,
@@ -426,7 +450,8 @@ fun AddPlantScreen(
                                     careRequirements = result.careRequirements,
                                     location = locationInput.ifBlank { "Indoor • Living Room" },
                                     healthStatusType = HealthStatusType.HEALTHY,
-                                    healthStatusText = "Healthy"
+                                    healthStatusText = "Healthy",
+                                    photos = listOf(initialMilestonePhoto)
                                 )
                                 onPlantAdded(newPlant)
                             },
