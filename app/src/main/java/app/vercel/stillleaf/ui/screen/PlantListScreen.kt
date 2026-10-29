@@ -1,6 +1,5 @@
 package app.vercel.stillleaf.ui.screen
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -115,9 +112,9 @@ fun PlantListScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. Screen Content
+        // 2. Screen Content Column (Pushes Footer to Very Bottom)
         Column(modifier = Modifier.fillMaxSize()) {
-            // Unified Top Logo & Navbar
+            // Unified Top Logo & Navbar (Pushed down below front camera)
             StillLeafTopBar(
                 currentTab = currentTab,
                 onNavTabSelected = onNavTabSelected,
@@ -126,148 +123,151 @@ fun PlantListScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // "My Plants" Title & Filter Chips Row
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "My Plants",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = CreamyOffWhite
-                    )
-
-                    Surface(
-                        color = SurfaceWhite.copy(alpha = 0.85f),
-                        shape = PillShape,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+            // Main Content Area (Expands with .weight(1f) to push Footer to Bottom)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                // "My Plants" Title & Filter Chips Row
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${plants.size} ${if (plants.size == 1) "Plant" else "Plants"}",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = "My Plants",
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                            color = CreamyOffWhite
                         )
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    PlantFilter.entries.forEach { filter ->
-                        val isSelected = selectedFilter == filter
                         Surface(
-                            onClick = { selectedFilter = filter },
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else SurfaceWhite.copy(alpha = 0.85f),
-                            border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                            color = SurfaceWhite.copy(alpha = 0.85f),
+                            shape = PillShape,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             Text(
-                                text = filter.label,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+                                text = "${plants.size} ${if (plants.size == 1) "Plant" else "Plants"}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                             )
                         }
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-            // Plant Cards Grid OR Serene Empty State
-            if (filteredPlants.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.95f)),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(28.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Spa,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(48.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = "Your Sanctuary is Empty",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = "You have not added any plants yet. Tap below to scan your first plant or create a new profile.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Button(
-                                onClick = { onNavTabSelected(NavTab.ADD) },
-                                shape = PillShape,
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                modifier = Modifier.height(48.dp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        PlantFilter.entries.forEach { filter ->
+                            val isSelected = selectedFilter == filter
+                            Surface(
+                                onClick = { selectedFilter = filter },
+                                shape = RoundedCornerShape(20.dp),
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else SurfaceWhite.copy(alpha = 0.85f),
+                                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Add Your First Plant", fontWeight = FontWeight.Bold)
-                                }
+                                Text(
+                                    text = filter.label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+                                )
                             }
                         }
                     }
                 }
 
-                StillLeafFooter(onLegalRequested = onLegalRequested)
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(filteredPlants) { plant ->
-                        MockupPlantCard(
-                            plant = plant,
-                            onClick = { onPlantSelected(plant) }
-                        )
-                    }
+                Spacer(modifier = Modifier.height(16.dp))
 
-                    // Span full 2 columns for Footer Links & Copyright
-                    item(span = { GridItemSpan(2) }) {
-                        StillLeafFooter(
-                            onLegalRequested = onLegalRequested,
-                            modifier = Modifier.padding(top = 12.dp)
-                        )
+                // Plant Cards Grid OR Serene Empty State
+                if (filteredPlants.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.95f)),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(28.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Spa,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(48.dp)
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    text = "Your Sanctuary is Empty",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(
+                                    text = "You have not added any plants yet. Tap below to scan your first plant or create a new profile.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.height(20.dp))
+
+                                Button(
+                                    onClick = { onNavTabSelected(NavTab.ADD) },
+                                    shape = PillShape,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    modifier = Modifier.height(48.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Add Your First Plant", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(filteredPlants) { plant ->
+                            MockupPlantCard(
+                                plant = plant,
+                                onClick = { onPlantSelected(plant) }
+                            )
+                        }
                     }
                 }
             }
+
+            // Footer Links & Copyright ALWAYS Anchored at the Very Bottom Edge
+            StillLeafFooter(
+                onLegalRequested = onLegalRequested,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
         }
     }
 }

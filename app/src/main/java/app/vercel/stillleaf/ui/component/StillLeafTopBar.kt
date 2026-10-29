@@ -45,7 +45,7 @@ fun StillLeafTopBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 4.dp),
+            .padding(top = 52.dp, bottom = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 1. Centered Brand Logo & Slogan (Light Cream for high contrast across all pages)

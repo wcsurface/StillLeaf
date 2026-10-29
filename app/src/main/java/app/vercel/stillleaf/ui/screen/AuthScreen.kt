@@ -433,14 +433,13 @@ fun AuthScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
-            // Footer Links & Copyright
+            // Footer Links & Copyright ALWAYS Anchored at the Very Bottom Edge
             StillLeafFooter(
-                onLegalRequested = onLegalRequested
+                onLegalRequested = onLegalRequested,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 
