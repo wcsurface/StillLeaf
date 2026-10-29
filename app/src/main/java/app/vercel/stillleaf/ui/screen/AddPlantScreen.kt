@@ -316,7 +316,7 @@ fun AddPlantScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Connecting with OpenAI GPT-4o Vision API",
+                                text = "Identifying botanical features...",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -365,12 +365,6 @@ fun AddPlantScreen(
                                     )
                                 }
                             }
-
-                            Text(
-                                text = "OpenAI GPT-4o Verified",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
