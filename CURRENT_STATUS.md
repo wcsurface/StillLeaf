@@ -1,14 +1,13 @@
 # CURRENT_STATUS.md - Project State Snapshot
 
 ## Current Phase
-Phase 30: Real Green Botanical Log In & Profile Background Applied
+Phase 31: Real Green Botanical Home Background Applied
 
 ## Completed Work
 - [x] Initialized project memory & guidelines (`AGENTS.md`, `PROJECT_MEMORY.md`, `REQUIREMENTS.md`, `CHANGELOG.md`).
-- [x] **Replaced Auth & Profile Background Asset**:
-  - Identified `Log in and Profile.png` in Downloads and copied it directly to [bg_auth_profile.png](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/res/drawable/bg_auth_profile.png).
-  - Replaced the temporary gear image with the exact deep green botanical leaf background requested.
-  - The white/cream header logo (**STILL LEAF**), slogan, and badge text now render brightly and legibly over the deep forest green leaf artwork.
+- [x] **Replaced Home Background Asset**:
+  - Replaced the blue car image with the exact green botanical background artwork (`bg_home.png`).
+  - Updated [PlantListScreen.kt](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/java/app/vercel/stillleaf/ui/screen/PlantListScreen.kt) header logo, slogan, and **"My Plants"** section title to **Deep Forest Accent (`#2C3E35`)** for 100% bold, crisp, and high-contrast legibility over the top warm sage background area.
 - [x] Verified full app build (`app:assembleDebug` SUCCESSFUL) and pushed updates live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
 ## Next Steps

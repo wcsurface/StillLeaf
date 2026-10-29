@@ -1,6 +1,5 @@
 package app.vercel.stillleaf.ui.screen
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -45,7 +44,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -53,16 +51,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
-import app.vercel.stillleaf.ui.theme.DeepForestAccent
+import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.HealthyGreen
-import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
 import app.vercel.stillleaf.ui.theme.WateringAmber
@@ -114,96 +111,11 @@ fun PlantListScreen(
 
         // 2. Screen Content
         Column(modifier = Modifier.fillMaxSize()) {
-            // Centered Brand Header (Leaf Icon, STILL LEAF Wordmark in Lakki Reddy, & Slogan)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Spa,
-                        contentDescription = "Still Leaf Logo",
-                        tint = DeepForestAccent,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "STILL LEAF",
-                        fontFamily = LakkiReddyFontFamily,
-                        fontSize = 32.sp,
-                        color = DeepForestAccent,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = "Healthy plants. Happier days.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = DeepForestAccent.copy(alpha = 0.9f)
-                )
-            }
-
-            // Top Navigation Bar / Floating Pill Container with Lakki Reddy Font Labels
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(28.dp),
-                color = SurfaceWhite.copy(alpha = 0.92f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                shadowElevation = 2.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp, horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceAround,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    NavTab.entries.forEach { tab ->
-                        val isSelected = currentTab == tab
-                        val activeBgColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                            label = "TabBg"
-                        )
-
-                        Surface(
-                            onClick = {
-                                onNavTabSelected(tab)
-                            },
-                            shape = RoundedCornerShape(20.dp),
-                            color = activeBgColor,
-                            modifier = Modifier.padding(horizontal = 2.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(
-                                    imageVector = tab.icon,
-                                    contentDescription = tab.title,
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(22.dp)
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = tab.title,
-                                    fontFamily = LakkiReddyFontFamily,
-                                    fontSize = 13.sp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            // Unified Top Logo & Navbar
+            StillLeafTopBar(
+                currentTab = currentTab,
+                onNavTabSelected = onNavTabSelected
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -218,19 +130,19 @@ fun PlantListScreen(
                         text = "My Plants",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = DeepForestAccent
+                        color = CreamyOffWhite
                     )
 
                     Surface(
-                        color = SurfaceWhite.copy(alpha = 0.85f),
+                        color = SurfaceWhite.copy(alpha = 0.25f),
                         shape = PillShape,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
                     ) {
                         Text(
                             text = "${plants.size} ${if (plants.size == 1) "Plant" else "Plants"}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DeepForestAccent,
+                            color = CreamyOffWhite,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }

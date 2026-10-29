@@ -137,6 +137,9 @@ class MainActivity : ComponentActivity() {
                                             onBackRequested = {
                                                 currentTab = NavTab.HOME
                                             },
+                                            onNavTabSelected = { tab ->
+                                                currentTab = tab
+                                            },
                                             onPlantAdded = { newPlant ->
                                                 plantList = listOf(newPlant) + plantList
                                                 currentTab = NavTab.HOME
@@ -154,6 +157,9 @@ class MainActivity : ComponentActivity() {
                                             plants = plantList,
                                             onBackRequested = {
                                                 currentTab = NavTab.HOME
+                                            },
+                                            onNavTabSelected = { tab ->
+                                                currentTab = tab
                                             }
                                         )
                                     }
@@ -164,6 +170,9 @@ class MainActivity : ComponentActivity() {
                                             currentUser = currentUser,
                                             onBackRequested = {
                                                 currentTab = NavTab.HOME
+                                            },
+                                            onNavTabSelected = { tab ->
+                                                currentTab = tab
                                             },
                                             onUpgradeRequested = {
                                                 showPaywallSheet = true

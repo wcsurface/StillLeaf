@@ -24,8 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
@@ -33,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -56,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.CareTaskType
 import app.vercel.stillleaf.data.model.Plant
+import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
@@ -77,6 +75,7 @@ data class CalendarTaskItem(
 fun CalendarScreen(
     plants: List<Plant>,
     onBackRequested: () -> Unit,
+    onNavTabSelected: (NavTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(2) } // Default to Wednesday/current day
@@ -164,38 +163,28 @@ fun CalendarScreen(
 
         // 2. Screen Content
         Column(modifier = Modifier.fillMaxSize()) {
-            // Screen Header
+            // Unified Top Logo & Navbar
+            StillLeafTopBar(
+                currentTab = NavTab.CALENDAR,
+                onNavTabSelected = onNavTabSelected
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Sub-Header Title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                IconButton(onClick = onBackRequested) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = CreamyOffWhite,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
                 Text(
                     text = "Care & Calendar",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = CreamyOffWhite
                 )
-
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Full Calendar",
-                        tint = CreamyOffWhite,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

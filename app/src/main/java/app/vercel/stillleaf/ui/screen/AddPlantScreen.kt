@@ -68,6 +68,8 @@ import app.vercel.stillleaf.data.api.OpenAiVisionService
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
+import app.vercel.stillleaf.ui.component.StillLeafTopBar
+import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
@@ -92,6 +94,7 @@ fun saveBitmapToCacheUri(context: Context, bitmap: Bitmap): Uri? {
 fun AddPlantScreen(
     onBackRequested: () -> Unit,
     onPlantAdded: (Plant) -> Unit,
+    onNavTabSelected: (NavTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -177,30 +180,28 @@ fun AddPlantScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // Header
+            // Unified Top Logo & Navbar
+            StillLeafTopBar(
+                currentTab = NavTab.ADD,
+                onNavTabSelected = onNavTabSelected
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Sub-Header Title with High-Contrast Light Cream
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                IconButton(onClick = onBackRequested) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = DeepForestAccent
-                    )
-                }
-
                 Text(
                     text = "Identify & Add Plant",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = DeepForestAccent
+                    color = CreamyOffWhite
                 )
-
-                Spacer(modifier = Modifier.width(48.dp))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -212,7 +213,7 @@ fun AddPlantScreen(
                         .fillMaxWidth()
                         .height(240.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(SurfaceWhite.copy(alpha = 0.9f))
+                        .background(SurfaceWhite.copy(alpha = 0.92f))
                         .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), shape = RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -299,7 +300,7 @@ fun AddPlantScreen(
                             .weight(1f)
                             .height(50.dp),
                         shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite.copy(alpha = 0.9f))
+                        colors = ButtonDefaults.buttonColors(containerColor = SurfaceWhite.copy(alpha = 0.92f))
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(

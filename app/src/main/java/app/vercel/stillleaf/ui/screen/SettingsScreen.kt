@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
@@ -32,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -54,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.PillShape
@@ -68,6 +67,7 @@ fun SettingsScreen(
     onRestorePurchasesRequested: () -> Unit = {},
     onSignInRequested: () -> Unit = {},
     onSignOutRequested: () -> Unit = {},
+    onNavTabSelected: (NavTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -89,30 +89,28 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // Header
+            // Unified Top Logo & Navbar
+            StillLeafTopBar(
+                currentTab = NavTab.SETTINGS,
+                onNavTabSelected = onNavTabSelected
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Sub-Header Title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                IconButton(onClick = onBackRequested) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = CreamyOffWhite
-                    )
-                }
-
                 Text(
                     text = "Settings & Profile",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = CreamyOffWhite
                 )
-
-                Spacer(modifier = Modifier.width(48.dp))
             }
 
             Spacer(modifier = Modifier.height(12.dp))
