@@ -1,13 +1,15 @@
 package app.vercel.stillleaf.ui.component
 
 import android.util.DisplayMetrics
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import app.vercel.stillleaf.data.model.SubscriptionStatus
@@ -26,12 +28,12 @@ fun BannerAdView(
         return
     }
 
-    val context = LocalContext.current
-
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(50.dp),
+            .wrapContentHeight()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(top = 4.dp, bottom = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
