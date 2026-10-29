@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import plantRoutes from './routes/plantRoutes';
 import billingRoutes from './routes/billingRoutes';
+import authRoutes from './routes/authRoutes';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Route registration
+app.use('/api/auth', authRoutes);
 app.use('/api/plants', plantRoutes);
 app.use('/api/billing', billingRoutes);
 

@@ -18,12 +18,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import app.vercel.stillleaf.billing.BillingManager
+import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.CareRequirement
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.ui.component.BannerAdView
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
+import app.vercel.stillleaf.ui.screen.AuthScreen
 import app.vercel.stillleaf.ui.screen.CalendarScreen
 import app.vercel.stillleaf.ui.screen.NavTab
 import app.vercel.stillleaf.ui.screen.PlantDetailScreen
@@ -50,9 +52,17 @@ class MainActivity : ComponentActivity() {
                 var plantList by remember { mutableStateOf(initialPlants) }
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
+                var currentUser by remember { mutableStateOf<AuthUser?>(null) }
+                var isAuthScreenVisible by remember { mutableStateOf(false) }
 
                 // Intercept system back button
-                if (selectedPlant != null) {
+                if (isAuthScreenVisible) {
+                    BackHandler {
+                        if (currentUser != null) {
+                            isAuthScreenVisible = false
+                        }
+                    }
+                } else if (selectedPlant != null) {
                     BackHandler {
                         selectedPlant = null
                     }
@@ -62,125 +72,146 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        // Banner Ad is rendered only for FREE tier users; suppressed for PRO
-                        BannerAdView(subscriptionStatus = subscriptionStatus)
-                    }
-                ) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        Crossfade(
-                            targetState = Pair(selectedPlant, currentTab),
-                            label = "MainScreenTransition"
-                        ) { (activePlant, activeTab) ->
-                            when {
-                                activePlant != null -> {
-                                    // 1. Detailed Plant Profile View
-                                    PlantDetailScreen(
-                                        plant = activePlant,
-                                        subscriptionStatus = subscriptionStatus,
-                                        onBackRequested = {
-                                            selectedPlant = null
-                                        },
-                                        onUpgradeRequested = {
-                                            launchBillingUpgrade()
-                                        },
-                                        onEditPlantRequested = { targetPlant, newNickname, newLocation ->
-                                            val updatedPlant = targetPlant.copy(
-                                                nickname = newNickname,
-                                                location = newLocation
-                                            )
-                                            plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
-                                            selectedPlant = updatedPlant
-                                            Toast.makeText(this@MainActivity, "Updated ${updatedPlant.nickname}!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        onDeletePlantRequested = { targetPlant ->
-                                            plantList = plantList.filter { it.id != targetPlant.id }
-                                            selectedPlant = null
-                                            Toast.makeText(this@MainActivity, "Removed ${targetPlant.nickname} from Sanctuary", Toast.LENGTH_SHORT).show()
-                                        },
-                                        onDiagnosisCreated = { targetPlant, diagnosisResult, scheduleOnCalendar ->
-                                            val updatedPlant = targetPlant.copy(
-                                                activeDiagnosis = diagnosisResult,
-                                                healthStatusType = HealthStatusType.NEEDS_WATER,
-                                                healthStatusText = "Treatment Active"
-                                            )
-                                            plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
-                                            selectedPlant = updatedPlant
+                if (isAuthScreenVisible) {
+                    AuthScreen(
+                        onBackRequested = if (currentUser != null) { { isAuthScreenVisible = false } } else null,
+                        onAuthSuccess = { authenticatedUser ->
+                            currentUser = authenticatedUser
+                            isAuthScreenVisible = false
+                            Toast.makeText(this@MainActivity, "Welcome, ${authenticatedUser.displayName}!", Toast.LENGTH_SHORT).show()
+                        },
+                        onGuestRequested = {
+                            isAuthScreenVisible = false
+                            Toast.makeText(this@MainActivity, "Continuing in Guest Preview Mode", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                } else {
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = {
+                            // Banner Ad is rendered only for FREE tier users; suppressed for PRO
+                            BannerAdView(subscriptionStatus = subscriptionStatus)
+                        }
+                    ) { innerPadding ->
+                        Box(modifier = Modifier.padding(innerPadding)) {
+                            Crossfade(
+                                targetState = Pair(selectedPlant, currentTab),
+                                label = "MainScreenTransition"
+                            ) { (activePlant, activeTab) ->
+                                when {
+                                    activePlant != null -> {
+                                        // 1. Detailed Plant Profile View
+                                        PlantDetailScreen(
+                                            plant = activePlant,
+                                            subscriptionStatus = subscriptionStatus,
+                                            onBackRequested = {
+                                                selectedPlant = null
+                                            },
+                                            onUpgradeRequested = {
+                                                launchBillingUpgrade()
+                                            },
+                                            onEditPlantRequested = { targetPlant, newNickname, newLocation ->
+                                                val updatedPlant = targetPlant.copy(
+                                                    nickname = newNickname,
+                                                    location = newLocation
+                                                )
+                                                plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                selectedPlant = updatedPlant
+                                                Toast.makeText(this@MainActivity, "Updated ${updatedPlant.nickname}!", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onDeletePlantRequested = { targetPlant ->
+                                                plantList = plantList.filter { it.id != targetPlant.id }
+                                                selectedPlant = null
+                                                Toast.makeText(this@MainActivity, "Removed ${targetPlant.nickname} from Sanctuary", Toast.LENGTH_SHORT).show()
+                                            },
+                                            onDiagnosisCreated = { targetPlant, diagnosisResult, scheduleOnCalendar ->
+                                                val updatedPlant = targetPlant.copy(
+                                                    activeDiagnosis = diagnosisResult,
+                                                    healthStatusType = HealthStatusType.NEEDS_WATER,
+                                                    healthStatusText = "Treatment Active"
+                                                )
+                                                plantList = plantList.map { if (it.id == targetPlant.id) updatedPlant else it }
+                                                selectedPlant = updatedPlant
 
-                                            val msg = if (scheduleOnCalendar) {
-                                                "Diagnosis saved & Special Care Treatment scheduled on Calendar!"
-                                            } else {
-                                                "Diagnosis saved to ${updatedPlant.nickname}'s profile!"
+                                                val msg = if (scheduleOnCalendar) {
+                                                    "Diagnosis saved & Special Care Treatment scheduled on Calendar!"
+                                                } else {
+                                                    "Diagnosis saved to ${updatedPlant.nickname}'s profile!"
+                                                }
+                                                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
                                             }
-                                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
-                                        }
-                                    )
-                                }
-                                activeTab == NavTab.ADD -> {
-                                    // 2. Add / AI Plant Identification Screen
-                                    AddPlantScreen(
-                                        onBackRequested = {
-                                            currentTab = NavTab.HOME
-                                        },
-                                        onPlantAdded = { newPlant ->
-                                            plantList = listOf(newPlant) + plantList
-                                            currentTab = NavTab.HOME
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                "“${newPlant.nickname}” saved to your Sanctuary!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    )
-                                }
-                                activeTab == NavTab.CALENDAR -> {
-                                    // 3. Care & Calendar Dashboard
-                                    CalendarScreen(
-                                        plants = plantList,
-                                        onBackRequested = {
-                                            currentTab = NavTab.HOME
-                                        }
-                                    )
-                                }
-                                activeTab == NavTab.SETTINGS -> {
-                                    // 4. Settings & Subscription Preferences
-                                    SettingsScreen(
-                                        subscriptionStatus = subscriptionStatus,
-                                        onBackRequested = {
-                                            currentTab = NavTab.HOME
-                                        },
-                                        onUpgradeRequested = {
-                                            launchBillingUpgrade()
-                                        }
-                                    )
-                                }
-                                else -> {
-                                    // 5. Main Botanical Sanctuary Dashboard (Matching User Mockup)
-                                    PlantListScreen(
-                                        plants = plantList,
-                                        subscriptionStatus = subscriptionStatus,
-                                        currentTab = currentTab,
-                                        onPlantSelected = { plant ->
-                                            selectedPlant = plant
-                                        },
-                                        onNavTabSelected = { tab ->
-                                            if (tab == NavTab.ADD && !subscriptionStatus.isPro && plantList.size >= subscriptionStatus.maxPlantsAllowed) {
+                                        )
+                                    }
+                                    activeTab == NavTab.ADD -> {
+                                        // 2. Add / AI Plant Identification Screen
+                                        AddPlantScreen(
+                                            onBackRequested = {
+                                                currentTab = NavTab.HOME
+                                            },
+                                            onPlantAdded = { newPlant ->
+                                                plantList = listOf(newPlant) + plantList
+                                                currentTab = NavTab.HOME
                                                 Toast.makeText(
                                                     this@MainActivity,
-                                                    "Free tier limit reached (2 plants max). Upgrade to Pro for unlimited plants!",
-                                                    Toast.LENGTH_LONG
+                                                    "“${newPlant.nickname}” saved to your Sanctuary!",
+                                                    Toast.LENGTH_SHORT
                                                 ).show()
-                                                launchBillingUpgrade()
-                                            } else {
-                                                currentTab = tab
                                             }
-                                        },
-                                        onUpgradeRequested = {
-                                            launchBillingUpgrade()
-                                        }
-                                    )
+                                        )
+                                    }
+                                    activeTab == NavTab.CALENDAR -> {
+                                        // 3. Care & Calendar Dashboard
+                                        CalendarScreen(
+                                            plants = plantList,
+                                            onBackRequested = {
+                                                currentTab = NavTab.HOME
+                                            }
+                                        )
+                                    }
+                                    activeTab == NavTab.SETTINGS -> {
+                                        // 4. Settings & Account Profile Preferences
+                                        SettingsScreen(
+                                            subscriptionStatus = subscriptionStatus,
+                                            currentUser = currentUser,
+                                            onBackRequested = {
+                                                currentTab = NavTab.HOME
+                                            },
+                                            onUpgradeRequested = {
+                                                launchBillingUpgrade()
+                                            },
+                                            onSignOutRequested = {
+                                                currentUser = null
+                                                isAuthScreenVisible = true
+                                                Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
+                                    else -> {
+                                        // 5. Main Botanical Sanctuary Dashboard
+                                        PlantListScreen(
+                                            plants = plantList,
+                                            subscriptionStatus = subscriptionStatus,
+                                            currentTab = currentTab,
+                                            onPlantSelected = { plant ->
+                                                selectedPlant = plant
+                                            },
+                                            onNavTabSelected = { tab ->
+                                                if (tab == NavTab.ADD && !subscriptionStatus.isPro && plantList.size >= subscriptionStatus.maxPlantsAllowed) {
+                                                    Toast.makeText(
+                                                        this@MainActivity,
+                                                        "Free tier limit reached (2 plants max). Upgrade to Pro for unlimited plants!",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                    launchBillingUpgrade()
+                                                } else {
+                                                    currentTab = tab
+                                                }
+                                            },
+                                            onUpgradeRequested = {
+                                                launchBillingUpgrade()
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }

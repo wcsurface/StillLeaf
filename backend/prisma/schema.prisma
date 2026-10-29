@@ -20,11 +20,16 @@ enum CareTaskType {
   ROTATE
   TRIM
   PHOTO
+  SPECIAL_TREATMENT
 }
 
 model User {
   id                 String             @id @default(uuid())
   email              String             @unique
+  passwordHash       String?
+  displayName        String?
+  avatarUrl          String?
+  authProvider       String             @default("EMAIL") // "EMAIL" or "GOOGLE"
   fcmToken           String?
   subscriptionStatus SubscriptionStatus @default(FREE)
   createdAt          DateTime           @default(now())
@@ -43,6 +48,7 @@ model Plant {
   nickname         String
   botanicalName    String
   commonName       String
+  location         String   @default("Indoor • Living Room")
   careRequirements Json // { sunlight: string, waterIntervalDays: number, feedIntervalDays: number, rotateIntervalDays: number, trimIntervalDays: number, careInsight: string }
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
