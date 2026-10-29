@@ -2,7 +2,9 @@ package app.vercel.stillleaf.data.repository
 
 import android.content.Context
 import android.util.Log
+import app.vercel.stillleaf.data.model.CareLog
 import app.vercel.stillleaf.data.model.CareRequirement
+import app.vercel.stillleaf.data.model.CareTaskType
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.PlantPhoto
@@ -10,6 +12,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 object PlantPersistenceManager {
 
@@ -17,7 +20,7 @@ object PlantPersistenceManager {
     private const val FILE_NAME = "still_leaf_plants.json"
 
     /**
-     * Saves the user's current plant sanctuary list and all photos to local device storage.
+     * Saves the user's current plant sanctuary list, photos, and care completion logs to local device storage.
      */
     fun savePlantsLocally(context: Context, plants: List<Plant>) {
         try {
@@ -63,20 +66,33 @@ object PlantPersistenceManager {
                         photosArray.put(photoJson)
                     }
                     put("photos", photosArray)
+
+                    // Recent Care Logs Array
+                    val logsArray = JSONArray()
+                    plant.recentLogs.forEach { log ->
+                        val logJson = JSONObject().apply {
+                            put("id", log.id)
+                            put("plantId", log.plantId)
+                            put("taskType", log.taskType.name)
+                            put("completedAtIso", log.completedAt.toString())
+                        }
+                        logsArray.put(logJson)
+                    }
+                    put("recentLogs", logsArray)
                 }
                 jsonArray.put(plantJson)
             }
 
             val file = File(context.filesDir, FILE_NAME)
             file.writeText(jsonArray.toString())
-            Log.d(TAG, "Successfully persisted ${plants.size} plants to local storage.")
+            Log.d(TAG, "Successfully persisted ${plants.size} plants with care logs to local storage.")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving plants to local storage", e)
         }
     }
 
     /**
-     * Restores saved plant sanctuary list and photos from local device storage on app launch.
+     * Restores saved plant sanctuary list, photos, and care logs from local device storage on app launch.
      */
     fun loadPlantsLocally(context: Context): List<Plant> {
         try {
@@ -126,6 +142,30 @@ object PlantPersistenceManager {
                     photosList.add(photo)
                 }
 
+                val logsArray = plantJson.optJSONArray("recentLogs") ?: JSONArray()
+                val logsList = mutableListOf<CareLog>()
+                for (k in 0 until logsArray.length()) {
+                    val logJson = logsArray.getJSONObject(k)
+                    val taskType = try {
+                        CareTaskType.valueOf(logJson.getString("taskType"))
+                    } catch (_: Exception) {
+                        CareTaskType.WATER
+                    }
+                    val completedAt = try {
+                        LocalDateTime.parse(logJson.getString("completedAtIso"))
+                    } catch (_: Exception) {
+                        LocalDateTime.now()
+                    }
+                    logsList.add(
+                        CareLog(
+                            id = logJson.optString("id", "log_$k"),
+                            plantId = logJson.optString("plantId", plantJson.getString("id")),
+                            taskType = taskType,
+                            completedAt = completedAt
+                        )
+                    )
+                }
+
                 val healthTypeString = plantJson.optString("healthStatusType", "HEALTHY")
                 val healthType = try {
                     HealthStatusType.valueOf(healthTypeString)
@@ -144,12 +184,13 @@ object PlantPersistenceManager {
                     location = plantJson.optString("location", "Indoor • Living Room"),
                     healthStatusType = healthType,
                     healthStatusText = plantJson.optString("healthStatusText", "Healthy"),
-                    photos = photosList
+                    photos = photosList,
+                    recentLogs = logsList
                 )
                 plantList.add(plant)
             }
 
-            Log.d(TAG, "Successfully restored ${plantList.size} plants from local storage.")
+            Log.d(TAG, "Successfully restored ${plantList.size} plants with care logs from local storage.")
             return plantList
         } catch (e: Exception) {
             Log.e(TAG, "Error restoring plants from local storage", e)

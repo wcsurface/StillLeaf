@@ -194,6 +194,28 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onLegalRequested = { tab ->
                                                 activeLegalTab = tab
+                                            },
+                                            onTaskToggled = { plantId, taskType, isCompleted ->
+                                                val updatedList = plantList.map { plant ->
+                                                    if (plant.id == plantId) {
+                                                        val updatedLogs = if (isCompleted) {
+                                                            plant.recentLogs + app.vercel.stillleaf.data.model.CareLog(
+                                                                id = "log_${System.currentTimeMillis()}",
+                                                                plantId = plantId,
+                                                                taskType = taskType,
+                                                                completedAt = java.time.LocalDateTime.now()
+                                                            )
+                                                        } else {
+                                                            plant.recentLogs.filterNot { log ->
+                                                                log.taskType == taskType && log.completedAt.toLocalDate() == java.time.LocalDate.now()
+                                                            }
+                                                        }
+                                                        plant.copy(recentLogs = updatedLogs)
+                                                    } else {
+                                                        plant
+                                                    }
+                                                }
+                                                updateAndPersistPlants(updatedList)
                                             }
                                         )
                                     }

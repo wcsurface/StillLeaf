@@ -45,7 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,6 +89,7 @@ fun CalendarScreen(
     onBackRequested: () -> Unit,
     onNavTabSelected: (NavTab) -> Unit = {},
     onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
+    onTaskToggled: (plantId: String, taskType: CareTaskType, isCompleted: Boolean) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(2) }
@@ -102,12 +102,16 @@ fun CalendarScreen(
         (0..6).map { startOfWeek.plusDays(it.toLong()) }
     }
 
-    // Task completion tracking map
-    val taskCompletionState = remember { mutableStateMapOf<String, Boolean>() }
+    // Helper to test if a task is completed today based on persisted logs
+    fun isTaskCompletedToday(plant: Plant, taskType: CareTaskType): Boolean {
+        return plant.recentLogs.any { log ->
+            log.taskType == taskType && log.completedAt.toLocalDate() == today
+        }
+    }
 
-    // DYNAMIC TASK GENERATION from user's actual plants (Zero hardcoded seed tasks)
-    val dynamicTasks = remember(plants, taskCompletionState) {
-        plants.flatMapIndexed { index, plant ->
+    // DYNAMIC TASK GENERATION from user's actual plants reading persisted logs
+    val dynamicTasks = remember(plants) {
+        plants.flatMap { plant ->
             listOf(
                 CalendarTaskItem(
                     id = "task_water_${plant.id}",
@@ -115,7 +119,7 @@ fun CalendarScreen(
                     taskType = CareTaskType.WATER,
                     taskName = "Water ${plant.nickname}",
                     location = plant.location,
-                    isCompleted = taskCompletionState["task_water_${plant.id}"] ?: false
+                    isCompleted = isTaskCompletedToday(plant, CareTaskType.WATER)
                 ),
                 CalendarTaskItem(
                     id = "task_feed_${plant.id}",
@@ -123,7 +127,7 @@ fun CalendarScreen(
                     taskType = CareTaskType.FEED,
                     taskName = "Nourish ${plant.nickname}",
                     location = plant.location,
-                    isCompleted = taskCompletionState["task_feed_${plant.id}"] ?: false
+                    isCompleted = isTaskCompletedToday(plant, CareTaskType.FEED)
                 ),
                 CalendarTaskItem(
                     id = "task_rotate_${plant.id}",
@@ -131,13 +135,13 @@ fun CalendarScreen(
                     taskType = CareTaskType.ROTATE,
                     taskName = "Rotate ${plant.nickname} 90°",
                     location = plant.location,
-                    isCompleted = taskCompletionState["task_rotate_${plant.id}"] ?: false
+                    isCompleted = isTaskCompletedToday(plant, CareTaskType.ROTATE)
                 )
             )
         }
     }
 
-    val completedCount = dynamicTasks.count { taskCompletionState[it.id] == true }
+    val completedCount = dynamicTasks.count { it.isCompleted }
     val totalCount = dynamicTasks.size
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -343,13 +347,11 @@ fun CalendarScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(dynamicTasks, key = { it.id }) { task ->
-                        val isCompleted = taskCompletionState[task.id] ?: false
-
                         CalendarTaskCard(
                             task = task,
-                            isCompleted = isCompleted,
+                            isCompleted = task.isCompleted,
                             onToggleCompletion = {
-                                taskCompletionState[task.id] = !isCompleted
+                                onTaskToggled(task.plant.id, task.taskType, !task.isCompleted)
                             }
                         )
                     }
