@@ -1,17 +1,14 @@
 # CHANGELOG.md - Project History
 
-## [6.6.0] - Plant Detail Page Refinements & Interactive Care Modals
+## [6.7.0] - Diagnostic Placeholder Helper Text Update
 
-### Removed
-- Removed Still Leaf Pro upgrade banner card from `PlantDetailScreen.kt`.
-
-### Added
-- Made all 4 Environment & Care Profile chips clickable (`Light`, `Water`, `Nourish`, `Humidity`) with custom explanatory popup modals and recommended affiliate links.
-- Updated Botanical Care Essentials section to display dual recommendation cards for both Potting Soil AND Organic Nutrients/Fertilizer.
+### Changed
+- Updated `DiagnosePlantDialog` in `PlantDetailScreen.kt` to start with an empty text box and placeholder helper text *"What is your concern? (e.g. yellowing lower leaves, brown tips, or wilting...)"*.
+- Placeholder automatically disappears when the user starts typing.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
-## [6.5.0] - Dynamic Calendar Care Schedule & Full Monthly Calendar View
+## [6.6.0] - Plant Detail Page Refinements & Interactive Care Modals
 
-### Fixed
-- Fixed **"View Full Calendar"** button and top calendar header icon.
+### Added
+- Made all 4 Environment & Care Profile chips clickable with custom explanatory popup modals and recommended affiliate links.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.

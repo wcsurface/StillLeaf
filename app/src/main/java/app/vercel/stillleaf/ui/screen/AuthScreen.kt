@@ -144,7 +144,7 @@ fun AuthScreen(
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(84.dp))
 
             // Brand Logo & Header with Lighter Fonts
             Column(
