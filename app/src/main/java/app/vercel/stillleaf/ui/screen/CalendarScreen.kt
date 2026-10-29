@@ -80,6 +80,7 @@ data class CalendarTaskItem(
     val taskType: CareTaskType,
     val taskName: String,
     val location: String,
+    val dueDate: LocalDate,
     val isCompleted: Boolean
 )
 
@@ -102,47 +103,120 @@ fun CalendarScreen(
         (0..6).map { startOfWeek.plusDays(it.toLong()) }
     }
 
-    // Helper to test if a task is completed today based on persisted logs
+    val selectedDate = weekDays.getOrElse(selectedDayIndex) { today }
+
+    // Helper to calculate last completed date for a plant task
+    fun getLastCompletedDate(plant: Plant, taskType: CareTaskType): LocalDate {
+        return plant.recentLogs
+            .filter { it.taskType == taskType }
+            .maxByOrNull { it.completedAt }
+            ?.completedAt
+            ?.toLocalDate() ?: plant.dateAdded
+    }
+
+    // Helper to test if a task is completed today
     fun isTaskCompletedToday(plant: Plant, taskType: CareTaskType): Boolean {
         return plant.recentLogs.any { log ->
             log.taskType == taskType && log.completedAt.toLocalDate() == today
         }
     }
 
-    // DYNAMIC TASK GENERATION from user's actual plants reading persisted logs
-    val dynamicTasks = remember(plants) {
+    // Helper to calculate next due date for a task type
+    fun getNextDueDate(plant: Plant, taskType: CareTaskType): LocalDate {
+        val lastDate = getLastCompletedDate(plant, taskType)
+        val interval = when (taskType) {
+            CareTaskType.WATER -> plant.careRequirements.waterIntervalDays
+            CareTaskType.FEED -> plant.careRequirements.feedIntervalDays
+            CareTaskType.ROTATE -> plant.careRequirements.rotateIntervalDays
+            CareTaskType.TRIM -> plant.careRequirements.trimIntervalDays
+            else -> 14
+        }
+        val isDoneToday = isTaskCompletedToday(plant, taskType)
+        return if (isDoneToday) {
+            today.plusDays(interval.toLong())
+        } else {
+            val scheduledDate = lastDate.plusDays(interval.toLong())
+            if (scheduledDate.isBefore(today)) today else scheduledDate
+        }
+    }
+
+    // Dynamic tasks due TODAY (for weekly strip view)
+    val todayTasks = remember(plants) {
         plants.flatMap { plant ->
-            listOf(
+            val tasksList = mutableListOf<CalendarTaskItem>()
+
+            // Water Task
+            tasksList.add(
                 CalendarTaskItem(
                     id = "task_water_${plant.id}",
                     plant = plant,
                     taskType = CareTaskType.WATER,
                     taskName = "Water ${plant.nickname}",
                     location = plant.location,
+                    dueDate = getNextDueDate(plant, CareTaskType.WATER),
                     isCompleted = isTaskCompletedToday(plant, CareTaskType.WATER)
-                ),
+                )
+            )
+
+            // Feed Task
+            tasksList.add(
                 CalendarTaskItem(
                     id = "task_feed_${plant.id}",
                     plant = plant,
                     taskType = CareTaskType.FEED,
                     taskName = "Nourish ${plant.nickname}",
                     location = plant.location,
+                    dueDate = getNextDueDate(plant, CareTaskType.FEED),
                     isCompleted = isTaskCompletedToday(plant, CareTaskType.FEED)
-                ),
+                )
+            )
+
+            // Rotate Task
+            tasksList.add(
                 CalendarTaskItem(
                     id = "task_rotate_${plant.id}",
                     plant = plant,
                     taskType = CareTaskType.ROTATE,
                     taskName = "Rotate ${plant.nickname} 90°",
                     location = plant.location,
+                    dueDate = getNextDueDate(plant, CareTaskType.ROTATE),
                     isCompleted = isTaskCompletedToday(plant, CareTaskType.ROTATE)
                 )
             )
+
+            tasksList
         }
     }
 
-    val completedCount = dynamicTasks.count { it.isCompleted }
-    val totalCount = dynamicTasks.size
+    // Function to calculate tasks actually due on ANY specific date for the Monthly Calendar
+    fun getTasksDueOnSpecificDate(targetDate: LocalDate): List<CalendarTaskItem> {
+        return plants.flatMap { plant ->
+            val dueForPlant = mutableListOf<CalendarTaskItem>()
+
+            CareTaskType.entries.forEach { taskType ->
+                if (taskType == CareTaskType.WATER || taskType == CareTaskType.FEED || taskType == CareTaskType.ROTATE) {
+                    val nextDue = getNextDueDate(plant, taskType)
+                    if (nextDue == targetDate || (targetDate == today && !isTaskCompletedToday(plant, taskType) && nextDue <= today)) {
+                        dueForPlant.add(
+                            CalendarTaskItem(
+                                id = "task_${taskType.name}_${plant.id}_${targetDate}",
+                                plant = plant,
+                                taskType = taskType,
+                                taskName = "${taskType.name.lowercase().replaceFirstChar { it.uppercase() }} ${plant.nickname}",
+                                location = plant.location,
+                                dueDate = targetDate,
+                                isCompleted = isTaskCompletedToday(plant, taskType)
+                            )
+                        )
+                    }
+                }
+            }
+            dueForPlant
+        }
+    }
+
+    val completedCount = todayTasks.count { it.isCompleted }
+    val totalCount = todayTasks.size
 
     Box(modifier = modifier.fillMaxSize()) {
         // 1. Background Image (bg_calendar)
@@ -279,7 +353,7 @@ fun CalendarScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Dynamic Care Task List OR Serene Empty Calendar State
-            if (dynamicTasks.isEmpty()) {
+            if (todayTasks.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -346,7 +420,7 @@ fun CalendarScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(dynamicTasks, key = { it.id }) { task ->
+                    items(todayTasks, key = { it.id }) { task ->
                         CalendarTaskCard(
                             task = task,
                             isCompleted = task.isCompleted,
@@ -406,8 +480,8 @@ fun CalendarScreen(
     // Full Monthly Calendar Modal Dialog
     if (showFullCalendarModal) {
         FullCalendarModal(
-            tasks = dynamicTasks,
             today = today,
+            getTasksForDate = { targetDate -> getTasksDueOnSpecificDate(targetDate) },
             onDismiss = { showFullCalendarModal = false }
         )
     }
@@ -505,13 +579,25 @@ fun CalendarTaskCard(
 
 @Composable
 fun FullCalendarModal(
-    tasks: List<CalendarTaskItem>,
     today: LocalDate,
+    getTasksForDate: (LocalDate) -> List<CalendarTaskItem>,
     onDismiss: () -> Unit
 ) {
     var selectedDay by remember { mutableIntStateOf(today.dayOfMonth) }
     val monthTitle = remember(today) { "${today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${today.year}" }
     val daysInMonth = remember(today) { today.lengthOfMonth() }
+
+    val selectedDate = remember(selectedDay, today) {
+        try {
+            today.withDayOfMonth(selectedDay)
+        } catch (_: Exception) {
+            today
+        }
+    }
+
+    val selectedDateTasks = remember(selectedDate) {
+        getTasksForDate(selectedDate)
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -564,8 +650,12 @@ fun FullCalendarModal(
                 ) {
                     items(daysInMonth) { index ->
                         val dayNum = index + 1
+                        val dateForDay = try { today.withDayOfMonth(dayNum) } catch (_: Exception) { today }
+                        val tasksOnDay = getTasksForDate(dateForDay)
+
                         val isToday = dayNum == today.dayOfMonth
                         val isSelected = dayNum == selectedDay
+                        val hasTasks = tasksOnDay.isNotEmpty()
 
                         Surface(
                             onClick = { selectedDay = dayNum },
@@ -589,7 +679,8 @@ fun FullCalendarModal(
                                         fontSize = 13.sp,
                                         color = if (isSelected) SurfaceWhite else DeepForestAccent
                                     )
-                                    if (tasks.isNotEmpty()) {
+                                    // Indicator dot renders ONLY if tasks are actually due on this date
+                                    if (hasTasks) {
                                         Box(
                                             modifier = Modifier
                                                 .size(4.dp)
@@ -614,15 +705,22 @@ fun FullCalendarModal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                if (tasks.isEmpty()) {
-                    Text(
-                        text = "No care tasks scheduled on this day.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (selectedDateTasks.isEmpty()) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (selectedDay == today.dayOfMonth) "All care tasks for today are completed! Next tasks due in future schedule." else "No care tasks scheduled on Day $selectedDay.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        tasks.take(3).forEach { task ->
+                        selectedDateTasks.take(3).forEach { task ->
                             Surface(
                                 color = MaterialTheme.colorScheme.surfaceVariant,
                                 shape = RoundedCornerShape(10.dp),
