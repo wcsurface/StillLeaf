@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
         windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
         windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
 
+        // Initialize Notification Channels for Daily Care Reminders & 90-Day Milestones
+        app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
+
         billingManager = BillingManager(applicationContext)
 
         setContent {

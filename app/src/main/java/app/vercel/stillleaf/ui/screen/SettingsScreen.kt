@@ -1,5 +1,11 @@
 package app.vercel.stillleaf.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +29,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
@@ -46,9 +51,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.SubscriptionStatus
@@ -57,6 +64,7 @@ import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
+import app.vercel.stillleaf.util.CareNotificationManager
 
 @Composable
 fun SettingsScreen(
@@ -72,8 +80,29 @@ fun SettingsScreen(
     pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var milestoneRemindersEnabled by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    var notificationsEnabled by remember {
+        mutableStateOf(CareNotificationManager.isDailyRemindersEnabled(context))
+    }
+    var milestoneRemindersEnabled by remember {
+        mutableStateOf(CareNotificationManager.isMilestoneRemindersEnabled(context))
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            notificationsEnabled = true
+            CareNotificationManager.setDailyRemindersEnabled(context, true)
+            Toast.makeText(context, "Daily care reminders enabled!", Toast.LENGTH_SHORT).show()
+        } else {
+            notificationsEnabled = false
+            CareNotificationManager.setDailyRemindersEnabled(context, false)
+            Toast.makeText(context, "Notification permission is required for daily reminders.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val scrollState = rememberScrollState()
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -298,7 +327,21 @@ fun SettingsScreen(
                     title = "Daily Care Reminders",
                     subtitle = "Morning notifications for due water, feed & rotation tasks",
                     checked = notificationsEnabled,
-                    onCheckedChange = { notificationsEnabled = it }
+                    onCheckedChange = { isChecked ->
+                        if (isChecked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val hasPermission = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+
+                            if (!hasPermission) {
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                return@SettingToggleRow
+                            }
+                        }
+                        notificationsEnabled = isChecked
+                        CareNotificationManager.setDailyRemindersEnabled(context, isChecked)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -308,7 +351,10 @@ fun SettingsScreen(
                     title = "90-Day Growth Milestones",
                     subtitle = "Reminders to photograph quarterly visual growth progress",
                     checked = milestoneRemindersEnabled,
-                    onCheckedChange = { milestoneRemindersEnabled = it }
+                    onCheckedChange = { isChecked ->
+                        milestoneRemindersEnabled = isChecked
+                        CareNotificationManager.setMilestoneRemindersEnabled(context, isChecked)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))

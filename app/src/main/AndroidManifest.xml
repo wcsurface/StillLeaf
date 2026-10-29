@@ -48,6 +48,16 @@
                     android:pathPrefix="/share" />
             </intent-filter>
         </activity>
+
+        <!-- Care Notification Receiver for Scheduled Alarms -->
+        <receiver
+            android:name=".util.CareNotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="app.vercel.stillleaf.DAILY_REMINDER" />
+                <action android:name="app.vercel.stillleaf.MILESTONE_REMINDER" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

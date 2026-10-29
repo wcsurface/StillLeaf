@@ -1,14 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [7.4.0] - Home & Auth Screen Footer Legal Links & Copyright Integration
+
+### Added
+- Embedded `StillLeafFooter` into `PlantListScreen.kt` (spans full 2 columns at the bottom of the plant sanctuary grid).
+- Embedded `StillLeafFooter` into `AuthScreen.kt` below the authentication form card.
+- Users on Home and Login pages can now tap `Terms of Service`, `Privacy Policy`, or `FAQ` and view complete compliant policies and dynamic Surface Apps copyright info.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [7.3.0] - Full-Screen Immersive Status Bar Hiding
 
 ### Added
-- Configured `WindowInsetsControllerCompat` in `MainActivity.kt` to hide the system status bar (clock, battery, Wi-Fi, notification icons) across the app.
-- Configured `WindowInsets(0, 0, 0, 0)` in `Scaffold` so custom botanical background artwork extends seamlessly to the top edge of the display.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [7.2.0] - Calendar Navigation Bar Remaining Task Badge Popup
-
-### Added
-- Added real-time remaining care task counter badge popup on top of the Calendar icon in `StillLeafTopBar.kt`.
+- Configured `WindowInsetsControllerCompat` in `MainActivity.kt` to hide the system status bar across the app.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
