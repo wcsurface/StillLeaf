@@ -168,6 +168,10 @@ class MainActivity : ComponentActivity() {
                                             onUpgradeRequested = {
                                                 launchBillingUpgrade()
                                             },
+                                            onRestorePurchasesRequested = {
+                                                billingManager.queryExistingPurchases()
+                                                Toast.makeText(this@MainActivity, "Restoring Google Play purchases...", Toast.LENGTH_SHORT).show()
+                                            },
                                             onSignOutRequested = {
                                                 currentUser = null
                                                 Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()

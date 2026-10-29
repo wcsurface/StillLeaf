@@ -18,11 +18,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
@@ -59,6 +59,7 @@ fun SettingsScreen(
     currentUser: AuthUser? = null,
     onBackRequested: () -> Unit,
     onUpgradeRequested: () -> Unit,
+    onRestorePurchasesRequested: () -> Unit = {},
     onSignInRequested: () -> Unit = {},
     onSignOutRequested: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -231,15 +232,35 @@ fun SettingsScreen(
 
                     if (!subscriptionStatus.isPro) {
                         Spacer(modifier = Modifier.height(14.dp))
-                        Button(
-                            onClick = onUpgradeRequested,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp),
-                            shape = PillShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = AttentionTerracotta)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text("Upgrade to Pro ($4.99)", fontWeight = FontWeight.Bold)
+                            Button(
+                                onClick = onUpgradeRequested,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(46.dp),
+                                shape = PillShape,
+                                colors = ButtonDefaults.buttonColors(containerColor = AttentionTerracotta)
+                            ) {
+                                Text("Upgrade ($4.99)", fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = onRestorePurchasesRequested,
+                                modifier = Modifier
+                                    .weight(1.2f)
+                                    .height(46.dp),
+                                shape = PillShape,
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Restore", fontWeight = FontWeight.Bold)
+                                }
+                            }
                         }
                     }
                 }
