@@ -3,14 +3,17 @@ package app.vercel.stillleaf.ui.component
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Spa
@@ -27,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.vercel.stillleaf.ui.screen.NavTab
+import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
@@ -35,6 +39,7 @@ import app.vercel.stillleaf.ui.theme.SurfaceWhite
 fun StillLeafTopBar(
     currentTab: NavTab,
     onNavTabSelected: (NavTab) -> Unit,
+    pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -74,7 +79,7 @@ fun StillLeafTopBar(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 2. Floating Top Navigation Pill Bar with Lakki Reddy Font Labels
+        // 2. Floating Top Navigation Pill Bar with Lakki Reddy Font Labels & Calendar Task Badge
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,13 +113,37 @@ fun StillLeafTopBar(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.title,
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Box(contentAlignment = Alignment.TopEnd) {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.title,
+                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp)
+                                )
+
+                                // Calendar Remaining Task Counter Badge Popup
+                                if (tab == NavTab.CALENDAR && pendingTasksCount > 0) {
+                                    Surface(
+                                        color = AttentionTerracotta,
+                                        shape = CircleShape,
+                                        modifier = Modifier
+                                            .offset(x = 8.dp, y = (-4).dp)
+                                            .size(16.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                text = if (pendingTasksCount > 9) "9+" else pendingTasksCount.toString(),
+                                                color = SurfaceWhite,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             Spacer(modifier = Modifier.height(2.dp))
+
                             Text(
                                 text = tab.title,
                                 fontFamily = LakkiReddyFontFamily,

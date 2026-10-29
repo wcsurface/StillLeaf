@@ -84,6 +84,7 @@ fun PlantListScreen(
     subscriptionStatus: SubscriptionStatus,
     currentUser: AuthUser? = null,
     currentTab: NavTab = NavTab.HOME,
+    pendingTasksCount: Int = 0,
     onPlantSelected: (Plant) -> Unit,
     onNavTabSelected: (NavTab) -> Unit,
     onSignInRequested: () -> Unit = {},
@@ -115,7 +116,8 @@ fun PlantListScreen(
             // Unified Top Logo & Navbar
             StillLeafTopBar(
                 currentTab = currentTab,
-                onNavTabSelected = onNavTabSelected
+                onNavTabSelected = onNavTabSelected,
+                pendingTasksCount = pendingTasksCount
             )
 
             Spacer(modifier = Modifier.height(12.dp))

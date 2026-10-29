@@ -61,6 +61,22 @@ class MainActivity : ComponentActivity() {
                 var showPaywallSheet by remember { mutableStateOf(false) }
                 var activeLegalTab by remember { mutableStateOf<LegalTab?>(null) }
 
+                // Calculate total pending care tasks due today across sanctuary
+                val pendingTasksCount = remember(plantList) {
+                    val today = java.time.LocalDate.now()
+                    plantList.sumOf { plant ->
+                        val waterDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.WATER && it.completedAt.toLocalDate() == today }
+                        val feedDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.FEED && it.completedAt.toLocalDate() == today }
+                        val rotateDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.ROTATE && it.completedAt.toLocalDate() == today }
+
+                        var count = 0
+                        if (!waterDone) count++
+                        if (!feedDone) count++
+                        if (!rotateDone) count++
+                        count
+                    }
+                }
+
                 // Helper to update plant list & persist to disk
                 fun updateAndPersistPlants(newList: List<Plant>) {
                     plantList = newList
@@ -170,6 +186,7 @@ class MainActivity : ComponentActivity() {
                                             onLegalRequested = { tab ->
                                                 activeLegalTab = tab
                                             },
+                                            pendingTasksCount = pendingTasksCount,
                                             onPlantAdded = { newPlant ->
                                                 val updatedList = listOf(newPlant) + plantList
                                                 updateAndPersistPlants(updatedList)
@@ -195,6 +212,7 @@ class MainActivity : ComponentActivity() {
                                             onLegalRequested = { tab ->
                                                 activeLegalTab = tab
                                             },
+                                            pendingTasksCount = pendingTasksCount,
                                             onTaskToggled = { plantId, taskType, isCompleted ->
                                                 val updatedList = plantList.map { plant ->
                                                     if (plant.id == plantId) {
@@ -233,6 +251,7 @@ class MainActivity : ComponentActivity() {
                                             onLegalRequested = { tab ->
                                                 activeLegalTab = tab
                                             },
+                                            pendingTasksCount = pendingTasksCount,
                                             onUpgradeRequested = {
                                                 showPaywallSheet = true
                                             },
@@ -253,6 +272,7 @@ class MainActivity : ComponentActivity() {
                                             subscriptionStatus = subscriptionStatus,
                                             currentUser = currentUser,
                                             currentTab = currentTab,
+                                            pendingTasksCount = pendingTasksCount,
                                             onPlantSelected = { plant ->
                                                 selectedPlant = plant
                                             },

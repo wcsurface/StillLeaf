@@ -69,6 +69,7 @@ fun SettingsScreen(
     onSignOutRequested: () -> Unit = {},
     onNavTabSelected: (NavTab) -> Unit = {},
     onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
+    pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -93,7 +94,8 @@ fun SettingsScreen(
             // Unified Top Logo & Navbar
             StillLeafTopBar(
                 currentTab = NavTab.SETTINGS,
-                onNavTabSelected = onNavTabSelected
+                onNavTabSelected = onNavTabSelected,
+                pendingTasksCount = pendingTasksCount
             )
 
             Spacer(modifier = Modifier.height(8.dp))

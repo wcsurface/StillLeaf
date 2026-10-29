@@ -91,6 +91,7 @@ fun CalendarScreen(
     onNavTabSelected: (NavTab) -> Unit = {},
     onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
     onTaskToggled: (plantId: String, taskType: CareTaskType, isCompleted: Boolean) -> Unit = { _, _, _ -> },
+    pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(2) }
@@ -232,7 +233,8 @@ fun CalendarScreen(
             // Unified Top Logo & Navbar
             StillLeafTopBar(
                 currentTab = NavTab.CALENDAR,
-                onNavTabSelected = onNavTabSelected
+                onNavTabSelected = onNavTabSelected,
+                pendingTasksCount = pendingTasksCount
             )
 
             Spacer(modifier = Modifier.height(8.dp))

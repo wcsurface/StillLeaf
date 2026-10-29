@@ -110,6 +110,7 @@ fun AddPlantScreen(
     onPlantAdded: (Plant) -> Unit,
     onNavTabSelected: (NavTab) -> Unit = {},
     onLegalRequested: (app.vercel.stillleaf.ui.component.LegalTab) -> Unit = {},
+    pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -242,7 +243,8 @@ fun AddPlantScreen(
         ) {
             StillLeafTopBar(
                 currentTab = NavTab.ADD,
-                onNavTabSelected = onNavTabSelected
+                onNavTabSelected = onNavTabSelected,
+                pendingTasksCount = pendingTasksCount
             )
 
             Spacer(modifier = Modifier.height(8.dp))
