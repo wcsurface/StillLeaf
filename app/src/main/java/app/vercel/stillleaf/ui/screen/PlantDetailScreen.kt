@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -116,6 +117,11 @@ fun PlantDetailScreen(
     var showDiagnoseModal by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    // Filter photos specifically for Quarterly Growth Journal milestones (Day 0 Whole Plant, Day 90, etc.)
+    val milestonePhotos = remember(plant.photos) {
+        plant.photos.filter { it.isQuarterlyMilestone }
+    }
 
     Column(
         modifier = modifier
@@ -356,7 +362,7 @@ fun PlantDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botanical Care & Essentials Card Section (Links to Soil AND Fertilizer/Nutrients)
+        // Botanical Care & Essentials Card Section
         val soilAffiliateItem = remember(plant) {
             val name = plant.commonName.lowercase()
             if (name.contains("succulent") || name.contains("cactus") || name.contains("snake")) {
@@ -405,7 +411,7 @@ fun PlantDetailScreen(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // 4. 3-Month Visual Growth Gallery (Horizontal Timeline)
+        // 4. 3-Month Visual Growth Gallery (Filtering specifically for Whole Plant Quarterly Milestones)
         Column {
             Row(
                 modifier = Modifier
@@ -435,7 +441,7 @@ fun PlantDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
-                items(plant.photos) { photo ->
+                items(milestonePhotos) { photo ->
                     GrowthMilestoneCard(
                         photo = photo,
                         onClick = {
@@ -819,12 +825,24 @@ fun LightDetailsDialog(
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     shape = PillShape,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("View Recommended LED Grow Light", fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "View LED Grow Light",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
@@ -921,12 +939,24 @@ fun WaterDetailsDialog(
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     shape = PillShape,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("View Soil Moisture Sensor", fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "View Soil Moisture Meter",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
@@ -1021,12 +1051,24 @@ fun NourishDetailsDialog(
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     shape = PillShape,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Get Recommended Organic Nutrients", fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "View Organic Nutrients",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
@@ -1121,12 +1163,24 @@ fun HumidityDetailsDialog(
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     shape = PillShape,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("View Recommended Plant Humidifier", fontWeight = FontWeight.Bold)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "View Plant Humidifier",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
