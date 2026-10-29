@@ -16,24 +16,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Opacity
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -51,10 +50,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
@@ -62,7 +63,7 @@ import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.DeepBotanicalGreen
 import app.vercel.stillleaf.ui.theme.HealthyGreen
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
-import app.vercel.stillleaf.ui.theme.PrimaryOlive
+import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.WateringAmber
 import coil.compose.AsyncImage
 
@@ -83,9 +84,11 @@ enum class PlantFilter(val label: String) {
 fun PlantListScreen(
     plants: List<Plant>,
     subscriptionStatus: SubscriptionStatus,
+    currentUser: AuthUser? = null,
     currentTab: NavTab = NavTab.HOME,
     onPlantSelected: (Plant) -> Unit,
     onNavTabSelected: (NavTab) -> Unit,
+    onSignInRequested: () -> Unit = {},
     onUpgradeRequested: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,47 +107,85 @@ fun PlantListScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 1. Logo Header with Lakki Reddy Font
+        // 1. Logo Header & Sign In Button
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp, bottom = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Spa,
-                    contentDescription = "Still Leaf Logo",
-                    tint = DeepBotanicalGreen,
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "STILL LEAF",
-                    fontFamily = LakkiReddyFontFamily,
-                    fontSize = 32.sp,
-                    color = DeepBotanicalGreen,
-                    fontWeight = FontWeight.Bold
-                )
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Spa,
+                            contentDescription = "Still Leaf Logo",
+                            tint = DeepBotanicalGreen,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "STILL LEAF",
+                            fontFamily = LakkiReddyFontFamily,
+                            fontSize = 30.sp,
+                            color = DeepBotanicalGreen,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Text(
+                        text = "Healthy plants. Happier days.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Top Right Auth Status Button
+                if (currentUser == null) {
+                    Button(
+                        onClick = onSignInRequested,
+                        shape = PillShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.height(38.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Sign In", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = PillShape
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = currentUser.displayName,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = "Healthy plants. Happier days.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
 
         // 2. Top Navigation Bar / Floating Pill Container with Lakki Reddy Font Labels
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
+                .padding(horizontal = 20.dp, vertical = 4.dp),
             shape = RoundedCornerShape(28.dp),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),

@@ -59,6 +59,7 @@ fun SettingsScreen(
     currentUser: AuthUser? = null,
     onBackRequested: () -> Unit,
     onUpgradeRequested: () -> Unit,
+    onSignInRequested: () -> Unit = {},
     onSignOutRequested: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -162,6 +163,22 @@ fun SettingsScreen(
                                 Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Sign Out of Account", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Button(
+                            onClick = onSignInRequested,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            shape = PillShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Sign In or Register Account", fontWeight = FontWeight.Bold)
                             }
                         }
                     }

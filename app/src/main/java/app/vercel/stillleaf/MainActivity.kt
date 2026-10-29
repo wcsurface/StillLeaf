@@ -179,6 +179,9 @@ class MainActivity : ComponentActivity() {
                                             onUpgradeRequested = {
                                                 launchBillingUpgrade()
                                             },
+                                            onSignInRequested = {
+                                                isAuthScreenVisible = true
+                                            },
                                             onSignOutRequested = {
                                                 currentUser = null
                                                 isAuthScreenVisible = true
@@ -191,6 +194,7 @@ class MainActivity : ComponentActivity() {
                                         PlantListScreen(
                                             plants = plantList,
                                             subscriptionStatus = subscriptionStatus,
+                                            currentUser = currentUser,
                                             currentTab = currentTab,
                                             onPlantSelected = { plant ->
                                                 selectedPlant = plant
@@ -206,6 +210,9 @@ class MainActivity : ComponentActivity() {
                                                 } else {
                                                     currentTab = tab
                                                 }
+                                            },
+                                            onSignInRequested = {
+                                                isAuthScreenVisible = true
                                             },
                                             onUpgradeRequested = {
                                                 launchBillingUpgrade()
