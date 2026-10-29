@@ -1,7 +1,9 @@
 package app.vercel.stillleaf.ui.screen
 
+import android.accounts.AccountManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -47,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -54,6 +59,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.ui.theme.DeepBotanicalGreen
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
@@ -69,6 +75,8 @@ fun AuthScreen(
     onAuthSuccess: (AuthUser) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     var authMode by remember { mutableStateOf(AuthMode.SIGN_IN) }
 
     var emailInput by remember { mutableStateOf("") }
@@ -79,7 +87,39 @@ fun AuthScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Google Sign-In Modal States
+    var showGoogleAccountModal by remember { mutableStateOf(false) }
+    var deviceAccounts by remember { mutableStateOf<List<String>>(emptyList()) }
+
     val scrollState = rememberScrollState()
+
+    fun handleGoogleAccountSelected(selectedEmail: String) {
+        val formattedName = selectedEmail.split("@")[0]
+            .replace(".", " ")
+            .replace("_", " ")
+            .split(" ")
+            .joinToString(" ") { word -> word.replaceFirstChar { char -> char.uppercase() } }
+
+        val authenticatedUser = AuthUser(
+            id = "usr_google_${System.currentTimeMillis()}",
+            email = selectedEmail.trim(),
+            displayName = formattedName,
+            authProvider = "GOOGLE",
+            token = "google_oauth_token_${System.currentTimeMillis()}"
+        )
+        onAuthSuccess(authenticatedUser)
+    }
+
+    fun launchGoogleSignIn() {
+        try {
+            val manager = AccountManager.get(context)
+            val accounts = manager.getAccountsByType("com.google").map { it.name }
+            deviceAccounts = accounts
+        } catch (_: Exception) {
+            deviceAccounts = emptyList()
+        }
+        showGoogleAccountModal = true
+    }
 
     Column(
         modifier = modifier
@@ -311,7 +351,7 @@ fun AuthScreen(
                                     token = "jwt_session_${System.currentTimeMillis()}"
                                 )
                                 onAuthSuccess(authenticatedUser)
-                            }, 1000)
+                            }, 800)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,20 +387,7 @@ fun AuthScreen(
 
                 // Google Sign In Button
                 OutlinedButton(
-                    onClick = {
-                        isLoading = true
-                        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                            isLoading = false
-                            val googleUser = AuthUser(
-                                id = "usr_google_123",
-                                email = "gardener@gmail.com",
-                                displayName = "Botanical Enthusiast",
-                                authProvider = "GOOGLE",
-                                token = "google_oauth_token_123"
-                            )
-                            onAuthSuccess(googleUser)
-                        }, 800)
-                    },
+                    onClick = { launchGoogleSignIn() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -400,5 +427,175 @@ fun AuthScreen(
         }
 
         Spacer(modifier = Modifier.height(40.dp))
+    }
+
+    // Google Account Picker Dialog
+    if (showGoogleAccountModal) {
+        GoogleAccountPickerDialog(
+            deviceAccounts = deviceAccounts,
+            onDismiss = { showGoogleAccountModal = false },
+            onAccountSelected = { selectedEmail ->
+                showGoogleAccountModal = false
+                handleGoogleAccountSelected(selectedEmail)
+            }
+        )
+    }
+}
+
+@Composable
+fun GoogleAccountPickerDialog(
+    deviceAccounts: List<String>,
+    onDismiss: () -> Unit,
+    onAccountSelected: (String) -> Unit
+) {
+    var customGoogleEmailInput by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = CircleShape,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "G",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Choose Google Account",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    IconButton(onClick = onDismiss) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "Select your Google Account to sign in to Still Leaf:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // List Device Accounts found on Android phone
+                if (deviceAccounts.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        deviceAccounts.forEach { accountEmail ->
+                            Surface(
+                                onClick = { onAccountSelected(accountEmail) },
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = accountEmail,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "Google Account",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
+                        Text(
+                            text = "  or enter email  ",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        HorizontalDivider(modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.outline)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Custom Email Input
+                OutlinedTextField(
+                    value = customGoogleEmailInput,
+                    onValueChange = { customGoogleEmailInput = it },
+                    label = { Text("Your Google Email Address") },
+                    leadingIcon = {
+                        Icon(imageVector = Icons.Default.Email, contentDescription = null)
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        if (customGoogleEmailInput.isNotBlank()) {
+                            onAccountSelected(customGoogleEmailInput.trim())
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = PillShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Continue with Selected Google Account", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }
