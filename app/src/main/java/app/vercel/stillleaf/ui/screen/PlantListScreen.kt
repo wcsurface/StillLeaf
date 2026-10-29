@@ -25,14 +25,9 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Spa
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -63,7 +58,6 @@ import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.DeepBotanicalGreen
 import app.vercel.stillleaf.ui.theme.HealthyGreen
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
-import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.WateringAmber
 import coil.compose.AsyncImage
 
@@ -107,78 +101,40 @@ fun PlantListScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // 1. Logo Header & Sign In Button
+        // 1. Centered Brand Header (Leaf Icon, STILL LEAF Wordmark in Lakki Reddy, & Slogan)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(top = 16.dp, bottom = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Spa,
-                            contentDescription = "Still Leaf Logo",
-                            tint = DeepBotanicalGreen,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "STILL LEAF",
-                            fontFamily = LakkiReddyFontFamily,
-                            fontSize = 30.sp,
-                            color = DeepBotanicalGreen,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Text(
-                        text = "Healthy plants. Happier days.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Top Right Auth Status Button
-                if (currentUser == null) {
-                    Button(
-                        onClick = onSignInRequested,
-                        shape = PillShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.height(38.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Sign In", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                } else {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = PillShape
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = currentUser.displayName,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.Spa,
+                    contentDescription = "Still Leaf Logo",
+                    tint = DeepBotanicalGreen,
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "STILL LEAF",
+                    fontFamily = LakkiReddyFontFamily,
+                    fontSize = 32.sp,
+                    color = DeepBotanicalGreen,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = "Healthy plants. Happier days.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         // 2. Top Navigation Bar / Floating Pill Container with Lakki Reddy Font Labels
