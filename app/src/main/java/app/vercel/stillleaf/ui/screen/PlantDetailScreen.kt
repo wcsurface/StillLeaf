@@ -1469,7 +1469,7 @@ fun DiagnosePlantDialog(
     onDismiss: () -> Unit,
     onDiagnosisComplete: (diagnosis: PlantDiagnosis, scheduleOnCalendar: Boolean) -> Unit
 ) {
-    var issueInput by remember { mutableStateOf("Yellowing lower leaves with small brown tips and moisture buildup...") }
+    var issueInput by remember { mutableStateOf("") }
     var isAnalyzing by remember { mutableStateOf(false) }
     var diagnosisResult by remember { mutableStateOf<PlantDiagnosis?>(null) }
     var scheduleOnCalendar by remember { mutableStateOf(true) }
@@ -1535,9 +1535,15 @@ fun DiagnosePlantDialog(
                     OutlinedTextField(
                         value = issueInput,
                         onValueChange = { issueInput = it },
+                        placeholder = {
+                            Text(
+                                text = "What is your concern? (e.g. yellowing lower leaves, brown tips, or wilting...)",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(110.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary
