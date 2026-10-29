@@ -45,6 +45,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -109,8 +110,13 @@ fun AddPlantScreen(
     var isAnalyzing by remember { mutableStateOf(false) }
     var aiResult by remember { mutableStateOf<AiIdentificationResult?>(null) }
 
+    // Photo 1: Close-up AI Identification Photo
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    // Photo 2: Day 0 Whole Plant Growth Snapshot Photo
+    var wholePlantImageUri by remember { mutableStateOf<Uri?>(null) }
+    var wholePlantCapturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
     var nicknameInput by remember { mutableStateOf("") }
     var locationInput by remember { mutableStateOf("Indoor • Living Room") }
@@ -131,7 +137,7 @@ fun AddPlantScreen(
         }
     }
 
-    // 1. Gallery Photo Picker Launcher
+    // 1. Gallery Photo Picker Launcher for Close-Up Detail Photo
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
@@ -142,7 +148,7 @@ fun AddPlantScreen(
         }
     }
 
-    // 2. Take Photo Camera Launcher
+    // 2. Take Photo Camera Launcher for Close-Up Detail Photo
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
@@ -156,7 +162,30 @@ fun AddPlantScreen(
         }
     }
 
-    // 3. Camera Permission Launcher to prevent crashes
+    // 3. Whole Plant Gallery Launcher
+    val wholePlantGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            wholePlantImageUri = uri
+            wholePlantCapturedBitmap = null
+        }
+    }
+
+    // 4. Whole Plant Camera Launcher
+    val wholePlantCameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            wholePlantCapturedBitmap = bitmap
+            val cacheUri = saveBitmapToCacheUri(context, bitmap)
+            if (cacheUri != null) {
+                wholePlantImageUri = cacheUri
+            }
+        }
+    }
+
+    // 5. Camera Permission Launcher to prevent crashes
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -358,7 +387,7 @@ fun AddPlantScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Nailing your first photo ensures the exact species and initial care baseline. (Quarterly growth photos can be taken at any angle or lighting!)",
+                                text = "Nailing your first close-up photo ensures the exact species and initial care baseline. (Quarterly growth photos can be taken at any angle or lighting!)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -481,6 +510,92 @@ fun AddPlantScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // Day 0 Whole Plant Growth Snapshot Section (Recommended)
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.PhotoCamera,
+                                            contentDescription = null,
+                                            tint = PrimarySage,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Day 0 Whole Plant Photo (Optional)",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = DeepForestAccent
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
+                                        text = "Take a full shot of your plant in its pot to start your 90-Day Growth Journal timeline baseline.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    if (wholePlantImageUri != null || wholePlantCapturedBitmap != null) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(180.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                        ) {
+                                            if (wholePlantCapturedBitmap != null) {
+                                                Image(
+                                                    bitmap = wholePlantCapturedBitmap!!.asImageBitmap(),
+                                                    contentDescription = "Whole Plant Photo",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            } else {
+                                                AsyncImage(
+                                                    model = wholePlantImageUri,
+                                                    contentDescription = "Whole Plant Photo",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = { wholePlantCameraLauncher.launch(null) },
+                                                modifier = Modifier.weight(1f),
+                                                shape = PillShape,
+                                                border = BorderStroke(1.dp, PrimarySage)
+                                            ) {
+                                                Text("Take Whole Shot", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PrimarySage)
+                                            }
+
+                                            OutlinedButton(
+                                                onClick = { wholePlantGalleryLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                                                modifier = Modifier.weight(1f),
+                                                shape = PillShape,
+                                                border = BorderStroke(1.dp, PrimarySage)
+                                            ) {
+                                                Text("Pick Whole Shot", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = PrimarySage)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
                             // Custom Name & Location Input Fields
                             OutlinedTextField(
                                 value = nicknameInput,
@@ -514,33 +629,56 @@ fun AddPlantScreen(
                             Button(
                                 onClick = {
                                     val plantId = "plant_${System.currentTimeMillis()}"
-                                    val photoUrl = selectedImageUri?.toString()
+
+                                    // Close-up detail photo URL
+                                    val detailPhotoUrl = selectedImageUri?.toString()
                                         ?: (if (capturedBitmap != null) saveBitmapToCacheUri(context, capturedBitmap!!)?.toString() else null)
                                         ?: defaultSamplePhoto
 
-                                    val initialMilestonePhoto = PlantPhoto(
-                                        id = "photo_${System.currentTimeMillis()}",
+                                    // Day 0 Whole plant photo URL (or detail photo if whole plant shot omitted)
+                                    val wholePlantUrl = wholePlantImageUri?.toString()
+                                        ?: (if (wholePlantCapturedBitmap != null) saveBitmapToCacheUri(context, wholePlantCapturedBitmap!!)?.toString() else null)
+                                        ?: detailPhotoUrl
+
+                                    val detailPhotoObj = PlantPhoto(
+                                        id = "photo_detail_${System.currentTimeMillis()}",
                                         plantId = plantId,
-                                        photoUrl = photoUrl,
+                                        photoUrl = detailPhotoUrl,
                                         dateTaken = LocalDate.now(),
                                         ageInDays = 0,
-                                        note = "Day 0 - Initial Sanctuary Entry",
-                                        isQuarterlyMilestone = true,
-                                        milestoneTitle = "Day 0 - Welcome"
+                                        note = "Day 0 - AI Detail Identification Shot",
+                                        isQuarterlyMilestone = false
                                     )
+
+                                    val wholePlantMilestonePhotoObj = PlantPhoto(
+                                        id = "photo_whole_${System.currentTimeMillis() + 1}",
+                                        plantId = plantId,
+                                        photoUrl = wholePlantUrl,
+                                        dateTaken = LocalDate.now(),
+                                        ageInDays = 0,
+                                        note = "Day 0 - Baseline Whole Plant Snapshot",
+                                        isQuarterlyMilestone = true,
+                                        milestoneTitle = "Day 0 - Baseline"
+                                    )
+
+                                    val photosList = if (wholePlantUrl != detailPhotoUrl) {
+                                        listOf(wholePlantMilestonePhotoObj, detailPhotoObj)
+                                    } else {
+                                        listOf(wholePlantMilestonePhotoObj)
+                                    }
 
                                     val newPlant = Plant(
                                         id = plantId,
                                         nickname = nicknameInput.ifBlank { result.commonName },
                                         botanicalName = result.botanicalName,
                                         commonName = result.commonName,
-                                        primaryPhotoUrl = photoUrl,
+                                        primaryPhotoUrl = wholePlantUrl,
                                         dateAdded = LocalDate.now(),
                                         careRequirements = result.careRequirements,
                                         location = locationInput.ifBlank { "Indoor • Living Room" },
                                         healthStatusType = HealthStatusType.HEALTHY,
                                         healthStatusText = "Healthy",
-                                        photos = listOf(initialMilestonePhoto)
+                                        photos = photosList
                                     )
                                     onPlantAdded(newPlant)
                                 },
