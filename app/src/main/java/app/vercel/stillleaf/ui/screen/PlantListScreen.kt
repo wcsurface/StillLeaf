@@ -1,5 +1,6 @@
 package app.vercel.stillleaf.ui.screen
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -56,6 +59,7 @@ import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.ui.component.StillLeafFooter
 import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
@@ -137,15 +141,15 @@ fun PlantListScreen(
                     )
 
                     Surface(
-                        color = SurfaceWhite.copy(alpha = 0.25f),
+                        color = SurfaceWhite.copy(alpha = 0.85f),
                         shape = PillShape,
-                        border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Text(
                             text = "${plants.size} ${if (plants.size == 1) "Plant" else "Plants"}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = CreamyOffWhite,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
@@ -180,7 +184,8 @@ fun PlantListScreen(
             if (filteredPlants.isEmpty()) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .weight(1f)
+                        .fillMaxWidth()
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -237,6 +242,8 @@ fun PlantListScreen(
                         }
                     }
                 }
+
+                StillLeafFooter(onLegalRequested = onLegalRequested)
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -251,13 +258,16 @@ fun PlantListScreen(
                             onClick = { onPlantSelected(plant) }
                         )
                     }
+
+                    // Span full 2 columns for Footer Links & Copyright
+                    item(span = { GridItemSpan(2) }) {
+                        StillLeafFooter(
+                            onLegalRequested = onLegalRequested,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
+                    }
                 }
             }
-
-            // Footer Links & Copyright
-            app.vercel.stillleaf.ui.component.StillLeafFooter(
-                onLegalRequested = onLegalRequested
-            )
         }
     }
 }

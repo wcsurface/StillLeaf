@@ -3,7 +3,6 @@ package app.vercel.stillleaf.ui.screen
 import android.accounts.AccountManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,6 +66,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.model.AuthUser
+import app.vercel.stillleaf.ui.component.LegalTab
+import app.vercel.stillleaf.ui.component.StillLeafFooter
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
 import app.vercel.stillleaf.ui.theme.PillShape
@@ -80,6 +81,7 @@ enum class AuthMode {
 @Composable
 fun AuthScreen(
     onAuthSuccess: (AuthUser) -> Unit,
+    onLegalRequested: (LegalTab) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -146,7 +148,7 @@ fun AuthScreen(
         ) {
             Spacer(modifier = Modifier.height(84.dp))
 
-            // Brand Logo & Header with Lighter Fonts
+            // Brand Logo & Header
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -431,7 +433,14 @@ fun AuthScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Footer Links & Copyright
+            StillLeafFooter(
+                onLegalRequested = onLegalRequested
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 

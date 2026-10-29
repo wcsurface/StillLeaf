@@ -112,16 +112,26 @@ class MainActivity : ComponentActivity() {
 
                 // Mandatory Authentication Gate: User CANNOT enter until signed in
                 if (currentUser == null) {
-                    AuthScreen(
-                        onAuthSuccess = { authenticatedUser ->
-                            currentUser = authenticatedUser
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Welcome to your Sanctuary, ${authenticatedUser.displayName}!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    )
+                    if (activeLegalTab != null) {
+                        LegalInfoScreen(
+                            initialTab = activeLegalTab!!,
+                            onBackRequested = { activeLegalTab = null }
+                        )
+                    } else {
+                        AuthScreen(
+                            onAuthSuccess = { authenticatedUser ->
+                                currentUser = authenticatedUser
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Welcome to your Sanctuary, ${authenticatedUser.displayName}!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onLegalRequested = { tab ->
+                                activeLegalTab = tab
+                            }
+                        )
+                    }
                 } else if (activeLegalTab != null) {
                     // Legal Info Screen (Terms, Privacy, FAQ)
                     LegalInfoScreen(
