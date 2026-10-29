@@ -172,24 +172,12 @@ fun AuthScreen(
 
                 Text(
                     text = "Healthy plants. Happier days.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CreamyOffWhite.copy(alpha = 0.9f)
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = CreamyOffWhite,
+                    textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Surface(
-                    color = SurfaceWhite.copy(alpha = 0.2f),
-                    shape = PillShape,
-                    border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
-                ) {
-                    Text(
-                        text = "Sign in to access your Botanical Sanctuary",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = CreamyOffWhite,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
