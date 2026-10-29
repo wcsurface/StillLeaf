@@ -17,12 +17,17 @@ import java.time.LocalDateTime
 object PlantPersistenceManager {
 
     private const val TAG = "PlantPersistence"
-    private const val FILE_NAME = "still_leaf_plants.json"
+
+    private fun getFileNameForUser(userId: String): String {
+        val sanitized = userId.lowercase().replace("[^a-z0-9]".toRegex(), "_")
+        return "still_leaf_plants_${sanitized}.json"
+    }
 
     /**
-     * Saves the user's current plant sanctuary list, photos, and care completion logs to local device storage.
+     * Saves the user's current plant sanctuary list, photos, and care completion logs isolated strictly by user account ID.
      */
-    fun savePlantsLocally(context: Context, plants: List<Plant>) {
+    fun savePlantsLocally(context: Context, userId: String, plants: List<Plant>) {
+        if (userId.isBlank()) return
         try {
             val jsonArray = JSONArray()
             plants.forEach { plant ->
@@ -83,22 +88,25 @@ object PlantPersistenceManager {
                 jsonArray.put(plantJson)
             }
 
-            val file = File(context.filesDir, FILE_NAME)
+            val fileName = getFileNameForUser(userId)
+            val file = File(context.filesDir, fileName)
             file.writeText(jsonArray.toString())
-            Log.d(TAG, "Successfully persisted ${plants.size} plants with care logs to local storage.")
+            Log.d(TAG, "Successfully persisted ${plants.size} plants for account [$userId] to $fileName.")
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving plants to local storage", e)
+            Log.e(TAG, "Error saving plants for user [$userId]", e)
         }
     }
 
     /**
-     * Restores saved plant sanctuary list, photos, and care logs from local device storage on app launch.
+     * Loads plants for a specific user account ID.
      */
-    fun loadPlantsLocally(context: Context): List<Plant> {
+    fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
+        if (userId.isBlank()) return emptyList()
         try {
-            val file = File(context.filesDir, FILE_NAME)
+            val fileName = getFileNameForUser(userId)
+            val file = File(context.filesDir, fileName)
             if (!file.exists()) {
-                Log.d(TAG, "No local plant storage file found. Returning empty sanctuary.")
+                Log.d(TAG, "No local plant storage file found for account [$userId]. Returning empty sanctuary.")
                 return emptyList()
             }
 
@@ -190,11 +198,25 @@ object PlantPersistenceManager {
                 plantList.add(plant)
             }
 
-            Log.d(TAG, "Successfully restored ${plantList.size} plants with care logs from local storage.")
+            Log.d(TAG, "Successfully restored ${plantList.size} plants for account [$userId] from $fileName.")
             return plantList
         } catch (e: Exception) {
-            Log.e(TAG, "Error restoring plants from local storage", e)
+            Log.e(TAG, "Error restoring plants for user [$userId]", e)
             return emptyList()
+        }
+    }
+
+    /**
+     * Fallback loader for background notifications across saved local account files.
+     */
+    fun loadAllLocalPlants(context: Context): List<Plant> {
+        val files = context.filesDir.listFiles { _, name -> name.startsWith("still_leaf_plants_") } ?: emptyArray()
+        if (files.isEmpty()) {
+            return loadPlantsLocally(context, "guest")
+        }
+        return files.flatMap { file ->
+            val userId = file.name.removePrefix("still_leaf_plants_").removeSuffix(".json")
+            loadPlantsLocally(context, userId)
         }
     }
 }

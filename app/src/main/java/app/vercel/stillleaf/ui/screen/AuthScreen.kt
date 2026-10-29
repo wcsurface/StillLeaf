@@ -1,6 +1,7 @@
 package app.vercel.stillleaf.ui.screen
 
 import android.accounts.AccountManager
+import android.util.Patterns
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -78,6 +79,16 @@ enum class AuthMode {
     REGISTER
 }
 
+fun isValidEmail(email: String): Boolean {
+    val trimmed = email.trim()
+    if (trimmed.isBlank() || !trimmed.contains("@")) return false
+    val parts = trimmed.split("@")
+    if (parts.size != 2) return false
+    val userPart = parts[0]
+    val domainPart = parts[1]
+    return userPart.length >= 2 && domainPart.contains(".") && domainPart.substringAfter(".").length >= 2 && Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()
+}
+
 @Composable
 fun AuthScreen(
     onAuthSuccess: (AuthUser) -> Unit,
@@ -103,15 +114,21 @@ fun AuthScreen(
     val scrollState = rememberScrollState()
 
     fun handleGoogleAccountSelected(selectedEmail: String) {
-        val formattedName = selectedEmail.split("@")[0]
+        val trimmedEmail = selectedEmail.trim()
+        if (!isValidEmail(trimmedEmail)) {
+            errorMessage = "Please select or enter a valid email address."
+            return
+        }
+
+        val formattedName = trimmedEmail.split("@")[0]
             .replace(".", " ")
             .replace("_", " ")
             .split(" ")
             .joinToString(" ") { word -> word.replaceFirstChar { char -> char.uppercase() } }
 
         val authenticatedUser = AuthUser(
-            id = "usr_google_${System.currentTimeMillis()}",
-            email = selectedEmail.trim(),
+            id = "usr_google_${trimmedEmail.lowercase().replace("[^a-z0-9]".toRegex(), "_")}",
+            email = trimmedEmail,
             displayName = formattedName,
             authProvider = "GOOGLE",
             token = "google_oauth_token_${System.currentTimeMillis()}"
@@ -122,7 +139,7 @@ fun AuthScreen(
     fun launchGoogleSignIn() {
         try {
             val manager = AccountManager.get(context)
-            val accounts = manager.getAccountsByType("com.google").map { it.name }
+            val accounts = manager.getAccountsByType("com.google").map { it.name }.filter { isValidEmail(it) }
             deviceAccounts = accounts
         } catch (_: Exception) {
             deviceAccounts = emptyList()
@@ -339,8 +356,13 @@ fun AuthScreen(
                     } else {
                         Button(
                             onClick = {
-                                if (emailInput.isBlank() || passwordInput.isBlank()) {
+                                val trimmedEmail = emailInput.trim()
+                                if (trimmedEmail.isBlank() || passwordInput.isBlank()) {
                                     errorMessage = "Please enter your email and password."
+                                    return@Button
+                                }
+                                if (!isValidEmail(trimmedEmail)) {
+                                    errorMessage = "Please enter a valid email address (e.g. name@gmail.com)."
                                     return@Button
                                 }
 
@@ -351,9 +373,9 @@ fun AuthScreen(
                                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                                     isLoading = false
                                     val authenticatedUser = AuthUser(
-                                        id = "usr_${System.currentTimeMillis()}",
-                                        email = emailInput.trim(),
-                                        displayName = if (authMode == AuthMode.REGISTER && nameInput.isNotBlank()) nameInput else emailInput.split("@")[0],
+                                        id = "usr_${trimmedEmail.lowercase().replace("[^a-z0-9]".toRegex(), "_")}",
+                                        email = trimmedEmail,
+                                        displayName = if (authMode == AuthMode.REGISTER && nameInput.isNotBlank()) nameInput else trimmedEmail.split("@")[0],
                                         authProvider = "EMAIL",
                                         token = "jwt_session_${System.currentTimeMillis()}"
                                     )
@@ -463,6 +485,7 @@ fun GoogleAccountPickerDialog(
     onAccountSelected: (String) -> Unit
 ) {
     var customGoogleEmailInput by remember { mutableStateOf("") }
+    var dialogError by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -519,6 +542,23 @@ fun GoogleAccountPickerDialog(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Dialog Error Callout
+                if (dialogError != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = dialogError!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
 
                 // List Device Accounts found on Android phone
                 if (deviceAccounts.isNotEmpty()) {
@@ -580,7 +620,10 @@ fun GoogleAccountPickerDialog(
                 // Custom Email Input
                 OutlinedTextField(
                     value = customGoogleEmailInput,
-                    onValueChange = { customGoogleEmailInput = it },
+                    onValueChange = {
+                        customGoogleEmailInput = it
+                        dialogError = null
+                    },
                     label = { Text("Your Google Email Address") },
                     leadingIcon = {
                         Icon(imageVector = Icons.Default.Email, contentDescription = null)
@@ -595,11 +638,17 @@ fun GoogleAccountPickerDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Centered, Clean Primary Button
+                // Centered, Clean Primary Button with Email Validation
                 Button(
                     onClick = {
-                        if (customGoogleEmailInput.isNotBlank()) {
-                            onAccountSelected(customGoogleEmailInput.trim())
+                        val trimmedEmail = customGoogleEmailInput.trim()
+                        if (trimmedEmail.isBlank()) {
+                            dialogError = "Please select or enter your Google email address."
+                        } else if (!isValidEmail(trimmedEmail)) {
+                            dialogError = "Please enter a valid Google email address (e.g. name@gmail.com)."
+                        } else {
+                            dialogError = null
+                            onAccountSelected(trimmedEmail)
                         }
                     },
                     modifier = Modifier

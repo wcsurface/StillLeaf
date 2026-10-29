@@ -67,13 +67,11 @@ class MainActivity : ComponentActivity() {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
 
-                // Load saved plants from persistent disk storage
-                val restoredPlants = remember { PlantPersistenceManager.loadPlantsLocally(applicationContext) }
-                var plantList by remember { mutableStateOf<List<Plant>>(restoredPlants) }
+                var currentUser by remember { mutableStateOf<AuthUser?>(null) }
+                var plantList by remember { mutableStateOf<List<Plant>>(emptyList()) }
 
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
-                var currentUser by remember { mutableStateOf<AuthUser?>(null) }
                 var showPaywallSheet by remember { mutableStateOf(false) }
                 var activeLegalTab by remember { mutableStateOf<LegalTab?>(null) }
 
@@ -93,10 +91,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Helper to update plant list & persist to disk
+                // Helper to update plant list & persist to user's isolated account file
                 fun updateAndPersistPlants(newList: List<Plant>) {
                     plantList = newList
-                    PlantPersistenceManager.savePlantsLocally(applicationContext, newList)
+                    val userId = currentUser?.id ?: "guest"
+                    PlantPersistenceManager.savePlantsLocally(applicationContext, userId, newList)
                 }
 
                 // Intercept system back button
@@ -127,6 +126,10 @@ class MainActivity : ComponentActivity() {
                         AuthScreen(
                             onAuthSuccess = { authenticatedUser ->
                                 currentUser = authenticatedUser
+                                // Load plants isolated strictly for this user account ID
+                                val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, authenticatedUser.id)
+                                plantList = userPlants
+
                                 Toast.makeText(
                                     this@MainActivity,
                                     "Welcome to your Sanctuary, ${authenticatedUser.displayName}!",
@@ -198,6 +201,28 @@ class MainActivity : ComponentActivity() {
                                                     "Diagnosis saved to ${updatedPlant.nickname}'s profile!"
                                                 }
                                                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+                                            },
+                                            onTaskToggled = { plantId, taskType, isCompleted ->
+                                                val updatedList = plantList.map { plant ->
+                                                    if (plant.id == plantId) {
+                                                        val updatedLogs = if (isCompleted) {
+                                                            plant.recentLogs + app.vercel.stillleaf.data.model.CareLog(
+                                                                id = "log_${System.currentTimeMillis()}",
+                                                                plantId = plantId,
+                                                                taskType = taskType,
+                                                                completedAt = java.time.LocalDateTime.now()
+                                                            )
+                                                        } else {
+                                                            plant.recentLogs.filterNot { log ->
+                                                                log.taskType == taskType && log.completedAt.toLocalDate() == java.time.LocalDate.now()
+                                                            }
+                                                        }
+                                                        plant.copy(recentLogs = updatedLogs)
+                                                    } else {
+                                                        plant
+                                                    }
+                                                }
+                                                updateAndPersistPlants(updatedList)
                                             }
                                         )
                                     }
@@ -288,6 +313,8 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onSignOutRequested = {
                                                 currentUser = null
+                                                plantList = emptyList()
+                                                selectedPlant = null
                                                 Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()
                                             }
                                         )

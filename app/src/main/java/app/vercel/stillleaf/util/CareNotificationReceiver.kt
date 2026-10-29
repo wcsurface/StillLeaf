@@ -39,7 +39,7 @@ class CareNotificationReceiver : BroadcastReceiver() {
 
         when (action) {
             ACTION_DAILY_REMINDER -> {
-                val plants = PlantPersistenceManager.loadPlantsLocally(context)
+                val plants = PlantPersistenceManager.loadAllLocalPlants(context)
                 if (plants.isEmpty()) return
 
                 val firstPlant = plants.first()
