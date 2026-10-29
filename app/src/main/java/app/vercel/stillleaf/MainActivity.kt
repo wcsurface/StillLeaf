@@ -44,12 +44,10 @@ class MainActivity : ComponentActivity() {
 
         billingManager = BillingManager(applicationContext)
 
-        val initialPlants = createSamplePlantList()
-
         setContent {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
-                var plantList by remember { mutableStateOf(initialPlants) }
+                var plantList by remember { mutableStateOf<List<Plant>>(emptyList()) }
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(null) }
