@@ -19,10 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import app.vercel.stillleaf.billing.BillingManager
 import app.vercel.stillleaf.data.model.AuthUser
-import app.vercel.stillleaf.data.model.CareRequirement
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
-import app.vercel.stillleaf.data.model.PlantPhoto
 import app.vercel.stillleaf.ui.component.BannerAdView
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
 import app.vercel.stillleaf.ui.screen.AuthScreen
@@ -32,7 +30,6 @@ import app.vercel.stillleaf.ui.screen.PlantDetailScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
 import app.vercel.stillleaf.ui.screen.SettingsScreen
 import app.vercel.stillleaf.ui.theme.StillLeafTheme
-import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
 
@@ -229,136 +226,5 @@ class MainActivity : ComponentActivity() {
         if (::billingManager.isInitialized) {
             billingManager.endConnection()
         }
-    }
-
-    private fun createSamplePlantList(): List<Plant> {
-        val today = LocalDate.now()
-
-        val monsteraPhotos = listOf(
-            PlantPhoto(
-                id = "p1",
-                plantId = "monstera_1",
-                photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
-                dateTaken = today.minusDays(180),
-                ageInDays = 0,
-                note = "Welcome home! Placed near east-facing window.",
-                isQuarterlyMilestone = true,
-                milestoneTitle = "Day 0 - Welcome"
-            ),
-            PlantPhoto(
-                id = "p2",
-                plantId = "monstera_1",
-                photoUrl = "https://images.unsplash.com/photo-1545241047-6083a3684587?auto=format&fit=crop&w=800&q=80",
-                dateTaken = today.minusDays(90),
-                ageInDays = 90,
-                note = "First fenestrated split leaf emerging!",
-                isQuarterlyMilestone = true,
-                milestoneTitle = "Day 90 - First Split"
-            ),
-            PlantPhoto(
-                id = "p3",
-                plantId = "monstera_1",
-                photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
-                dateTaken = today,
-                ageInDays = 180,
-                note = "Summer growth surge! Three new vibrant leaves.",
-                isQuarterlyMilestone = true,
-                milestoneTitle = "Day 180 - Summer Surge"
-            )
-        )
-
-        val monstera = Plant(
-            id = "monstera_1",
-            nickname = "Monstera Deliciosa",
-            botanicalName = "Monstera deliciosa",
-            commonName = "Swiss Cheese Plant",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
-            dateAdded = today.minusDays(180),
-            careRequirements = CareRequirement(
-                sunlight = "Bright Indirect Light",
-                idealTemperature = "18°C - 27°C",
-                idealHumidity = "60% - 80%",
-                waterIntervalDays = 7,
-                feedIntervalDays = 30,
-                rotateIntervalDays = 14,
-                trimIntervalDays = 90,
-                careInsight = "Thrives in gentle ambient light. Let top 2 inches of soil dry before watering."
-            ),
-            location = "Indoor • Living Room",
-            healthStatusType = HealthStatusType.HEALTHY,
-            healthStatusText = "Healthy",
-            photos = monsteraPhotos
-        )
-
-        val snakePlant = Plant(
-            id = "snake_1",
-            nickname = "Snake Plant",
-            botanicalName = "Sansevieria trifasciata",
-            commonName = "Mother-in-law's Tongue",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?auto=format&fit=crop&w=800&q=80",
-            dateAdded = today.minusDays(120),
-            careRequirements = CareRequirement(
-                sunlight = "Low to Bright Indirect Light",
-                idealTemperature = "15°C - 29°C",
-                idealHumidity = "30% - 50%",
-                waterIntervalDays = 14,
-                feedIntervalDays = 60,
-                rotateIntervalDays = 30,
-                trimIntervalDays = 180,
-                careInsight = "Extremely drought-tolerant. Soil should dry out completely between waterings."
-            ),
-            location = "Indoor • Office",
-            healthStatusType = HealthStatusType.NEEDS_WATER,
-            healthStatusText = "Needs Water",
-            photos = emptyList()
-        )
-
-        val basil = Plant(
-            id = "basil_1",
-            nickname = "Basil",
-            botanicalName = "Ocimum basilicum",
-            commonName = "Sweet Basil",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=800&q=80",
-            dateAdded = today.minusDays(45),
-            careRequirements = CareRequirement(
-                sunlight = "Full Sunlight 6+ hours",
-                idealTemperature = "20°C - 30°C",
-                idealHumidity = "40% - 60%",
-                waterIntervalDays = 3,
-                feedIntervalDays = 14,
-                rotateIntervalDays = 7,
-                trimIntervalDays = 14,
-                careInsight = "Pinch top leaves regularly to encourage bushy, aromatic growth."
-            ),
-            location = "Outdoor • Patio",
-            healthStatusType = HealthStatusType.HEALTHY,
-            healthStatusText = "Healthy",
-            photos = emptyList()
-        )
-
-        val lavender = Plant(
-            id = "lavender_1",
-            nickname = "Lavender",
-            botanicalName = "Lavandula angustifolia",
-            commonName = "English Lavender",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1528183429752-a97d0bf99b5a?auto=format&fit=crop&w=800&q=80",
-            dateAdded = today.minusDays(60),
-            careRequirements = CareRequirement(
-                sunlight = "Full Direct Sunlight",
-                idealTemperature = "18°C - 28°C",
-                idealHumidity = "30% - 40%",
-                waterIntervalDays = 7,
-                feedIntervalDays = 30,
-                rotateIntervalDays = 14,
-                trimIntervalDays = 60,
-                careInsight = "Requires well-draining lean soil. Apply organic bloom booster fertilizer for fragrant purple spikes."
-            ),
-            location = "Outdoor • Garden",
-            healthStatusType = HealthStatusType.NEEDS_FERTILIZER,
-            healthStatusText = "Needs Fertilizer",
-            photos = emptyList()
-        )
-
-        return listOf(monstera, snakePlant, basil, lavender)
     }
 }
