@@ -1,0 +1,1 @@
+Temporary file created for testing delete and rename permissions.
