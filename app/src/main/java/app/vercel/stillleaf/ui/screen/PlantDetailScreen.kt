@@ -57,7 +57,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -89,6 +88,7 @@ import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.PillShape
 import coil.compose.AsyncImage
+import java.time.LocalDate
 
 @Composable
 fun PlantDetailScreen(
@@ -99,13 +99,20 @@ fun PlantDetailScreen(
     onEditPlantRequested: (Plant, String, String) -> Unit = { _, _, _ -> },
     onDeletePlantRequested: (Plant) -> Unit = {},
     onDiagnosisCreated: (Plant, PlantDiagnosis, Boolean) -> Unit = { _, _, _ -> },
+    onTaskToggled: (plantId: String, taskType: CareTaskType, isCompleted: Boolean) -> Unit = { _, _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val scrollState = rememberScrollState()
+    val today = remember { LocalDate.now() }
 
-    // Track task completion locally for micro-interaction
-    val taskCompletionState = remember { mutableStateMapOf<CareTaskType, Boolean>() }
+    // Unified helper reading persisted CareLogs from plant
+    fun isTaskCompletedToday(taskType: CareTaskType): Boolean {
+        return plant.recentLogs.any { log ->
+            log.taskType == taskType && log.completedAt.toLocalDate() == today
+        }
+    }
+
     var selectedComparisonPhoto by remember { mutableStateOf<PlantPhoto?>(null) }
 
     // Dialog & Modal states for Environment & Care Profile
@@ -293,7 +300,7 @@ fun PlantDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 3. Interactive Task Action Cards
+        // 3. Interactive Task Action Cards (Connected to Unified CareLog Handler)
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
                 text = "Care Routine & Tasks",
@@ -309,10 +316,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.WaterDrop,
                 title = "Water Plant",
                 subtitle = "Keep topsoil evenly moist",
-                isCompleted = taskCompletionState[CareTaskType.WATER] ?: false,
+                isCompleted = isTaskCompletedToday(CareTaskType.WATER),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    taskCompletionState[CareTaskType.WATER] = !(taskCompletionState[CareTaskType.WATER] ?: false)
+                    onTaskToggled(plant.id, CareTaskType.WATER, !isTaskCompletedToday(CareTaskType.WATER))
                 }
             )
 
@@ -323,11 +330,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.Spa,
                 title = "Nourish & Feed",
                 subtitle = "Apply diluted organic fertilizer (Tap for info)",
-                isCompleted = taskCompletionState[CareTaskType.FEED] ?: false,
+                isCompleted = isTaskCompletedToday(CareTaskType.FEED),
                 onCompleteToggle = {
-                    showNourishModal = true
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    taskCompletionState[CareTaskType.FEED] = !(taskCompletionState[CareTaskType.FEED] ?: false)
+                    onTaskToggled(plant.id, CareTaskType.FEED, !isTaskCompletedToday(CareTaskType.FEED))
                 }
             )
 
@@ -338,10 +344,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.Refresh,
                 title = "Rotate Pot 90°",
                 subtitle = "Promote balanced leaf growth",
-                isCompleted = taskCompletionState[CareTaskType.ROTATE] ?: false,
+                isCompleted = isTaskCompletedToday(CareTaskType.ROTATE),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    taskCompletionState[CareTaskType.ROTATE] = !(taskCompletionState[CareTaskType.ROTATE] ?: false)
+                    onTaskToggled(plant.id, CareTaskType.ROTATE, !isTaskCompletedToday(CareTaskType.ROTATE))
                 }
             )
 
@@ -352,10 +358,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.ContentCut,
                 title = "Prune & Clean Leaves",
                 subtitle = "Remove yellowing foliage",
-                isCompleted = taskCompletionState[CareTaskType.TRIM] ?: false,
+                isCompleted = isTaskCompletedToday(CareTaskType.TRIM),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    taskCompletionState[CareTaskType.TRIM] = !(taskCompletionState[CareTaskType.TRIM] ?: false)
+                    onTaskToggled(plant.id, CareTaskType.TRIM, !isTaskCompletedToday(CareTaskType.TRIM))
                 }
             )
         }
