@@ -60,7 +60,7 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
-import app.vercel.stillleaf.ui.theme.CreamyOffWhite
+import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.HealthyGreen
 import app.vercel.stillleaf.ui.theme.LakkiReddyFontFamily
 import app.vercel.stillleaf.ui.theme.PillShape
@@ -128,7 +128,7 @@ fun PlantListScreen(
                     Icon(
                         imageVector = Icons.Default.Spa,
                         contentDescription = "Still Leaf Logo",
-                        tint = CreamyOffWhite,
+                        tint = DeepForestAccent,
                         modifier = Modifier.size(32.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -136,7 +136,7 @@ fun PlantListScreen(
                         text = "STILL LEAF",
                         fontFamily = LakkiReddyFontFamily,
                         fontSize = 32.sp,
-                        color = CreamyOffWhite,
+                        color = DeepForestAccent,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -146,7 +146,7 @@ fun PlantListScreen(
                 Text(
                     text = "Healthy plants. Happier days.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CreamyOffWhite.copy(alpha = 0.9f)
+                    color = DeepForestAccent.copy(alpha = 0.9f)
                 )
             }
 
@@ -218,19 +218,19 @@ fun PlantListScreen(
                         text = "My Plants",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = CreamyOffWhite
+                        color = DeepForestAccent
                     )
 
                     Surface(
-                        color = SurfaceWhite.copy(alpha = 0.25f),
+                        color = SurfaceWhite.copy(alpha = 0.85f),
                         shape = PillShape,
-                        border = BorderStroke(1.dp, CreamyOffWhite.copy(alpha = 0.4f))
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
                         Text(
                             text = "${plants.size} ${if (plants.size == 1) "Plant" else "Plants"}",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = CreamyOffWhite,
+                            color = DeepForestAccent,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
