@@ -53,36 +53,30 @@ class MainActivity : ComponentActivity() {
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(null) }
-                var isAuthScreenVisible by remember { mutableStateOf(false) }
 
                 // Intercept system back button
-                if (isAuthScreenVisible) {
-                    BackHandler {
-                        if (currentUser != null) {
-                            isAuthScreenVisible = false
+                if (currentUser != null) {
+                    if (selectedPlant != null) {
+                        BackHandler {
+                            selectedPlant = null
                         }
-                    }
-                } else if (selectedPlant != null) {
-                    BackHandler {
-                        selectedPlant = null
-                    }
-                } else if (currentTab != NavTab.HOME) {
-                    BackHandler {
-                        currentTab = NavTab.HOME
+                    } else if (currentTab != NavTab.HOME) {
+                        BackHandler {
+                            currentTab = NavTab.HOME
+                        }
                     }
                 }
 
-                if (isAuthScreenVisible) {
+                // Mandatory Authentication Gate: User CANNOT enter until signed in
+                if (currentUser == null) {
                     AuthScreen(
-                        onBackRequested = if (currentUser != null) { { isAuthScreenVisible = false } } else null,
                         onAuthSuccess = { authenticatedUser ->
                             currentUser = authenticatedUser
-                            isAuthScreenVisible = false
-                            Toast.makeText(this@MainActivity, "Welcome, ${authenticatedUser.displayName}!", Toast.LENGTH_SHORT).show()
-                        },
-                        onGuestRequested = {
-                            isAuthScreenVisible = false
-                            Toast.makeText(this@MainActivity, "Continuing in Guest Preview Mode", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Welcome to your Sanctuary, ${authenticatedUser.displayName}!",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     )
                 } else {
@@ -179,12 +173,8 @@ class MainActivity : ComponentActivity() {
                                             onUpgradeRequested = {
                                                 launchBillingUpgrade()
                                             },
-                                            onSignInRequested = {
-                                                isAuthScreenVisible = true
-                                            },
                                             onSignOutRequested = {
                                                 currentUser = null
-                                                isAuthScreenVisible = true
                                                 Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()
                                             }
                                         )
@@ -210,9 +200,6 @@ class MainActivity : ComponentActivity() {
                                                 } else {
                                                     currentTab = tab
                                                 }
-                                            },
-                                            onSignInRequested = {
-                                                isAuthScreenVisible = true
                                             },
                                             onUpgradeRequested = {
                                                 launchBillingUpgrade()
