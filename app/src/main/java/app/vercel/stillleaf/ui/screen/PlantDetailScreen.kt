@@ -119,11 +119,11 @@ fun PlantDetailScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(scrollState)
     ) {
-        // 1. Plant Image Header Banner
+        // 1. Plant Image Header Banner (9:16 Portrait Format)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(420.dp)
         ) {
             AsyncImage(
                 model = plant.primaryPhotoUrl,

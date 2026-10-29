@@ -269,11 +269,11 @@ fun MockupPlantCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
-            // Plant Photo Container
+            // Plant Photo Container (9:16 Vertical Portrait Ratio)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
+                    .height(200.dp)
                     .clip(RoundedCornerShape(16.dp))
             ) {
                 AsyncImage(

@@ -25,14 +25,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,6 +59,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -72,6 +77,7 @@ import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
 import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.PillShape
+import app.vercel.stillleaf.ui.theme.PrimarySage
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
@@ -188,7 +194,7 @@ fun AddPlantScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Sub-Header Title with High-Contrast Light Cream
+            // Sub-Header Title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -206,12 +212,12 @@ fun AddPlantScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Camera Frame / Photo Preview Box
+            // 9:16 Vertical Portrait Camera Preview Frame
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
+                        .height(320.dp) // 9:16 vertical format
                         .clip(RoundedCornerShape(20.dp))
                         .background(SurfaceWhite.copy(alpha = 0.92f))
                         .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), shape = RoundedCornerShape(20.dp)),
@@ -239,13 +245,19 @@ fun AddPlantScreen(
                                 Icon(
                                     imageVector = Icons.Default.CameraAlt,
                                     contentDescription = "Camera",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(48.dp)
+                                    tint = PrimarySage,
+                                    modifier = Modifier.size(52.dp)
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Text(
-                                    text = "Take a photo or pick an image from gallery",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = "Position leaf inside frame",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepForestAccent
+                                )
+                                Text(
+                                    text = "9:16 Portrait Capture Format",
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -311,6 +323,69 @@ fun AddPlantScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Gallery", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+
+                // Initial Best Practices Guidance Card (Before Photo Selected)
+                if (aiResult == null && !isAnalyzing) {
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceWhite.copy(alpha = 0.95f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Spa,
+                                    contentDescription = null,
+                                    tint = PrimarySage,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Photo Best Practices for 99% AI Accuracy",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = DeepForestAccent
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = "Nailing your first photo ensures the exact species and initial care baseline. (Quarterly growth photos can be taken at any angle or lighting!)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            BestPracticeRow(
+                                icon = Icons.Default.ZoomIn,
+                                title = "Focus on Leaf & Flower Detail",
+                                description = "Center a single clear leaf margin, vein pattern, or flower bloom in the frame."
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            BestPracticeRow(
+                                icon = Icons.Default.LightMode,
+                                title = "Natural Indirect Lighting",
+                                description = "Ensure bright ambient daylight—avoid heavy shadows or dark indoor rooms."
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            BestPracticeRow(
+                                icon = Icons.Default.PhotoCamera,
+                                title = "Isolate Single Plant",
+                                description = "Keep background foliage or secondary houseplants out of the camera view."
+                            )
                         }
                     }
                 }
@@ -483,6 +558,49 @@ fun AddPlantScreen(
 
                 Spacer(modifier = Modifier.height(40.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun BestPracticeRow(
+    icon: ImageVector,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            color = PrimarySage.copy(alpha = 0.15f),
+            shape = CircleShape,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = PrimarySage,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = DeepForestAccent
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
