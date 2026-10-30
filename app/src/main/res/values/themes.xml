@@ -10,9 +10,9 @@
 
     <!-- Official Starting Splash Screen Theme for Android 12+ and All Versions -->
     <style name="Theme.StillLeaf.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#89947F</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="windowSplashScreenIconBackgroundColor">#89947F</item>
+        <item name="windowSplashScreenBackground">@color/still_leaf_sage</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/still_leaf_sage</item>
         <item name="postSplashScreenTheme">@style/Theme.StillLeaf</item>
     </style>
 </resources>

@@ -1,15 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [8.5.0] - Official Startup Splash Screen Integration
+
+### Fixed
+- Fixed bug where Android 12+ displayed default Android bug icon during app launch.
+- Integrated `androidx.core:core-splashscreen` API and configured `Theme.StillLeaf.Starting`.
+- Set startup splash screen to display official Still Leaf logo on sage green background.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [8.4.0] - Screen Rotation Uninterrupted Audio Playback Fix
 
 ### Fixed
 - Fixed bug where rotating the phone screen restarted background music from the beginning.
-- Configured `android:configChanges` on `MainActivity` in `AndroidManifest.xml` to prevent Activity destruction during screen orientation changes.
-- Updated `BackgroundMusicManager.kt` to preserve exact millisecond playback position (`savedPlaybackPosition`) across lifecycle transitions.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [8.3.0] - Persistent User Authentication Sessions
-
-### Added
-- Created `UserSessionManager.kt` to persist authenticated user account sessions in `SharedPreferences`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.

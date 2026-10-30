@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Still Leaf Top Leaf Petal -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,18 C45,30 45,42 54,48 C63,42 63,30 54,18 Z" />
+
+    <!-- Still Leaf Left Curved Wing Petal -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,52 C32,46 18,54 18,72 C36,80 48,68 51,52 Z" />
+
+    <!-- Still Leaf Right Curved Wing Petal -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M57,52 C60,68 72,80 90,72 C90,54 76,46 57,52 Z" />
+</vector>
