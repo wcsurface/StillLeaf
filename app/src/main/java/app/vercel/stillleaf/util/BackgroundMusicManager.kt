@@ -13,6 +13,7 @@ object BackgroundMusicManager {
 
     private var mediaPlayer: MediaPlayer? = null
     private var isPausedByLifecycle = false
+    private var savedPlaybackPosition = 0
 
     /**
      * Reads background music toggle preference (defaults to true).
@@ -37,7 +38,7 @@ object BackgroundMusicManager {
     }
 
     /**
-     * Starts gentle background ambient music at low volume (12%).
+     * Starts gentle background ambient music at low volume (12%), maintaining uninterrupted playback across screen rotations.
      */
     fun startMusic(context: Context) {
         if (!isMusicEnabled(context)) {
@@ -45,21 +46,32 @@ object BackgroundMusicManager {
             return
         }
 
+        // If player is already playing, do NOT restart the track
+        if (mediaPlayer?.isPlaying == true) {
+            Log.d(TAG, "Background music is already actively playing.")
+            return
+        }
+
         if (mediaPlayer == null) {
             try {
                 mediaPlayer = MediaPlayer.create(context.applicationContext, R.raw.bg_gentle_bamboo_breeze)?.apply {
                     isLooping = true
-                    // Low ambient volume (12% left and right channel)
                     setVolume(0.12f, 0.12f)
+                    if (savedPlaybackPosition > 0) {
+                        seekTo(savedPlaybackPosition)
+                    }
                     start()
                 }
                 isPausedByLifecycle = false
-                Log.d(TAG, "Gentle Bamboo Breeze background music started at low volume.")
+                Log.d(TAG, "Gentle Bamboo Breeze background music playing from $savedPlaybackPosition ms.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing background music player", e)
             }
-        } else if (mediaPlayer?.isPlaying == false) {
+        } else {
             try {
+                if (savedPlaybackPosition > 0) {
+                    mediaPlayer?.seekTo(savedPlaybackPosition)
+                }
                 mediaPlayer?.start()
                 isPausedByLifecycle = false
             } catch (e: Exception) {
@@ -69,14 +81,17 @@ object BackgroundMusicManager {
     }
 
     /**
-     * Pauses background music when activity is backgrounded.
+     * Saves playback position and pauses music for lifecycle transitions.
      */
     fun pauseMusic() {
         try {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer?.pause()
-                isPausedByLifecycle = true
-                Log.d(TAG, "Background music paused for lifecycle.")
+            mediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    savedPlaybackPosition = player.currentPosition
+                    player.pause()
+                    isPausedByLifecycle = true
+                    Log.d(TAG, "Background music paused at $savedPlaybackPosition ms.")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error pausing background music", e)
@@ -84,29 +99,35 @@ object BackgroundMusicManager {
     }
 
     /**
-     * Resumes background music when activity returns to foreground.
+     * Resumes background music seamlessly from the saved position.
      */
     fun resumeMusic(context: Context) {
-        if (isMusicEnabled(context) && isPausedByLifecycle && mediaPlayer != null) {
-            try {
-                mediaPlayer?.start()
-                isPausedByLifecycle = false
-                Log.d(TAG, "Background music resumed.")
-            } catch (e: Exception) {
-                Log.e(TAG, "Error resuming background music on activity resume", e)
+        if (isMusicEnabled(context)) {
+            if (mediaPlayer == null) {
+                startMusic(context)
+            } else if (isPausedByLifecycle || mediaPlayer?.isPlaying == false) {
+                try {
+                    if (savedPlaybackPosition > 0) {
+                        mediaPlayer?.seekTo(savedPlaybackPosition)
+                    }
+                    mediaPlayer?.start()
+                    isPausedByLifecycle = false
+                    Log.d(TAG, "Background music resumed at $savedPlaybackPosition ms.")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error resuming background music on activity resume", e)
+                }
             }
-        } else if (isMusicEnabled(context) && mediaPlayer == null) {
-            startMusic(context)
         }
     }
 
     /**
-     * Stops and releases background music player.
+     * Stops and releases background music player on explicit exit.
      */
     fun stopMusic() {
         try {
             mediaPlayer?.let { player ->
                 if (player.isPlaying) {
+                    savedPlaybackPosition = player.currentPosition
                     player.stop()
                 }
                 player.release()
