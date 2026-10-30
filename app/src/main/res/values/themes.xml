@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base App Theme -->
     <style name="Theme.StillLeaf" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">#F7F4E9</item>
         <item name="android:statusBarColor">#F7F4E9</item>
         <item name="android:navigationBarColor">#F7F4E9</item>
         <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!-- Official Starting Splash Screen Theme for Android 12+ and All Versions -->
+    <style name="Theme.StillLeaf.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#89947F</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenIconBackgroundColor">#89947F</item>
+        <item name="postSplashScreenTheme">@style/Theme.StillLeaf</item>
     </style>
 </resources>

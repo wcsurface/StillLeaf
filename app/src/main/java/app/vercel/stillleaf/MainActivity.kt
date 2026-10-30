@@ -37,6 +37,7 @@ import app.vercel.stillleaf.ui.screen.CalendarScreen
 import app.vercel.stillleaf.ui.screen.LegalInfoScreen
 import app.vercel.stillleaf.ui.screen.NavTab
 import app.vercel.stillleaf.ui.screen.PlantDetailScreen
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
 import app.vercel.stillleaf.ui.screen.SettingsScreen
 import app.vercel.stillleaf.ui.theme.StillLeafTheme
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
