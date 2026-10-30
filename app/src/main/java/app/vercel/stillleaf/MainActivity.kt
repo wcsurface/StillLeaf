@@ -28,6 +28,7 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.data.repository.PlantPersistenceManager
+import app.vercel.stillleaf.data.repository.UserSessionManager
 import app.vercel.stillleaf.ui.component.LegalTab
 import app.vercel.stillleaf.ui.component.PaywallBottomSheet
 import app.vercel.stillleaf.ui.screen.AddPlantScreen
@@ -67,8 +68,19 @@ class MainActivity : ComponentActivity() {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
 
-                var currentUser by remember { mutableStateOf<AuthUser?>(null) }
-                var plantList by remember { mutableStateOf<List<Plant>>(emptyList()) }
+                // Restore saved user session from persistent SharedPreferences
+                val savedUser = remember { UserSessionManager.getSavedUserSession(applicationContext) }
+                var currentUser by remember { mutableStateOf<AuthUser?>(savedUser) }
+
+                // Restore user's isolated plant sanctuary if logged in
+                val restoredPlants = remember(savedUser) {
+                    if (savedUser != null) {
+                        PlantPersistenceManager.loadPlantsLocally(applicationContext, savedUser.id)
+                    } else {
+                        emptyList()
+                    }
+                }
+                var plantList by remember { mutableStateOf<List<Plant>>(restoredPlants) }
 
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
@@ -125,7 +137,10 @@ class MainActivity : ComponentActivity() {
                     } else {
                         AuthScreen(
                             onAuthSuccess = { authenticatedUser ->
+                                // Save user session to disk so user stays logged in across restarts
+                                UserSessionManager.saveUserSession(applicationContext, authenticatedUser)
                                 currentUser = authenticatedUser
+
                                 // Load plants isolated strictly for this user account ID
                                 val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, authenticatedUser.id)
                                 plantList = userPlants
@@ -312,6 +327,8 @@ class MainActivity : ComponentActivity() {
                                                 Toast.makeText(this@MainActivity, "Restoring Google Play purchases...", Toast.LENGTH_SHORT).show()
                                             },
                                             onSignOutRequested = {
+                                                // Clear session and state on explicit sign-out
+                                                UserSessionManager.clearUserSession(applicationContext)
                                                 currentUser = null
                                                 plantList = emptyList()
                                                 selectedPlant = null
