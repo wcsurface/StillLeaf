@@ -38,6 +38,10 @@ class BillingManager(
     private val _subscriptionStatus = MutableStateFlow(SubscriptionStatus.FREE)
     val subscriptionStatus: StateFlow<SubscriptionStatus> = _subscriptionStatus.asStateFlow()
 
+    fun updateSubscriptionStatus(status: SubscriptionStatus) {
+        _subscriptionStatus.value = status
+    }
+
     private val _subProductDetails = MutableStateFlow<ProductDetails?>(null)
     val subProductDetails: StateFlow<ProductDetails?> = _subProductDetails.asStateFlow()
 

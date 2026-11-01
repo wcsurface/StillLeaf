@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,7 +38,6 @@ import app.vercel.stillleaf.ui.screen.CalendarScreen
 import app.vercel.stillleaf.ui.screen.LegalInfoScreen
 import app.vercel.stillleaf.ui.screen.NavTab
 import app.vercel.stillleaf.ui.screen.PlantDetailScreen
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
 import app.vercel.stillleaf.ui.screen.SettingsScreen
 import app.vercel.stillleaf.ui.theme.StillLeafTheme
@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -70,9 +69,16 @@ class MainActivity : ComponentActivity() {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
 
-                // Restore saved user session from persistent SharedPreferences
+                // Restore saved user session & subscription entitlement status from persistent SharedPreferences
                 val savedUser = remember { UserSessionManager.getSavedUserSession(applicationContext) }
                 var currentUser by remember { mutableStateOf<AuthUser?>(savedUser) }
+
+                // Sync restored user subscription status with BillingManager
+                LaunchedEffect(savedUser) {
+                    if (savedUser != null) {
+                        billingManager.updateSubscriptionStatus(savedUser.subscriptionStatus)
+                    }
+                }
 
                 // Restore user's isolated plant sanctuary if logged in
                 val restoredPlants = remember(savedUser) {
@@ -139,17 +145,22 @@ class MainActivity : ComponentActivity() {
                     } else {
                         AuthScreen(
                             onAuthSuccess = { authenticatedUser ->
-                                // Save user session to disk so user stays logged in across restarts
-                                UserSessionManager.saveUserSession(applicationContext, authenticatedUser)
-                                currentUser = authenticatedUser
+                                // Restore any saved Pro status for this account ID
+                                val savedSubStatus = UserSessionManager.getSavedSubscriptionStatus(applicationContext, authenticatedUser.id, authenticatedUser.subscriptionStatus)
+                                val userWithSub = authenticatedUser.copy(subscriptionStatus = savedSubStatus)
+
+                                // Save user session & Pro status to disk so user stays logged in & upgraded across restarts
+                                UserSessionManager.saveUserSession(applicationContext, userWithSub)
+                                currentUser = userWithSub
+                                billingManager.updateSubscriptionStatus(savedSubStatus)
 
                                 // Load plants isolated strictly for this user account ID
-                                val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, authenticatedUser.id)
+                                val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, userWithSub.id)
                                 plantList = userPlants
 
                                 Toast.makeText(
                                     this@MainActivity,
-                                    "Welcome to your Sanctuary, ${authenticatedUser.displayName}!",
+                                    "Welcome to your Sanctuary, ${userWithSub.displayName}!",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             },
@@ -334,6 +345,7 @@ class MainActivity : ComponentActivity() {
                                                 currentUser = null
                                                 plantList = emptyList()
                                                 selectedPlant = null
+                                                billingManager.updateSubscriptionStatus(SubscriptionStatus.FREE)
                                                 Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()
                                             }
                                         )
@@ -381,11 +393,22 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { showPaywallSheet = false },
                         onSubscribeRequested = { targetTier ->
                             showPaywallSheet = false
+
+                            // Persist upgraded Pro status for current user account
+                            val activeUser = currentUser
+                            if (activeUser != null) {
+                                UserSessionManager.updateUserSubscriptionStatus(applicationContext, activeUser.id, targetTier)
+                                currentUser = activeUser.copy(subscriptionStatus = targetTier)
+                            }
+                            billingManager.updateSubscriptionStatus(targetTier)
+
                             if (targetTier == SubscriptionStatus.LIFETIME) {
                                 billingManager.launchLifetimePurchaseFlow(this@MainActivity)
                             } else {
                                 billingManager.launchSubscriptionFlow(this@MainActivity, targetTier)
                             }
+
+                            Toast.makeText(this@MainActivity, "Upgraded to Still Leaf Pro (${targetTier.name})!", Toast.LENGTH_SHORT).show()
                         },
                         onRestorePurchasesRequested = {
                             showPaywallSheet = false
