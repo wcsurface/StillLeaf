@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -64,6 +65,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -130,7 +132,11 @@ fun AddPlantScreen(
     var activeCaptureTarget by remember { mutableStateOf<Int>(1) } // 1 = Detail, 2 = Whole Plant
 
     var nicknameInput by remember { mutableStateOf("") }
-    var locationInput by remember { mutableStateOf("Indoor • Living Room") }
+
+    // Indoor / Outdoor Toggle & Empty Location Detail Field
+    var isOutdoorEnv by remember { mutableStateOf(false) } // false = Indoor, true = Outdoor
+    var locationDetailInput by remember { mutableStateOf("") } // MUST BE COMPLETED
+    var locationError by remember { mutableStateOf<String?>(null) }
 
     val defaultSamplePhoto = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
     val scrollState = rememberScrollState()
@@ -481,12 +487,91 @@ fun AddPlantScreen(
                                 )
                             )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
+                            // Indoor / Outdoor Toggle Pill Selector
+                            Text(
+                                text = "Environment",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = DeepForestAccent
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Surface(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = PillShape,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(4.dp)
+                                ) {
+                                    Surface(
+                                        onClick = { isOutdoorEnv = false },
+                                        shape = PillShape,
+                                        color = if (!isOutdoorEnv) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Indoor",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (!isOutdoorEnv) SurfaceWhite else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(vertical = 10.dp)
+                                        )
+                                    }
+
+                                    Surface(
+                                        onClick = { isOutdoorEnv = true },
+                                        shape = PillShape,
+                                        color = if (isOutdoorEnv) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Outdoor",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isOutdoorEnv) SurfaceWhite else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(vertical = 10.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Error Callout if location detail is missing
+                            if (locationError != null) {
+                                Surface(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = locationError!!,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.padding(10.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                            }
+
+                            // Empty Location Detail Text Field (MUST BE COMPLETED)
                             OutlinedTextField(
-                                value = locationInput,
-                                onValueChange = { locationInput = it },
-                                label = { Text("Location (e.g. Indoor • Living Room)") },
+                                value = locationDetailInput,
+                                onValueChange = {
+                                    locationDetailInput = it
+                                    locationError = null
+                                },
+                                label = { Text("Location Detail (Required)") },
+                                placeholder = { Text("e.g. Living Room, Sunroom, Patio, Office...") },
+                                isError = locationError != null,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -497,8 +582,18 @@ fun AddPlantScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
+                            // Save Button with Location Requirement Validation
                             Button(
                                 onClick = {
+                                    val trimmedDetail = locationDetailInput.trim()
+                                    if (trimmedDetail.isBlank()) {
+                                        locationError = "Location detail is required. Please enter where your plant is placed (e.g. Living Room, Patio, Office)."
+                                        return@Button
+                                    }
+
+                                    val envType = if (isOutdoorEnv) "Outdoor" else "Indoor"
+                                    val formattedLocation = "$envType • $trimmedDetail"
+
                                     val plantId = "plant_${System.currentTimeMillis()}"
 
                                     val closeUpUrl = detailImageUri?.toString()
@@ -538,7 +633,7 @@ fun AddPlantScreen(
                                         primaryPhotoUrl = wholePlantUrl,
                                         dateAdded = LocalDate.now(),
                                         careRequirements = result.careRequirements,
-                                        location = locationInput.ifBlank { "Indoor • Living Room" },
+                                        location = formattedLocation,
                                         healthStatusType = HealthStatusType.HEALTHY,
                                         healthStatusText = "Healthy",
                                         photos = listOf(wholePlantMilestonePhotoObj, detailPhotoObj)

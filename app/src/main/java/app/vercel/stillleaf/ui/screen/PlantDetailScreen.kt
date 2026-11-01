@@ -1742,7 +1742,20 @@ fun EditPlantDialog(
     onSave: (updatedNickname: String, updatedLocation: String) -> Unit
 ) {
     var nicknameInput by remember { mutableStateOf(plant.nickname) }
-    var locationInput by remember { mutableStateOf(plant.location) }
+
+    val initialIsOutdoor = remember(plant.location) { plant.location.contains("Outdoor", ignoreCase = true) }
+    val initialDetail = remember(plant.location) {
+        plant.location
+            .replace("Indoor", "")
+            .replace("Outdoor", "")
+            .replace("•", "")
+            .replace("-", "")
+            .trim()
+    }
+
+    var isOutdoorEnv by remember { mutableStateOf(initialIsOutdoor) }
+    var locationDetailInput by remember { mutableStateOf(initialDetail) }
+    var locationError by remember { mutableStateOf<String?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -1785,12 +1798,91 @@ fun EditPlantDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // Indoor / Outdoor Toggle Segmented Selector
+                Text(
+                    text = "Environment",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = DeepForestAccent
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = PillShape,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                    ) {
+                        Surface(
+                            onClick = { isOutdoorEnv = false },
+                            shape = PillShape,
+                            color = if (!isOutdoorEnv) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Indoor",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (!isOutdoorEnv) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+                        }
+
+                        Surface(
+                            onClick = { isOutdoorEnv = true },
+                            shape = PillShape,
+                            color = if (isOutdoorEnv) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "Outdoor",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isOutdoorEnv) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Location Error Callout
+                if (locationError != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = locationError!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                // Specific Location Detail Field (Required)
                 OutlinedTextField(
-                    value = locationInput,
-                    onValueChange = { locationInput = it },
-                    label = { Text("Location (e.g. Indoor • Living Room)") },
+                    value = locationDetailInput,
+                    onValueChange = {
+                        locationDetailInput = it
+                        locationError = null
+                    },
+                    label = { Text("Specific Location (Required)") },
+                    placeholder = { Text("e.g. Living Room, Patio, Office, Bedroom...") },
+                    isError = locationError != null,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -1802,9 +1894,16 @@ fun EditPlantDialog(
 
                 Button(
                     onClick = {
-                        if (nicknameInput.isNotBlank()) {
-                            onSave(nicknameInput.trim(), locationInput.trim())
+                        val trimmedDetail = locationDetailInput.trim()
+                        if (trimmedDetail.isBlank()) {
+                            locationError = "Location detail is required. Please specify where your plant is placed (e.g. Living Room, Patio, Office)."
+                            return@Button
                         }
+
+                        val envType = if (isOutdoorEnv) "Outdoor" else "Indoor"
+                        val formattedLocation = "$envType • $trimmedDetail"
+
+                        onSave(nicknameInput.ifBlank { plant.nickname }.trim(), formattedLocation)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
