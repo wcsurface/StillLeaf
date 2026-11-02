@@ -9,6 +9,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.collections.firstOrNull
 
 class BillingManager(
     private val context: Context,
@@ -51,9 +53,14 @@ class BillingManager(
     private val _billingError = MutableStateFlow<String?>(null)
     val billingError: StateFlow<String?> = _billingError.asStateFlow()
 
+    private val pendingPurchasesParams = PendingPurchasesParams.newBuilder()
+        .enableOneTimeProducts()
+        .enablePrepaidPlans()
+        .build()
+
     private var billingClient: BillingClient = BillingClient.newBuilder(context)
         .setListener(this)
-        .enablePendingPurchases()
+        .enablePendingPurchases(pendingPurchasesParams)
         .build()
 
     init {
@@ -91,9 +98,10 @@ class BillingManager(
             .setProductList(subProductList)
             .build()
 
-        billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsList ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                _subProductDetails.value = productDetailsList.firstOrNull { it.productId == SUB_PRODUCT_ID }
+        billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsResult ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsResult != null) {
+                val detailsList = (productDetailsResult as? Iterable<*>)?.filterIsInstance<ProductDetails>()
+                _subProductDetails.value = detailsList?.firstOrNull { it.productId == SUB_PRODUCT_ID }
             }
         }
 
@@ -108,9 +116,10 @@ class BillingManager(
             .setProductList(inAppProductList)
             .build()
 
-        billingClient.queryProductDetailsAsync(inAppParams) { billingResult, productDetailsList ->
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                _lifetimeProductDetails.value = productDetailsList.firstOrNull { it.productId == LIFETIME_PRODUCT_ID }
+        billingClient.queryProductDetailsAsync(inAppParams) { billingResult, productDetailsResult ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsResult != null) {
+                val detailsList = (productDetailsResult as? Iterable<*>)?.filterIsInstance<ProductDetails>()
+                _lifetimeProductDetails.value = detailsList?.firstOrNull { it.productId == LIFETIME_PRODUCT_ID }
             }
         }
     }

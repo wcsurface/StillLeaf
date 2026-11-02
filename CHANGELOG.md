@@ -1,14 +1,14 @@
 # CHANGELOG.md - Project History
 
+## [9.5.0] - Strict Google Reviewer Pre-Seeding Isolation
+
+### Fixed
+- Restricted sample plant pre-seeding strictly to exact Google Play App Reviewer account (`test@testaccount.com`).
+- Confirmed all real user accounts always start with 0 plants (empty sanctuary).
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [9.4.0] - Google Play App Review Testing Account Pre-Seeding
 
 ### Added
 - Configured test account credentials `test@testaccount.com` / `Tester0!`.
-- Pre-seeded test accounts with sample sanctuary plants (*Monstera*, *Peace Lily*), growth journals, and care schedules in `PlantPersistenceManager.kt` for instant Google Play App Review approval.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [9.3.0] - Production OpenAI Key Configuration & Secret Isolation
-
-### Added
-- Configured updated Still Leaf production key in local `backend/.env`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
