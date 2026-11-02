@@ -4,7 +4,7 @@ import { generatePreSignedReadUrl } from './r2Service';
 
 const prisma = new PrismaClient();
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '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',
+  apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export interface PlantIdentificationResponse {

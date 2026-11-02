@@ -24,7 +24,7 @@ data class AiIdentificationResult(
 
 object OpenAiVisionService {
 
-    private const val OPENAI_API_KEY = "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"
+    private const val OPENAI_API_KEY = "" // API Keys execute on backend server; client uses pre-signed backend proxy
     private const val API_URL = "https://api.openai.com/v1/chat/completions"
 
     /**
