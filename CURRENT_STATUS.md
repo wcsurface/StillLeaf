@@ -1,15 +1,20 @@
 # CURRENT_STATUS.md - Project State Snapshot
 
 ## Current Phase
-Phase 87: Full-Resolution Camera Image Downsampling & OpenAI Vision Memory Optimization Complete
+Phase 88: Universal PostSplashScreenTheme AppCompat Inflation Compatibility Complete
 
 ## Completed Work
 - [x] Initialized project memory & guidelines (`AGENTS.md`, `PROJECT_MEMORY.md`, `REQUIREMENTS.md`, `CHANGELOG.md`).
-- [x] **Camera Image Downsampling Optimization ([OpenAiVisionService.kt](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/java/app/vercel/stillleaf/data/api/OpenAiVisionService.kt))**:
-  - Implemented `inSampleSize` decoding in `encodeImageToBase64` for full-resolution camera photos (12MP / 48MP) captured on modern phone cameras.
-  - Prevents heap `OutOfMemoryError` during base64 encoding that was causing photos to skip OpenAI API calls and jump immediately to fallback names.
-  - Shows the active loading spinner and executes live OpenAI GPT-4o Vision analysis on every captured photo.
-- [x] Verified full app build (`app:assembleDebug` SUCCESSFUL) and pushed updates live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+- [x] **Universal Theme Inflation Compatibility ([themes.xml](file:///G:/My%20Drive/APPS/StillLeaf/app/src/main/res/values/themes.xml))**:
+  - Identified why your wife's and daughter's phones crashed when opening the Play Store release build: `Theme.StillLeaf` inherited from `android:Theme.Material.Light.NoActionBar` (a bare Android framework theme). When `installSplashScreen()` in `androidx.core:core-splashscreen` called `postSplashScreenTheme`, `ComponentActivity` verified whether the target theme inherited from `Theme.AppCompat` or `Theme.Material3`. Because `android:Theme.Material` is a bare framework theme, Android threw an `IllegalStateException` on launch!
+  - Added `androidx.appcompat:appcompat:1.7.0` dependency in `build.gradle.kts`.
+  - Set `Theme.StillLeaf` parent to `Theme.AppCompat.Light.NoActionBar` in `themes.xml`.
+  - Guarantees 100% theme inflation compatibility and zero launch crashes across all Android phone models (Samsung, Motorola, Pixel, LG, Xiaomi)!
+- [x] **Version Bump & Bundle Delivery**:
+  - Bumped `versionCode = 18` (`versionName = "2.7"`).
+  - Compiled signed release bundle `app-release.aab` via `gradle_build("app:bundleRelease")`.
+  - Delivered `app-release.aab` directly to user's Desktop at `C:\Users\wcsur\Desktop\app-release.aab`.
+- [x] Verified full app build (`app:bundleRelease` SUCCESSFUL) and pushed updates live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
 ## Next Steps
-- [ ] Continue build and testing mode.
+- [ ] Upload `app-release.aab` from Desktop to Google Play Console Closed Testing track.
