@@ -5,18 +5,18 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Still Leaf White Top Teardrop Petal -->
+    <!-- Still Leaf Top Teardrop Petal -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,26 C46,38 46,48 54,54 C62,48 62,38 54,26 Z" />
+        android:pathData="M 54,22 C 43,36 43,47 54,53 C 65,47 65,36 54,22 Z" />
 
-    <!-- Still Leaf White Left Curved Wing Petal -->
+    <!-- Still Leaf Left Curved Wing Petal -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M51,58 C32,52 18,60 18,78 C36,86 48,74 51,58 Z" />
+        android:pathData="M 50,57 C 28,49 14,58 14,78 C 36,87 48,73 50,57 Z" />
 
-    <!-- Still Leaf White Right Curved Wing Petal -->
+    <!-- Still Leaf Right Curved Wing Petal -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M57,58 C60,74 72,86 90,78 C90,60 76,52 57,58 Z" />
+        android:pathData="M 58,57 C 60,73 72,87 94,78 C 94,58 80,49 58,57 Z" />
 </vector>
