@@ -1,6 +1,7 @@
 package app.vercel.stillleaf
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -48,42 +50,78 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Mandatory SplashScreen API installation for Theme.StillLeaf.Starting
+        try {
+            installSplashScreen()
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error installing splash screen", e)
+        }
 
-        // Hide Status Bar (Clock, Battery, Wi-Fi, Notifications) for 100% Immersive Full-Screen Experience
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        super.onCreate(savedInstanceState)
+
+        try {
+            enableEdgeToEdge()
+
+            // Hide Status Bar (Clock, Battery, Wi-Fi, Notifications) for 100% Immersive Full-Screen Experience
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error applying edge to edge or window insets", e)
+        }
 
         // Initialize Notification Channels for Daily Care Reminders & 90-Day Milestones
-        app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
+        try {
+            app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error creating notification channels", e)
+        }
 
         // Initialize Zen Background Music (Gentle Bamboo Breeze) at low volume
-        app.vercel.stillleaf.util.BackgroundMusicManager.startMusic(applicationContext)
+        try {
+            app.vercel.stillleaf.util.BackgroundMusicManager.startMusic(applicationContext)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error starting background music", e)
+        }
 
-        billingManager = BillingManager(applicationContext)
+        try {
+            billingManager = BillingManager(applicationContext)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error initializing BillingManager", e)
+        }
 
         setContent {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
 
                 // Restore saved user session & subscription entitlement status from persistent SharedPreferences
-                val savedUser = remember { UserSessionManager.getSavedUserSession(applicationContext) }
+                val savedUser = remember {
+                    try {
+                        UserSessionManager.getSavedUserSession(applicationContext)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
                 var currentUser by remember { mutableStateOf<AuthUser?>(savedUser) }
 
                 // Sync restored user subscription status with BillingManager
                 LaunchedEffect(savedUser) {
                     if (savedUser != null) {
-                        billingManager.updateSubscriptionStatus(savedUser.subscriptionStatus)
+                        try {
+                            billingManager.updateSubscriptionStatus(savedUser.subscriptionStatus)
+                        } catch (_: Exception) {}
                     }
                 }
 
                 // Restore user's isolated plant sanctuary if logged in
                 val restoredPlants = remember(savedUser) {
                     if (savedUser != null) {
-                        PlantPersistenceManager.loadPlantsLocally(applicationContext, savedUser.id)
+                        try {
+                            PlantPersistenceManager.loadPlantsLocally(applicationContext, savedUser.id)
+                        } catch (e: Exception) {
+                            emptyList()
+                        }
                     } else {
                         emptyList()
                     }
@@ -97,17 +135,21 @@ class MainActivity : ComponentActivity() {
 
                 // Calculate total pending care tasks due today across sanctuary
                 val pendingTasksCount = remember(plantList) {
-                    val today = java.time.LocalDate.now()
-                    plantList.sumOf { plant ->
-                        val waterDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.WATER && it.completedAt.toLocalDate() == today }
-                        val feedDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.FEED && it.completedAt.toLocalDate() == today }
-                        val rotateDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.ROTATE && it.completedAt.toLocalDate() == today }
+                    try {
+                        val today = java.time.LocalDate.now()
+                        plantList.sumOf { plant ->
+                            val waterDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.WATER && it.completedAt.toLocalDate() == today }
+                            val feedDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.FEED && it.completedAt.toLocalDate() == today }
+                            val rotateDone = plant.recentLogs.any { it.taskType == app.vercel.stillleaf.data.model.CareTaskType.ROTATE && it.completedAt.toLocalDate() == today }
 
-                        var count = 0
-                        if (!waterDone) count++
-                        if (!feedDone) count++
-                        if (!rotateDone) count++
-                        count
+                            var count = 0
+                            if (!waterDone) count++
+                            if (!feedDone) count++
+                            if (!rotateDone) count++
+                            count
+                        }
+                    } catch (e: Exception) {
+                        0
                     }
                 }
 
@@ -115,7 +157,11 @@ class MainActivity : ComponentActivity() {
                 fun updateAndPersistPlants(newList: List<Plant>) {
                     plantList = newList
                     val userId = currentUser?.id ?: "guest"
-                    PlantPersistenceManager.savePlantsLocally(applicationContext, userId, newList)
+                    try {
+                        PlantPersistenceManager.savePlantsLocally(applicationContext, userId, newList)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error persisting plants", e)
+                    }
                 }
 
                 // Intercept system back button
@@ -152,7 +198,9 @@ class MainActivity : ComponentActivity() {
                                 // Save user session & Pro status to disk so user stays logged in & upgraded across restarts
                                 UserSessionManager.saveUserSession(applicationContext, userWithSub)
                                 currentUser = userWithSub
-                                billingManager.updateSubscriptionStatus(savedSubStatus)
+                                try {
+                                    billingManager.updateSubscriptionStatus(savedSubStatus)
+                                } catch (_: Exception) {}
 
                                 // Load plants isolated strictly for this user account ID
                                 val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, userWithSub.id)
@@ -345,7 +393,9 @@ class MainActivity : ComponentActivity() {
                                                 currentUser = null
                                                 plantList = emptyList()
                                                 selectedPlant = null
-                                                billingManager.updateSubscriptionStatus(SubscriptionStatus.FREE)
+                                                try {
+                                                    billingManager.updateSubscriptionStatus(SubscriptionStatus.FREE)
+                                                } catch (_: Exception) {}
                                                 Toast.makeText(this@MainActivity, "Signed out of account", Toast.LENGTH_SHORT).show()
                                             }
                                         )
@@ -400,7 +450,9 @@ class MainActivity : ComponentActivity() {
                                 UserSessionManager.updateUserSubscriptionStatus(applicationContext, activeUser.id, targetTier)
                                 currentUser = activeUser.copy(subscriptionStatus = targetTier)
                             }
-                            billingManager.updateSubscriptionStatus(targetTier)
+                            try {
+                                billingManager.updateSubscriptionStatus(targetTier)
+                            } catch (_: Exception) {}
 
                             if (targetTier == SubscriptionStatus.LIFETIME) {
                                 billingManager.launchLifetimePurchaseFlow(this@MainActivity)
@@ -423,19 +475,27 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        app.vercel.stillleaf.util.BackgroundMusicManager.resumeMusic(applicationContext)
+        try {
+            app.vercel.stillleaf.util.BackgroundMusicManager.resumeMusic(applicationContext)
+        } catch (_: Exception) {}
     }
 
     override fun onPause() {
         super.onPause()
-        app.vercel.stillleaf.util.BackgroundMusicManager.pauseMusic()
+        try {
+            app.vercel.stillleaf.util.BackgroundMusicManager.pauseMusic()
+        } catch (_: Exception) {}
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        app.vercel.stillleaf.util.BackgroundMusicManager.stopMusic()
+        try {
+            app.vercel.stillleaf.util.BackgroundMusicManager.stopMusic()
+        } catch (_: Exception) {}
         if (::billingManager.isInitialized) {
-            billingManager.endConnection()
+            try {
+                billingManager.endConnection()
+            } catch (_: Exception) {}
         }
     }
 }
