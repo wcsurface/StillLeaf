@@ -1,15 +1,13 @@
 # CHANGELOG.md - Project History
 
-## [9.0.0] - User Pro Subscription Entitlement Persistence & Account Sync
-
-### Fixed
-- Fixed bug where upgraded Pro status for user `wcsurface@gmail.com` reset upon app restart.
-- Added `updateUserSubscriptionStatus` in `UserSessionManager.kt` to persist Pro subscription tier per account ID (`sub_status_${userId}`).
-- Updated `MainActivity.kt` and `BillingManager.kt` to sync restored Pro status on app launch.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [8.9.0] - Indoor/Outdoor Environment Selector & Required Location Validation
+## [9.2.0] - Closed Testing Launch Readiness & Checklist Generation
 
 ### Added
-- Added Indoor / Outdoor Environment Toggle and required location field validation on `AddPlantScreen.kt` and `PlantDetailScreen.kt`.
+- Created authoritative Closed Testing Launch Checklist artifact (`launch_checklist.artifact.md`) covering signed `.aab` bundle generation, Google Play Console product setup (`still_leaf_pro_sub` & `still_leaf_lifetime_2999`), Railway/R2 backend environment setup, Vercel Asset Links deep linking, and 20-tester closed testing rollout.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
+## [9.1.0] - Multi-Tenant Security & Subscription Persistence Verification
+
+### Verified & Fixed
+- Verified account isolation across all potential user account IDs (`sub_status_${userId}`).
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
