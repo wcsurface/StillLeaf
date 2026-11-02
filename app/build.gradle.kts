@@ -51,7 +51,6 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.play.billing.ktx)
-    implementation(libs.play.services.ads)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
