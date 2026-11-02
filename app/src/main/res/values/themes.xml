@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base App Theme -->
-    <style name="Theme.StillLeaf" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Base App Theme (AppCompat Light NoActionBar for 100% theme inflation compatibility) -->
+    <style name="Theme.StillLeaf" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">#F7F4E9</item>
         <item name="android:statusBarColor">#F7F4E9</item>
         <item name="android:navigationBarColor">#F7F4E9</item>
