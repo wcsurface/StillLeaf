@@ -55,7 +55,7 @@ router.post('/register', async (req: Request, res: Response) => {
         email: newUser.email,
         displayName: newUser.displayName,
         authProvider: newUser.authProvider,
-        subscriptionStatus: newUser.subscriptionStatus
+        subscriptionStatus: newUser.tier
       }
     });
   } catch (error) {
@@ -106,7 +106,7 @@ router.post('/login', async (req: Request, res: Response) => {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         authProvider: user.authProvider,
-        subscriptionStatus: user.subscriptionStatus
+        subscriptionStatus: user.tier
       }
     });
   } catch (error) {
@@ -161,7 +161,7 @@ router.post('/google', async (req: Request, res: Response) => {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         authProvider: user.authProvider,
-        subscriptionStatus: user.subscriptionStatus
+        subscriptionStatus: user.tier
       }
     });
   } catch (error) {
@@ -197,7 +197,7 @@ router.get('/me', async (req: Request, res: Response) => {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         authProvider: user.authProvider,
-        subscriptionStatus: user.subscriptionStatus
+        subscriptionStatus: user.tier
       }
     });
   } catch (error) {

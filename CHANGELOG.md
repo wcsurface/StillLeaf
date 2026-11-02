@@ -1,16 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [9.0.0] - User Pro Subscription Entitlement Persistence & Account Sync
+
+### Fixed
+- Fixed bug where upgraded Pro status for user `wcsurface@gmail.com` reset upon app restart.
+- Added `updateUserSubscriptionStatus` in `UserSessionManager.kt` to persist Pro subscription tier per account ID (`sub_status_${userId}`).
+- Updated `MainActivity.kt` and `BillingManager.kt` to sync restored Pro status on app launch.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [8.9.0] - Indoor/Outdoor Environment Selector & Required Location Validation
 
 ### Added
-- Added Indoor / Outdoor Environment Toggle on `AddPlantScreen.kt` and `EditPlantDialog` in `PlantDetailScreen.kt`.
-- Added an empty, required location detail input field on both screens.
-- Added strict validation preventing saving if location detail is left blank.
-- Formats plant location string as `"${Indoor/Outdoor} • ${Location Detail}"`.
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [8.8.0] - App Launcher Icon Force Cache Invalidation & Version Bump (v1.1)
-
-### Fixed
-- Fixed Moto Launcher / Android launcher icon caching issue by bumping `versionCode = 2` (`versionName = "1.1"`).
+- Added Indoor / Outdoor Environment Toggle and required location field validation on `AddPlantScreen.kt` and `PlantDetailScreen.kt`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
