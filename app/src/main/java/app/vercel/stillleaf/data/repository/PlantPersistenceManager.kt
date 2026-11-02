@@ -24,9 +24,9 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Pre-populated sample plants for Google Play App Review testing team.
+     * Pre-populated sample plants strictly for official Google Play App Review testing account (test@testaccount.com).
      */
-    private fun getSampleTestPlants(userId: String): List<Plant> {
+    private fun getSampleTestPlants(): List<Plant> {
         val plantId1 = "plant_test_monstera"
         val plantId2 = "plant_test_peacelily"
 
@@ -176,7 +176,8 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Loads plants for a specific user account ID. Pre-seeds testing accounts with sample plants.
+     * Loads plants for a specific user account ID. All real user accounts start with an EMPTY sanctuary.
+     * Pre-seeds sample plants STRICTLY for the official Google Play Reviewer account (test@testaccount.com).
      */
     fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
         if (userId.isBlank()) return emptyList()
@@ -185,14 +186,17 @@ object PlantPersistenceManager {
             val file = File(context.filesDir, fileName)
 
             if (!file.exists()) {
-                // If this is Google Play Tester account, pre-seed sample plants
-                if (userId.contains("test", ignoreCase = true)) {
-                    val samplePlants = getSampleTestPlants(userId)
+                // Strict check: ONLY pre-seed for the official Google Play App Review test account
+                val isExactGoogleReviewerAccount = userId.equals("usr_test_testaccount_com", ignoreCase = true) ||
+                                                   userId.equals("test@testaccount.com", ignoreCase = true)
+
+                if (isExactGoogleReviewerAccount) {
+                    val samplePlants = getSampleTestPlants()
                     savePlantsLocally(context, userId, samplePlants)
                     return samplePlants
                 }
 
-                Log.d(TAG, "No local plant storage file found for account [$userId]. Returning empty sanctuary.")
+                Log.d(TAG, "New real user account [$userId]. Returning empty sanctuary (0 plants).")
                 return emptyList()
             }
 
