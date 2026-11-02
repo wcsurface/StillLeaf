@@ -1,16 +1,16 @@
 # CHANGELOG.md - Project History
 
-## [15.0.0] - Exact Muted Sage Green Background (#859375) Icon & Matching Splash Screen (v2.2, Build 13)
+## [16.0.0] - Moto Launcher Database Cache Invalidation (`ic_still_leaf_launch_v2`)
 
 ### Fixed
-- Updated `colors.xml` with exact background color `#859375` matching your uploaded icon image (`Gemini_Generated_Image_rzo8hsrzo8hsrzo8 (1).png`).
-- Set startup splash screen background to `#859375` with white botanical leaf emblem vector.
-- Overwrote all launcher icons across all density folders with exact flat muted sage green PNG image.
-- Bumped `versionCode = 13` (`versionName = "2.2"`).
+- Fixed Moto Launcher database caching issue where the old `STILL LEAF < PRO >` icon was retained.
+- Renamed launcher icon resource to `@mipmap/ic_still_leaf_launch_v2` in `AndroidManifest.xml` across all density folders.
+- Forced Moto Launcher (`com.motorola.launcher3`) to purge cached icon bitmaps and display exact flat muted sage green leaf emblem icon.
+- Bumped `versionCode = 14` (`versionName = "2.3"`).
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
-## [14.0.0] - 3D Squircle Sage Green Botanical Emblem Icon Overwrite (v2.1, Build 12)
+## [15.0.0] - Exact Muted Sage Green Background (#859375) Icon & Matching Splash Screen
 
 ### Fixed
-- Overwrote all launcher icons, drawables, splash assets, and Desktop files.
+- Updated `colors.xml` with exact background color `#859375`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
