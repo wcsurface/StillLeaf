@@ -24,6 +24,84 @@ object PlantPersistenceManager {
     }
 
     /**
+     * Pre-populated sample plants for Google Play App Review testing team.
+     */
+    private fun getSampleTestPlants(userId: String): List<Plant> {
+        val plantId1 = "plant_test_monstera"
+        val plantId2 = "plant_test_peacelily"
+
+        val p1 = Plant(
+            id = plantId1,
+            nickname = "Monstera",
+            botanicalName = "Monstera deliciosa",
+            commonName = "Swiss Cheese Plant",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(90),
+            careRequirements = CareRequirement(
+                sunlight = "Bright Indirect Light",
+                idealTemperature = "18°C - 27°C",
+                idealHumidity = "50% - 70%",
+                waterIntervalDays = 7,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Thrives in bright ambient light. Allow topsoil to dry before watering."
+            ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_test_1",
+                    plantId = plantId1,
+                    photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(90),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        val p2 = Plant(
+            id = plantId2,
+            nickname = "Peace Lily",
+            botanicalName = "Spathiphyllum wallisii",
+            commonName = "Peace Lily",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(45),
+            careRequirements = CareRequirement(
+                sunlight = "Medium Indirect Light",
+                idealTemperature = "18°C - 24°C",
+                idealHumidity = "50% - 80%",
+                waterIntervalDays = 5,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Prefers moist, well-draining soil and humid ambient air."
+            ),
+            location = "Indoor • Office",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_test_2",
+                    plantId = plantId2,
+                    photoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(45),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        return listOf(p1, p2)
+    }
+
+    /**
      * Saves the user's current plant sanctuary list, photos, and care completion logs isolated strictly by user account ID.
      */
     fun savePlantsLocally(context: Context, userId: String, plants: List<Plant>) {
@@ -98,14 +176,22 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Loads plants for a specific user account ID.
+     * Loads plants for a specific user account ID. Pre-seeds testing accounts with sample plants.
      */
     fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
         if (userId.isBlank()) return emptyList()
         try {
             val fileName = getFileNameForUser(userId)
             val file = File(context.filesDir, fileName)
+
             if (!file.exists()) {
+                // If this is Google Play Tester account, pre-seed sample plants
+                if (userId.contains("test", ignoreCase = true)) {
+                    val samplePlants = getSampleTestPlants(userId)
+                    savePlantsLocally(context, userId, samplePlants)
+                    return samplePlants
+                }
+
                 Log.d(TAG, "No local plant storage file found for account [$userId]. Returning empty sanctuary.")
                 return emptyList()
             }
