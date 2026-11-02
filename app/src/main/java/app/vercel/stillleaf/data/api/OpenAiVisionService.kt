@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import android.util.Log
 import app.vercel.stillleaf.data.model.CareRequirement
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,6 +25,7 @@ data class AiIdentificationResult(
 
 object OpenAiVisionService {
 
+    private const val TAG = "OpenAiVision"
     private const val API_URL = "https://api.openai.com/v1/chat/completions"
 
     private const val ENCODED_VISION_KEY = "c2stcHJvai1FTFlUM3A4TlE1c1lZSmRYNnpMc1lBVUlwUzFPdUc1Z3FXcXVZU3BJejVZR0tfbDJzUkp5Q0RSTFBMNTBqVVdWODZNRE1jTm5xS1QzQmxia0ZKaUxERWhuQ21PSjlkZUZ1azg1WlV2Rk9BUGNKZmhZaG43aHBiY3VCR2xzU1ljWWQ5NDQzTmFYTEQ1WUptRFl3ZUJaT21rRUFpY0E="
@@ -47,12 +49,16 @@ object OpenAiVisionService {
         wholePlantBitmap: Bitmap? = null
     ): AiIdentificationResult = withContext(Dispatchers.IO) {
         try {
+            Log.d(TAG, "Starting botanical image encoding...")
             val base64CloseUp = encodeImageToBase64(context, closeUpUri, closeUpBitmap)
             val base64Whole = encodeImageToBase64(context, wholePlantUri, wholePlantBitmap)
 
             if (base64CloseUp == null && base64Whole == null) {
+                Log.e(TAG, "Both base64 photo encodings returned null. Executing safety fallback.")
                 return@withContext createFallbackResult()
             }
+
+            Log.d(TAG, "Photos encoded successfully. Close-Up length: ${base64CloseUp?.length ?: 0}, Whole length: ${base64Whole?.length ?: 0}")
 
             val jsonPayload = JSONObject().apply {
                 put("model", "gpt-4o")
@@ -122,14 +128,16 @@ object OpenAiVisionService {
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Authorization", "Bearer $apiKey")
             conn.doOutput = true
-            conn.connectTimeout = 25000
-            conn.readTimeout = 25000
+            conn.connectTimeout = 30000
+            conn.readTimeout = 30000
 
             conn.outputStream.use { os ->
                 os.write(jsonPayload.toString().toByteArray(Charsets.UTF_8))
             }
 
             val responseCode = conn.responseCode
+            Log.d(TAG, "OpenAI Vision API HTTP response code: $responseCode")
+
             if (responseCode == 200) {
                 val responseString = conn.inputStream.bufferedReader().use { it.readText() }
                 val rootJson = JSONObject(responseString)
@@ -149,6 +157,8 @@ object OpenAiVisionService {
                 val trimDays = parsed.optInt("trim_days", 90)
                 val insight = parsed.optString("care_insight", "Requires gentle sunlight and well-draining soil.")
 
+                Log.d(TAG, "Successfully identified species: $commonName ($botanicalName)")
+
                 return@withContext AiIdentificationResult(
                     isPlantDetected = parsed.optBoolean("is_plant_detected", true),
                     botanicalName = botanicalName,
@@ -166,11 +176,12 @@ object OpenAiVisionService {
                     )
                 )
             } else {
-                android.util.Log.e("OpenAiVision", "OpenAI Vision API Error response code: $responseCode")
+                val errString = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "No error body"
+                Log.e(TAG, "OpenAI Vision API Error $responseCode: $errString")
                 return@withContext createFallbackResult()
             }
-        } catch (e: Exception) {
-            android.util.Log.e("OpenAiVision", "Exception during dual-photo botanical identification", e)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Exception during dual-photo botanical identification", e)
             return@withContext createFallbackResult()
         }
     }
@@ -207,10 +218,32 @@ object OpenAiVisionService {
                     }
                 }
                 imageUri != null -> {
-                    val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
-                    BitmapFactory.decodeStream(inputStream)
+                    // Downsample large camera photos efficiently to avoid OutOfMemoryError
+                    val options = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    context.contentResolver.openInputStream(imageUri)?.use {
+                        BitmapFactory.decodeStream(it, null, options)
+                    }
+
+                    val maxDimension = 1024
+                    var inSampleSize = 1
+                    if (options.outHeight > maxDimension || options.outWidth > maxDimension) {
+                        val halfHeight: Int = options.outHeight / 2
+                        val halfWidth: Int = options.outWidth / 2
+                        while (halfHeight / inSampleSize >= maxDimension && halfWidth / inSampleSize >= maxDimension) {
+                            inSampleSize *= 2
+                        }
+                    }
+
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        this.inSampleSize = inSampleSize
+                    }
+                    context.contentResolver.openInputStream(imageUri)?.use {
+                        BitmapFactory.decodeStream(it, null, decodeOptions)
+                    }
                 }
-                else -> return null
+                else -> null
             } ?: return null
 
             // Resize image to max 1024x1024 for speed & low token consumption
@@ -229,8 +262,8 @@ object OpenAiVisionService {
             resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
             val byteArray = outputStream.toByteArray()
             return Base64.encodeToString(byteArray, Base64.NO_WRAP)
-        } catch (e: Exception) {
-            android.util.Log.e("OpenAiVision", "Error encoding image to base64", e)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error encoding image to base64", e)
             return null
         }
     }
