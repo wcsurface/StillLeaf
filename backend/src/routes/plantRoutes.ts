@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { generateUploadUrl, identifyPlantFromImageKey } from '../services/plantVisionService';
+import { generateUploadUrl, identifyPlantFromImageKey, identifyPlantFromDualBase64 } from '../services/plantVisionService';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
@@ -21,6 +21,29 @@ router.post('/upload-url', async (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/plants/identify-base64
+ * Triggers OpenAI GPT-4o Vision analysis on dual base64 encoded photos via server side API key.
+ */
+router.post('/identify-base64', async (req: Request, res: Response) => {
+  try {
+    const { base64CloseUp, base64Whole } = req.body;
+    if (!base64CloseUp && !base64Whole) {
+      return res.status(400).json({ success: false, error: 'At least one base64 photo is required' });
+    }
+
+    const visionResult = await identifyPlantFromDualBase64(base64CloseUp, base64Whole);
+    return res.status(200).json({
+      success: true,
+      message: 'Dual-photo botanical vision analysis complete',
+      data: visionResult
+    });
+  } catch (error) {
+    console.error('Error identifying plant via base64:', error);
+    return res.status(500).json({ success: false, error: 'Plant identification failed' });
+  }
+});
+
+/**
  * POST /api/plants/identify
  * Triggers OpenAI GPT-4o Vision analysis on uploaded image key and saves the plant profile.
  */
@@ -35,7 +58,7 @@ router.post('/identify', async (req: Request, res: Response) => {
 
     // Verify user plant count limit if Free tier
     const user = await prisma.user.findUnique({ where: { id: currentUserId } });
-    if (user && user.subscriptionStatus === 'FREE') {
+    if (user && user.tier === 'FREE') {
       const plantCount = await prisma.plant.count({ where: { userId: currentUserId } });
       if (plantCount >= 2) {
         return res.status(403).json({

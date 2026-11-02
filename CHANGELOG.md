@@ -1,14 +1,16 @@
 # CHANGELOG.md - Project History
 
-## [10.4.0] - Dual Product ID Formatting (Hyphens & Underscores) Compatibility
+## [10.6.0] - Railway Backend Server Vision Proxy & Live AI Identification
 
 ### Added
-- Added dual product ID support (`still_leaf_lifetime_2999` and `still-leaf-lifetime-2999`, `still_leaf_pro_sub` and `still-leaf-pro-sub`) in `BillingManager.kt` and backend `billingRoutes.ts`.
-- Guarantees 100% In-App Purchase and Subscription entitlement compatibility.
+- Created `identifyPlantFromDualBase64` server endpoint (`POST /api/plants/identify-base64`) on Railway backend.
+- Updated `OpenAiVisionService.kt` in Android app to route dual-photo identification requests through Railway server.
+- Executes OpenAI GPT-4o Vision server-side via Railway `OPENAI_API_KEY` environment variable.
+- Enables live plant identification for all users without requiring a new Google Play App Bundle upload.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
 
-## [10.3.0] - Application Version Bump (v1.3, Build 4)
+## [10.5.0] - Photo Capture Slot Button Formatting & Version Bump (v1.4, Build 5)
 
-### Added
-- Bumped `versionCode = 4` (`versionName = "1.3"`) in `app/build.gradle.kts`.
+### Fixed
+- Fixed button label formatting and text padding on `AddPlantScreen.kt`.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.

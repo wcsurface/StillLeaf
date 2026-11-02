@@ -30,6 +30,58 @@ export interface PlantIdentificationResponse {
   freeScansRemaining: number;
 }
 
+export async function identifyPlantFromDualBase64(
+  base64CloseUp?: string,
+  base64Whole?: string
+) {
+  const promptText = `
+    You are a master botanist for Still Leaf - Whole Plant Care. Analyze BOTH photos of this plant:
+    - Photo 1 provides a close-up detail shot of the leaf margins, veins, or flower bloom.
+    - Photo 2 provides a whole plant overview shot in its pot.
+
+    Combine leaf details from Photo 1 and growth habit from Photo 2 to distinguish subtle plant species differences.
+    Return a strict JSON object with these exact keys:
+    {
+      "is_plant_detected": true,
+      "botanical_name": "Latin Name",
+      "common_name": "Common Name",
+      "confidence_score": 98,
+      "sunlight_requirement": "e.g. Full Direct Sunlight or Bright Indirect Light",
+      "water_days": 7,
+      "fertilize_days": 30,
+      "rotate_days": 14,
+      "trim_days": 90,
+      "care_insight": "A 2-sentence care guidance note tailored for this specific species."
+    }
+  `;
+
+  const contentArray: any[] = [{ type: 'text', text: promptText }];
+
+  if (base64CloseUp) {
+    contentArray.push({
+      type: 'image_url',
+      image_url: { url: `data:image/jpeg;base64,${base64CloseUp}`, detail: 'high' }
+    });
+  }
+
+  if (base64Whole) {
+    contentArray.push({
+      type: 'image_url',
+      image_url: { url: `data:image/jpeg;base64,${base64Whole}`, detail: 'high' }
+    });
+  }
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    response_format: { type: 'json_object' },
+    max_tokens: 700,
+    messages: [{ role: 'user', content: contentArray }]
+  });
+
+  const rawJson = completion.choices[0]?.message?.content || '{}';
+  return JSON.parse(rawJson);
+}
+
 export async function identifyPlantFromR2(
   userId: string,
   imageKey: string
@@ -54,7 +106,7 @@ export async function identifyPlantFromR2(
   // 2. Obtain Read URL from Cloudflare R2
   const imageUrl = await generatePreSignedReadUrl(imageKey);
 
-  // 3. Call OpenAI GPT-4o-mini Vision with Structured JSON Output
+  // 3. Call OpenAI GPT-4o Vision with Structured JSON Output
   const promptText = `
     You are a master botanist for Still Leaf - Whole Plant Care.
     Analyze this plant photo and return a JSON object following this exact schema:
