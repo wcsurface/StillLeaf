@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -30,6 +31,7 @@ import app.vercel.stillleaf.data.model.AuthUser
 import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
+import app.vercel.stillleaf.data.repository.PlantCloudSyncManager
 import app.vercel.stillleaf.data.repository.PlantPersistenceManager
 import app.vercel.stillleaf.data.repository.UserSessionManager
 import app.vercel.stillleaf.ui.component.LegalTab
@@ -43,6 +45,7 @@ import app.vercel.stillleaf.ui.screen.PlantDetailScreen
 import app.vercel.stillleaf.ui.screen.PlantListScreen
 import app.vercel.stillleaf.ui.screen.SettingsScreen
 import app.vercel.stillleaf.ui.theme.StillLeafTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -94,6 +97,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             StillLeafTheme {
                 val subscriptionStatus by billingManager.subscriptionStatus.collectAsState()
+                val coroutineScope = rememberCoroutineScope()
 
                 // Restore saved user session & subscription entitlement status from persistent SharedPreferences
                 val savedUser = remember {
@@ -127,6 +131,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 var plantList by remember { mutableStateOf<List<Plant>>(restoredPlants) }
+
+                // Multi-Device Cloud Sync Effect from Railway PostgreSQL
+                LaunchedEffect(currentUser) {
+                    val activeUser = currentUser
+                    if (activeUser != null) {
+                        try {
+                            val cloudPlants = PlantCloudSyncManager.fetchUserPlantsFromCloud(applicationContext, activeUser.id)
+                            if (cloudPlants.isNotEmpty()) {
+                                plantList = cloudPlants
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Error syncing cloud plants from Railway", e)
+                        }
+                    }
+                }
 
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
@@ -205,6 +224,18 @@ class MainActivity : ComponentActivity() {
                                 // Load plants isolated strictly for this user account ID
                                 val userPlants = PlantPersistenceManager.loadPlantsLocally(applicationContext, userWithSub.id)
                                 plantList = userPlants
+
+                                // Background Cloud Sync from Railway PostgreSQL
+                                coroutineScope.launch {
+                                    try {
+                                        val cloudPlants = PlantCloudSyncManager.fetchUserPlantsFromCloud(applicationContext, userWithSub.id)
+                                        if (cloudPlants.isNotEmpty()) {
+                                            plantList = cloudPlants
+                                        }
+                                    } catch (e: Exception) {
+                                        Log.e("MainActivity", "Cloud sync error on auth", e)
+                                    }
+                                }
 
                                 Toast.makeText(
                                     this@MainActivity,
@@ -318,6 +349,15 @@ class MainActivity : ComponentActivity() {
                                             onPlantAdded = { newPlant ->
                                                 val updatedList = listOf(newPlant) + plantList
                                                 updateAndPersistPlants(updatedList)
+                                                if (currentUser != null) {
+                                                    coroutineScope.launch {
+                                                        try {
+                                                            PlantCloudSyncManager.savePlantToCloud(currentUser!!.id, newPlant)
+                                                        } catch (e: Exception) {
+                                                            Log.e("MainActivity", "Error saving plant to Railway", e)
+                                                        }
+                                                    }
+                                                }
                                                 currentTab = NavTab.HOME
                                                 Toast.makeText(
                                                     this@MainActivity,

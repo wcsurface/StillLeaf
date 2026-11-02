@@ -1,16 +1,16 @@
 # CHANGELOG.md - Project History
 
+## [12.0.0] - Direct Wireless Device Deployment & Exact PNG Icon Integration (v2.0, Build 11)
+
+### Fixed
+- Installed crash-free build directly onto connected wireless Android device via ADB.
+- Overwrote all app launcher and splash screen assets with the exact, unmodified PNG image file uploaded by the user.
+- Added ProGuard rules in `proguard-rules.pro` keeping Kotlin sequences and coroutines.
+- Bumped `versionCode = 11` (`versionName = "2.0"`).
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [11.0.0] - Direct Launcher Icon Enforcement & Version Bump (v1.9, Build 10)
 
 ### Fixed
-- Removed adaptive XML override folder (`mipmap-anydpi`) that caused Moto Launcher to render the Android bug placeholder icon.
-- Forced home screen launcher to render direct high-density PNG icon assets (`ic_launcher.png`).
-- Refined `ic_splash_logo.xml` vector paths for the white botanical leaf emblem.
-- Bumped `versionCode = 10` (`versionName = "1.9"`).
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [10.9.0] - Android 12+ SplashScreen Bitmap Casting Crash Resolution (v1.8, Build 9)
-
-### Fixed
-- Fixed startup crash caused by `windowSplashScreenAnimatedIcon` pointing to a PNG file.
+- Removed adaptive XML override folder (`mipmap-anydpi`).
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.

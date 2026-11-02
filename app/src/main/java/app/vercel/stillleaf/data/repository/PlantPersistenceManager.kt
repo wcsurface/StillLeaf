@@ -24,14 +24,84 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Pre-populated sample plants strictly for official Google Play App Review testing account (test@testaccount.com).
+     * Pre-populated sample plants for developer and testing accounts.
      */
     private fun getSampleTestPlants(): List<Plant> {
-        val plantId1 = "plant_test_monstera"
-        val plantId2 = "plant_test_peacelily"
+        val plantId1 = "plant_jade"
+        val plantId2 = "plant_cactus"
+        val plantId3 = "plant_monstera"
+        val plantId4 = "plant_peacelily"
 
         val p1 = Plant(
             id = plantId1,
+            nickname = "Jade Plant",
+            botanicalName = "Crassula ovata",
+            commonName = "Jade Plant",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(120),
+            careRequirements = CareRequirement(
+                sunlight = "Bright Indirect Sunlight",
+                idealTemperature = "18°C - 26°C",
+                idealHumidity = "40% - 60%",
+                waterIntervalDays = 14,
+                feedIntervalDays = 60,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 90,
+                careInsight = "The Jade Plant prefers well-draining soil to prevent root rot. Allow topsoil to dry completely between waterings."
+            ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.NEEDS_WATER,
+            healthStatusText = "Treatment Active",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_jade_1",
+                    plantId = plantId1,
+                    photoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(120),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        val p2 = Plant(
+            id = plantId2,
+            nickname = "Christmas Cactus",
+            botanicalName = "Schlumbergera bridgesii",
+            commonName = "Christmas Cactus",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(90),
+            careRequirements = CareRequirement(
+                sunlight = "Bright Indirect Light",
+                idealTemperature = "18°C - 24°C",
+                idealHumidity = "50% - 70%",
+                waterIntervalDays = 10,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Prefers ambient daylight and moderate hydration. Protect from extreme heat drafts."
+            ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_cactus_1",
+                    plantId = plantId2,
+                    photoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(90),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        val p3 = Plant(
+            id = plantId3,
             nickname = "Monstera",
             botanicalName = "Monstera deliciosa",
             commonName = "Swiss Cheese Plant",
@@ -52,8 +122,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_test_1",
-                    plantId = plantId1,
+                    id = "photo_monstera_1",
+                    plantId = plantId3,
                     photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(90),
                     ageInDays = 0,
@@ -64,8 +134,8 @@ object PlantPersistenceManager {
             )
         )
 
-        val p2 = Plant(
-            id = plantId2,
+        val p4 = Plant(
+            id = plantId4,
             nickname = "Peace Lily",
             botanicalName = "Spathiphyllum wallisii",
             commonName = "Peace Lily",
@@ -86,8 +156,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_test_2",
-                    plantId = plantId2,
+                    id = "photo_peacelily_1",
+                    plantId = plantId4,
                     photoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(45),
                     ageInDays = 0,
@@ -98,7 +168,7 @@ object PlantPersistenceManager {
             )
         )
 
-        return listOf(p1, p2)
+        return listOf(p1, p2, p3, p4)
     }
 
     /**
@@ -176,8 +246,8 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Loads plants for a specific user account ID. All real user accounts start with an EMPTY sanctuary.
-     * Pre-seeds sample plants STRICTLY for the official Google Play Reviewer account (test@testaccount.com).
+     * Loads plants for a specific user account ID.
+     * Restores plants for wcsurface@gmail.com and test accounts.
      */
     fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
         if (userId.isBlank()) return emptyList()
@@ -186,11 +256,10 @@ object PlantPersistenceManager {
             val file = File(context.filesDir, fileName)
 
             if (!file.exists()) {
-                // Strict check: ONLY pre-seed for the official Google Play App Review test account
-                val isExactGoogleReviewerAccount = userId.equals("usr_test_testaccount_com", ignoreCase = true) ||
-                                                   userId.equals("test@testaccount.com", ignoreCase = true)
+                val isSeedAccount = userId.contains("wcsurface", ignoreCase = true) ||
+                                    userId.contains("test", ignoreCase = true)
 
-                if (isExactGoogleReviewerAccount) {
+                if (isSeedAccount) {
                     val samplePlants = getSampleTestPlants()
                     savePlantsLocally(context, userId, samplePlants)
                     return samplePlants
