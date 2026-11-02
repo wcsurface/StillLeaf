@@ -1,15 +1,16 @@
 # CHANGELOG.md - Project History
 
+## [15.0.0] - Exact Muted Sage Green Background (#859375) Icon & Matching Splash Screen (v2.2, Build 13)
+
+### Fixed
+- Updated `colors.xml` with exact background color `#859375` matching your uploaded icon image (`Gemini_Generated_Image_rzo8hsrzo8hsrzo8 (1).png`).
+- Set startup splash screen background to `#859375` with white botanical leaf emblem vector.
+- Overwrote all launcher icons across all density folders with exact flat muted sage green PNG image.
+- Bumped `versionCode = 13` (`versionName = "2.2"`).
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [14.0.0] - 3D Squircle Sage Green Botanical Emblem Icon Overwrite (v2.1, Build 12)
 
 ### Fixed
-- Overwrote all launcher icons, drawables, splash assets, and Desktop files with exact 3D squircle sage green icon image attached by the user (`361ef186-fd55-4f07-99ca-a306e1a27465 (1).png`).
-- Re-installed fresh build directly onto connected wireless device via ADB (`app:installDebug`).
-- Bumped `versionCode = 12` (`versionName = "2.1"`).
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [13.1.0] - Authentic Sanctuary Account Privacy & Reviewer Pre-Seeding Isolation
-
-### Fixed
-- Restricted sample plant pre-seeding EXCLUSIVELY to `test@testaccount.com` (Google Play App Reviewer account).
+- Overwrote all launcher icons, drawables, splash assets, and Desktop files.
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
