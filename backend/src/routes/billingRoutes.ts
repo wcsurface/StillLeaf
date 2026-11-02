@@ -20,9 +20,9 @@ export async function billingRoutes(fastify: FastifyInstance) {
 
       let determinedTier: SubscriptionTier = SubscriptionTier.FREE;
 
-      if (productId === 'still_leaf_lifetime_2999') {
+      if (productId === 'still_leaf_lifetime_2999' || productId === 'still-leaf-lifetime-2999') {
         determinedTier = SubscriptionTier.LIFETIME;
-      } else if (productId === 'still_leaf_pro_sub') {
+      } else if (productId === 'still_leaf_pro_sub' || productId === 'still-leaf-pro-sub') {
         if (basePlanId === 'annual-1499') {
           determinedTier = SubscriptionTier.ANNUAL;
         } else {

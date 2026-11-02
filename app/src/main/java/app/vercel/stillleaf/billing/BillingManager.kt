@@ -31,7 +31,10 @@ class BillingManager(
     companion object {
         private const val TAG = "StillLeafBilling"
         const val SUB_PRODUCT_ID = "still_leaf_pro_sub"
+        const val SUB_PRODUCT_ID_ALT = "still-leaf-pro-sub"
+
         const val LIFETIME_PRODUCT_ID = "still_leaf_lifetime_2999"
+        const val LIFETIME_PRODUCT_ID_ALT = "still-leaf-lifetime-2999"
 
         const val BASE_PLAN_MONTHLY = "monthly-199"
         const val BASE_PLAN_ANNUAL = "annual-1499"
@@ -92,6 +95,10 @@ class BillingManager(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(SUB_PRODUCT_ID)
                 .setProductType(BillingClient.ProductType.SUBS)
+                .build(),
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(SUB_PRODUCT_ID_ALT)
+                .setProductType(BillingClient.ProductType.SUBS)
                 .build()
         )
         val subParams = QueryProductDetailsParams.newBuilder()
@@ -101,7 +108,7 @@ class BillingManager(
         billingClient.queryProductDetailsAsync(subParams) { billingResult, productDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsResult != null) {
                 val detailsList = (productDetailsResult as? Iterable<*>)?.filterIsInstance<ProductDetails>()
-                _subProductDetails.value = detailsList?.firstOrNull { it.productId == SUB_PRODUCT_ID }
+                _subProductDetails.value = detailsList?.firstOrNull { it.productId == SUB_PRODUCT_ID || it.productId == SUB_PRODUCT_ID_ALT }
             }
         }
 
@@ -109,6 +116,10 @@ class BillingManager(
         val inAppProductList = listOf(
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(LIFETIME_PRODUCT_ID)
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build(),
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(LIFETIME_PRODUCT_ID_ALT)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         )
@@ -119,7 +130,7 @@ class BillingManager(
         billingClient.queryProductDetailsAsync(inAppParams) { billingResult, productDetailsResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && productDetailsResult != null) {
                 val detailsList = (productDetailsResult as? Iterable<*>)?.filterIsInstance<ProductDetails>()
-                _lifetimeProductDetails.value = detailsList?.firstOrNull { it.productId == LIFETIME_PRODUCT_ID }
+                _lifetimeProductDetails.value = detailsList?.firstOrNull { it.productId == LIFETIME_PRODUCT_ID || it.productId == LIFETIME_PRODUCT_ID_ALT }
             }
         }
     }
@@ -229,9 +240,9 @@ class BillingManager(
     }
 
     private fun updateStatusFromPurchase(purchase: Purchase) {
-        if (purchase.products.contains(LIFETIME_PRODUCT_ID)) {
+        if (purchase.products.contains(LIFETIME_PRODUCT_ID) || purchase.products.contains(LIFETIME_PRODUCT_ID_ALT)) {
             _subscriptionStatus.value = SubscriptionStatus.LIFETIME
-        } else if (purchase.products.contains(SUB_PRODUCT_ID)) {
+        } else if (purchase.products.contains(SUB_PRODUCT_ID) || purchase.products.contains(SUB_PRODUCT_ID_ALT)) {
             _subscriptionStatus.value = SubscriptionStatus.MONTHLY
         }
     }
