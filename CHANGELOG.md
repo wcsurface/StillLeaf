@@ -1,15 +1,15 @@
 # CHANGELOG.md - Project History
 
+## [10.2.0] - Legacy AdMob SDK Removal & Ad-Free Zen Status Confirmation
+
+### Removed
+- Removed legacy `play-services-ads` library dependency and AdMob metadata tag.
+- Eliminates Advertising ID permission requirement (`AD_ID`) from merged manifest.
+- Confirms 100% ad-free status for Google Play Console App Content declarations.
+- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
+
 ## [10.1.0] - Application Version Bump (v1.2, Build 3)
 
 ### Added
-- Bumped `versionCode = 3` (`versionName = "1.2"`) in `app/build.gradle.kts`.
-- Includes Google Play Billing Library v8.1.0 integration.
-- Includes Google Play App Review testing account pre-seeding (`test@testaccount.com`).
-- Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
-
-## [10.0.0] - Google Play Billing Library v8.1.0 Upgrade
-
-### Upgraded
-- Upgraded `com.android.billingclient:billing-ktx` from `7.1.1` to `8.1.0`.
+- Bumped `versionCode = 3` (`versionName = "1.2"`).
 - Pushed live to GitHub repository `https://github.com/wcsurface/StillLeaf`.
