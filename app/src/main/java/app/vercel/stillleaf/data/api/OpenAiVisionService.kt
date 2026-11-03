@@ -32,8 +32,11 @@ object OpenAiVisionService {
 
     private fun getActiveApiKey(): String {
         return try {
-            String(Base64.decode(ENCODED_VISION_KEY, Base64.DEFAULT), Charsets.UTF_8).replace("\r", "").replace("\n", "").trim()
-        } catch (_: Exception) {
+            val cleanedKey = ENCODED_VISION_KEY.replace("\r", "").replace("\n", "").replace(" ", "").trim()
+            val decodedBytes = Base64.decode(cleanedKey, Base64.DEFAULT or Base64.URL_SAFE)
+            String(decodedBytes, Charsets.UTF_8).trim()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error decoding vision API key", e)
             ""
         }
     }
@@ -120,6 +123,8 @@ object OpenAiVisionService {
 
             // 2. Direct OpenAI GPT-4o-mini Vision Call
             val apiKey = getActiveApiKey()
+            Log.d(TAG, "Executing direct OpenAI Vision call with key length: ${apiKey.length}...")
+
             if (apiKey.isNotBlank()) {
                 val directJsonPayload = JSONObject().apply {
                     put("model", "gpt-4o-mini")
@@ -233,7 +238,12 @@ object OpenAiVisionService {
                             careInsight = insight
                         )
                     )
+                } else {
+                    val errString = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "No error body"
+                    Log.e(TAG, "Direct OpenAI Vision API Error $responseCode: $errString")
                 }
+            } else {
+                Log.e(TAG, "Decoded API key is blank!")
             }
 
             return@withContext createFallbackResult()
@@ -274,7 +284,6 @@ object OpenAiVisionService {
                     }
                 }
                 imageUri != null -> {
-                    // Read image bytes ONCE into memory to prevent content resolver stream closure errors
                     val bytes = context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
                         ?: return null
 
