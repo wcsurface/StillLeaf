@@ -28,8 +28,8 @@ object OpenAiVisionService {
     private const val BACKEND_URL = "https://stillleaf-production.up.railway.app/api/plants/identify-base64"
 
     /**
-     * Ultra-optimized low-token cost botanical vision analysis (~$0.00015 per scan)
-     * routed through Railway Backend Server Proxy to protect API keys.
+     * Dual-photo botanical vision analysis routed 100% server-side via Railway Backend Proxy.
+     * Contains ZERO client API keys for absolute security.
      */
     suspend fun identifyPlantWithDualPhotos(
         context: Context,
@@ -39,7 +39,7 @@ object OpenAiVisionService {
         wholePlantBitmap: Bitmap? = null
     ): AiIdentificationResult = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting low-token botanical image encoding...")
+            Log.d(TAG, "Starting botanical image encoding...")
             val base64CloseUp = encodeImageToBase64(context, closeUpUri, closeUpBitmap)
             val base64Whole = encodeImageToBase64(context, wholePlantUri, wholePlantBitmap)
 
