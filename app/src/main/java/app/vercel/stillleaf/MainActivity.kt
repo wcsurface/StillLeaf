@@ -310,6 +310,7 @@ class MainActivity : ComponentActivity() {
                                                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
                                             },
                                             onTaskToggled = { plantId, taskType, isCompleted ->
+                                                var targetUpdatedPlant: Plant? = null
                                                 val updatedList = plantList.map { plant ->
                                                     if (plant.id == plantId) {
                                                         val updatedLogs = if (isCompleted) {
@@ -324,12 +325,17 @@ class MainActivity : ComponentActivity() {
                                                                 log.taskType == taskType && log.completedAt.toLocalDate() == java.time.LocalDate.now()
                                                             }
                                                         }
-                                                        plant.copy(recentLogs = updatedLogs)
+                                                        val p = plant.copy(recentLogs = updatedLogs)
+                                                        targetUpdatedPlant = p
+                                                        p
                                                     } else {
                                                         plant
                                                     }
                                                 }
                                                 updateAndPersistPlants(updatedList)
+                                                if (targetUpdatedPlant != null) {
+                                                    selectedPlant = targetUpdatedPlant
+                                                }
                                             }
                                         )
                                     }
@@ -382,6 +388,7 @@ class MainActivity : ComponentActivity() {
                                             },
                                             pendingTasksCount = pendingTasksCount,
                                             onTaskToggled = { plantId, taskType, isCompleted ->
+                                                var targetUpdatedPlant: Plant? = null
                                                 val updatedList = plantList.map { plant ->
                                                     if (plant.id == plantId) {
                                                         val updatedLogs = if (isCompleted) {
@@ -396,12 +403,17 @@ class MainActivity : ComponentActivity() {
                                                                 log.taskType == taskType && log.completedAt.toLocalDate() == java.time.LocalDate.now()
                                                             }
                                                         }
-                                                        plant.copy(recentLogs = updatedLogs)
+                                                        val p = plant.copy(recentLogs = updatedLogs)
+                                                        targetUpdatedPlant = p
+                                                        p
                                                     } else {
                                                         plant
                                                     }
                                                 }
                                                 updateAndPersistPlants(updatedList)
+                                                if (targetUpdatedPlant != null) {
+                                                    selectedPlant = targetUpdatedPlant
+                                                }
                                             }
                                         )
                                     }
