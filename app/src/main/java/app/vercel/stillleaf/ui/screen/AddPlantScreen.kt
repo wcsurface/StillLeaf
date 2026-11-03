@@ -153,10 +153,10 @@ fun AddPlantScreen(
             return
         }
 
-        coroutineScope.launch {
-            isAnalyzing = true
-            aiResult = null
+        aiResult = null
+        isAnalyzing = true
 
+        coroutineScope.launch {
             val result = OpenAiVisionService.identifyPlantWithDualPhotos(
                 context = context,
                 closeUpUri = detailImageUri,
