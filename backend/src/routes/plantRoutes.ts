@@ -6,6 +6,31 @@ const router = Router();
 const prisma = new PrismaClient();
 
 /**
+ * Dual-photo vision analysis handler
+ */
+const handleDualVision = async (req: Request, res: Response) => {
+  try {
+    const { base64CloseUp, base64Whole } = req.body;
+    if (!base64CloseUp && !base64Whole) {
+      return res.status(400).json({ success: false, error: 'At least one base64 photo is required' });
+    }
+
+    const visionResult = await identifyPlantFromDualBase64(base64CloseUp, base64Whole);
+    return res.status(200).json({
+      success: true,
+      message: 'Dual-photo botanical vision analysis complete',
+      data: visionResult
+    });
+  } catch (error: any) {
+    console.error('Error identifying plant via dual base64:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Plant identification failed' });
+  }
+};
+
+router.post('/identify-dual', handleDualVision);
+router.post('/identify-base64', handleDualVision);
+
+/**
  * DELETE /api/plants/user/clear
  * Deletes all plants and photos for a specific user ID or email in Railway PostgreSQL.
  */
@@ -55,29 +80,6 @@ router.post('/upload-url', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error generating upload URL:', error);
     return res.status(500).json({ success: false, error: 'Failed to generate upload URL' });
-  }
-});
-
-/**
- * POST /api/plants/identify-dual
- * Triggers OpenAI GPT-4o Vision analysis on dual base64 encoded photos via server side API key.
- */
-router.post('/identify-dual', async (req: Request, res: Response) => {
-  try {
-    const { base64CloseUp, base64Whole } = req.body;
-    if (!base64CloseUp && !base64Whole) {
-      return res.status(400).json({ success: false, error: 'At least one base64 photo is required' });
-    }
-
-    const visionResult = await identifyPlantFromDualBase64(base64CloseUp, base64Whole);
-    return res.status(200).json({
-      success: true,
-      message: 'Dual-photo botanical vision analysis complete',
-      data: visionResult
-    });
-  } catch (error: any) {
-    console.error('Error identifying plant via dual base64:', error);
-    return res.status(500).json({ success: false, error: error?.message || 'Plant identification failed' });
   }
 });
 
