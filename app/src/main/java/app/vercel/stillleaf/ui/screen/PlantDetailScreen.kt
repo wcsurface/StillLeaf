@@ -376,7 +376,7 @@ fun PlantDetailScreen(
                     title = "Organic Desert Succulent & Cactus Potting Soil",
                     brand = "FoxFarm Ocean Forest",
                     recommendationNote = "Fast-draining volcanic pumice & perlite blend ideal for ${plant.nickname} to prevent root moisture rot.",
-                    affiliateUrl = "https://www.amazon.com/dp/B001I49Q98?tag=stillleaf-20",
+                    affiliateUrl = "https://www.amazon.com/s?k=organic+succulent+cactus+potting+soil+mix&tag=stillleaf-20",
                     categoryLabel = "Essential Potting Soil"
                 )
             } else {
@@ -384,7 +384,7 @@ fun PlantDetailScreen(
                     title = "Chunky Premium Aroid & Tropical Potting Bark Blend",
                     brand = "Sustee Botanical Co.",
                     recommendationNote = "Aerated potting bark & sphagnum moss mix that balances root air flow and hydration for ${plant.nickname}.",
-                    affiliateUrl = "https://www.amazon.com/dp/B08NX3T6LH?tag=stillleaf-20",
+                    affiliateUrl = "https://www.amazon.com/s?k=organic+chunky+aroid+potting+bark+mix&tag=stillleaf-20",
                     categoryLabel = "Essential Potting Soil"
                 )
             }
@@ -395,7 +395,7 @@ fun PlantDetailScreen(
                 title = "Organic Gentle Liquid Plant Food & Nutrient Concentrate",
                 brand = "Miracle-Gro Organic",
                 recommendationNote = "Provides essential nitrogen and micronutrients every ${plant.careRequirements.feedIntervalDays} days for vibrant leaf and bloom growth.",
-                affiliateUrl = "https://www.amazon.com/dp/B000OW838O?tag=stillleaf-20",
+                affiliateUrl = "https://www.amazon.com/s?k=organic+liquid+plant+food+fertilizer&tag=stillleaf-20",
                 categoryLabel = "Essential Fertilizer & Nutrients"
             )
         }
@@ -827,7 +827,7 @@ fun LightDetailsDialog(
                 OutlinedButton(
                     onClick = {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/dp/B07TKKG84E?tag=stillleaf-20"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/s?k=full+spectrum+led+grow+lights+for+indoor+plants&tag=stillleaf-20"))
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
@@ -941,7 +941,7 @@ fun WaterDetailsDialog(
                 OutlinedButton(
                     onClick = {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/dp/B08NX3T6LH?tag=stillleaf-20"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/s?k=cool+mist+humidifier+for+indoor+plants&tag=stillleaf-20"))
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
@@ -1053,7 +1053,7 @@ fun NourishDetailsDialog(
                 OutlinedButton(
                     onClick = {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/dp/B000OW838O?tag=stillleaf-20"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/s?k=organic+liquid+plant+food+fertilizer&tag=stillleaf-20"))
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
@@ -1165,7 +1165,7 @@ fun HumidityDetailsDialog(
                 OutlinedButton(
                     onClick = {
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/dp/B08NX3T6LH?tag=stillleaf-20"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.amazon.com/s?k=cool+mist+humidifier+for+indoor+plants&tag=stillleaf-20"))
                             context.startActivity(intent)
                         } catch (_: Exception) {}
                     },
