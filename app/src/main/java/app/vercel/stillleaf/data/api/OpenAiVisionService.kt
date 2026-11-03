@@ -28,7 +28,7 @@ object OpenAiVisionService {
     private const val BACKEND_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants/identify-dual"
     private const val DIRECT_API_URL = "https://api.openai.com/v1/chat/completions"
 
-    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV_FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
+    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV9FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
 
     private fun getActiveApiKey(): String {
         return try {
@@ -127,7 +127,11 @@ object OpenAiVisionService {
                     put("max_tokens", 300)
 
                     val promptText = """
-                        Botanist analysis for Still Leaf. Identify plant from photos.
+                        You are a master botanist for Still Leaf. Analyze BOTH photos of this plant:
+                        - Photo 1 is a close-up detail shot of leaf margins, veins, or bloom.
+                        - Photo 2 is a whole plant overview in its pot.
+                        
+                        Identify the exact plant species.
                         Return strict json:
                         {
                           "is_plant_detected": true,
@@ -139,7 +143,7 @@ object OpenAiVisionService {
                           "fertilize_days": 30,
                           "rotate_days": 14,
                           "trim_days": 90,
-                          "care_insight": "2-sentence guidance for this plant."
+                          "care_insight": "2-sentence guidance for this specific plant species."
                         }
                     """.trimIndent()
 
@@ -270,12 +274,14 @@ object OpenAiVisionService {
                     }
                 }
                 imageUri != null -> {
+                    // Read image bytes ONCE into memory to prevent content resolver stream closure errors
+                    val bytes = context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
+                        ?: return null
+
                     val options = BitmapFactory.Options().apply {
                         inJustDecodeBounds = true
                     }
-                    context.contentResolver.openInputStream(imageUri)?.use {
-                        BitmapFactory.decodeStream(it, null, options)
-                    }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
 
                     val maxDimension = 512
                     var inSampleSize = 1
@@ -290,9 +296,7 @@ object OpenAiVisionService {
                     val decodeOptions = BitmapFactory.Options().apply {
                         this.inSampleSize = inSampleSize
                     }
-                    context.contentResolver.openInputStream(imageUri)?.use {
-                        BitmapFactory.decodeStream(it, null, decodeOptions)
-                    }
+                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions)
                 }
                 else -> null
             } ?: return null
