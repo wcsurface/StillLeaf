@@ -61,7 +61,7 @@ object OpenAiVisionService {
             Log.d(TAG, "Photos encoded successfully. Close-Up length: ${base64CloseUp?.length ?: 0}, Whole length: ${base64Whole?.length ?: 0}")
 
             val jsonPayload = JSONObject().apply {
-                put("model", "gpt-4o")
+                put("model", "gpt-4o-mini")
                 put("response_format", JSONObject().put("type", "json_object"))
                 put("max_tokens", 700)
 
