@@ -189,3 +189,5 @@ export async function identifyPlantFromR2(
     freeScansRemaining: isPro ? 999999 : remainingScans,
   };
 }
+
+export const identifyPlantFromImageKey = identifyPlantFromR2;
