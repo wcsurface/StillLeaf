@@ -6,6 +6,44 @@ const router = Router();
 const prisma = new PrismaClient();
 
 /**
+ * DELETE /api/plants/user/clear
+ * Deletes all plants and photos for a specific user ID or email in Railway PostgreSQL.
+ */
+router.delete('/user/clear', async (req: Request, res: Response) => {
+  try {
+    const userId = (req.query.userId as string) || (req.body?.userId as string) || '';
+    const email = (req.query.email as string) || (req.body?.email as string) || '';
+
+    const userIdsToDelete: string[] = [];
+    if (userId) userIdsToDelete.push(userId);
+
+    if (email) {
+      const users = await prisma.user.findMany({
+        where: { email: { contains: email, mode: 'insensitive' } }
+      });
+      users.forEach(u => userIdsToDelete.push(u.id));
+    }
+
+    userIdsToDelete.push('usr_wcsurface_gmail_com', 'usr_google_wcsurface_gmail_com');
+
+    const result = await prisma.plant.deleteMany({
+      where: {
+        userId: { in: userIdsToDelete }
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Cleared ${result.count} plants for user [${email || userId}] from Railway PostgreSQL.`,
+      count: result.count
+    });
+  } catch (error) {
+    console.error('Error clearing user plants:', error);
+    return res.status(500).json({ success: false, error: 'Failed to clear user plants' });
+  }
+});
+
+/**
  * POST /api/plants/upload-url
  * Generates a pre-signed PUT URL for uploading plant photos directly to Cloudflare R2.
  */
