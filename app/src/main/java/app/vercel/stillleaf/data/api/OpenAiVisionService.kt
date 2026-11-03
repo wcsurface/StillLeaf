@@ -284,6 +284,7 @@ object OpenAiVisionService {
                     }
                 }
                 imageUri != null -> {
+                    // Read image bytes ONCE into memory to prevent content resolver stream closure errors
                     val bytes = context.contentResolver.openInputStream(imageUri)?.use { it.readBytes() }
                         ?: return null
 
