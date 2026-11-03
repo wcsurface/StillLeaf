@@ -1312,14 +1312,15 @@ fun CareTaskActionCard(
 
             Box(
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .border(
                         width = 2.dp,
                         color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                         shape = CircleShape
                     )
-                    .background(if (isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent),
+                    .background(if (isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onCompleteToggle() },
                 contentAlignment = Alignment.Center
             ) {
                 if (isCompleted) {
@@ -1327,7 +1328,7 @@ fun CareTaskActionCard(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Completed",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }

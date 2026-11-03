@@ -560,16 +560,14 @@ fun AddPlantScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
                             }
 
-                            // Empty Location Detail Text Field (MUST BE COMPLETED)
+                            // Optional Notes Text Field
                             OutlinedTextField(
                                 value = locationDetailInput,
                                 onValueChange = {
                                     locationDetailInput = it
-                                    locationError = null
                                 },
-                                label = { Text("Location Detail (Required)") },
-                                placeholder = { Text("e.g. Living Room, Sunroom, Patio, Office...") },
-                                isError = locationError != null,
+                                label = { Text("Notes (Optional)") },
+                                placeholder = { Text("e.g. Care notes, potting date, light preferences...") },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
@@ -580,17 +578,12 @@ fun AddPlantScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            // Save Button with Location Requirement Validation
+                            // Save Button
                             Button(
                                 onClick = {
-                                    val trimmedDetail = locationDetailInput.trim()
-                                    if (trimmedDetail.isBlank()) {
-                                        locationError = "Location detail is required. Please enter where your plant is placed (e.g. Living Room, Patio, Office)."
-                                        return@Button
-                                    }
-
+                                    val trimmedNotes = locationDetailInput.trim()
                                     val envType = if (isOutdoorEnv) "Outdoor" else "Indoor"
-                                    val formattedLocation = "$envType • $trimmedDetail"
+                                    val formattedLocation = if (trimmedNotes.isNotBlank()) "$envType • $trimmedNotes" else envType
 
                                     val plantId = "plant_${System.currentTimeMillis()}"
 
@@ -687,7 +680,10 @@ private fun CaptureSlotCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Surface(
                         color = if (isCaptured) PrimarySage else DeepForestAccent,
                         shape = CircleShape,
@@ -707,22 +703,25 @@ private fun CaptureSlotCard(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = DeepForestAccent
+                        color = DeepForestAccent,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
                 if (isCaptured) {
+                    Spacer(modifier = Modifier.width(6.dp))
                     Surface(
                         color = PrimarySage,
                         shape = PillShape
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = SurfaceWhite, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Ready", style = MaterialTheme.typography.labelSmall, color = SurfaceWhite, fontWeight = FontWeight.Bold)
+                            Text("Ready", style = MaterialTheme.typography.labelSmall, color = SurfaceWhite, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
                     }
                 }
