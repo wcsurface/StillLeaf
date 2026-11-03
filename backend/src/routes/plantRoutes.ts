@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { generateUploadUrl, identifyPlantFromImageKey, identifyPlantFromDualBase64 } from '../services/plantVisionService';
+import { identifyPlantFromImageKey, identifyPlantFromDualBase64 } from '../services/plantVisionService';
+import { generateUploadUrl } from '../services/r2Service';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
@@ -109,7 +110,7 @@ router.post('/identify', async (req: Request, res: Response) => {
     }
 
     // Call OpenAI Vision Service
-    const visionResult = await identifyPlantFromImageKey(imageKey);
+    const visionResult = await identifyPlantFromImageKey(currentUserId, imageKey);
 
     const publicPhotoUrl = `https://${process.env.R2_BUCKET_NAME || 'still-leaf-images'}.r2.cloudflarestorage.com/${imageKey}`;
 
@@ -120,7 +121,14 @@ router.post('/identify', async (req: Request, res: Response) => {
         nickname: nickname || visionResult.commonName,
         botanicalName: visionResult.botanicalName,
         commonName: visionResult.commonName,
-        careRequirements: visionResult.careRequirements as any,
+        sunlightRequirement: visionResult.sunlightRequirement,
+        idealTemperature: visionResult.idealTemperature,
+        idealHumidity: visionResult.idealHumidity,
+        waterIntervalDays: visionResult.waterIntervalDays,
+        feedIntervalDays: visionResult.feedIntervalDays,
+        rotateIntervalDays: visionResult.rotateIntervalDays,
+        trimIntervalDays: visionResult.trimIntervalDays,
+        careSummary: visionResult.zenSummary,
         photos: {
           create: {
             photoUrl: publicPhotoUrl,
