@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -144,19 +145,15 @@ fun AddPlantScreen(
     val defaultSamplePhoto = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
     val scrollState = rememberScrollState()
 
-    // Trigger Botanical Identification when Dual Photos are captured
-    fun runIdentification() {
+    // Automatically trigger Botanical Identification whenever BOTH photos are captured
+    LaunchedEffect(detailImageUri, wholePlantImageUri, detailCapturedBitmap, wholePlantCapturedBitmap) {
         val hasPhoto1 = detailImageUri != null || detailCapturedBitmap != null
         val hasPhoto2 = wholePlantImageUri != null || wholePlantCapturedBitmap != null
 
-        if (!hasPhoto1 || !hasPhoto2) {
-            return
-        }
+        if (hasPhoto1 && hasPhoto2) {
+            aiResult = null
+            isAnalyzing = true
 
-        aiResult = null
-        isAnalyzing = true
-
-        coroutineScope.launch {
             val result = OpenAiVisionService.identifyPlantWithDualPhotos(
                 context = context,
                 closeUpUri = detailImageUri,
@@ -183,7 +180,6 @@ fun AddPlantScreen(
                 wholePlantCapturedBitmap = bitmap
                 wholePlantImageUri = cacheUri
             }
-            runIdentification()
         }
     }
 
@@ -199,7 +195,6 @@ fun AddPlantScreen(
                 wholePlantImageUri = uri
                 wholePlantCapturedBitmap = null
             }
-            runIdentification()
         }
     }
 
