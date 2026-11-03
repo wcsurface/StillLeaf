@@ -17,6 +17,7 @@ import java.time.LocalDateTime
 object PlantPersistenceManager {
 
     private const val TAG = "PlantPersistence"
+    private const val MASTER_PLANTS_FILE = "still_leaf_master_plants.json"
 
     private fun getFileNameForUser(userId: String): String {
         val sanitized = userId.lowercase().replace("[^a-z0-9]".toRegex(), "_")
@@ -24,14 +25,84 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Pre-populated sample plants strictly for official Google Play App Review testing account (test@testaccount.com).
+     * Pre-populated sample plants for developer and test accounts.
      */
     private fun getSampleTestPlants(): List<Plant> {
-        val plantId1 = "plant_test_monstera"
-        val plantId2 = "plant_test_peacelily"
+        val plantId1 = "plant_jade"
+        val plantId2 = "plant_cactus"
+        val plantId3 = "plant_monstera"
+        val plantId4 = "plant_peacelily"
 
         val p1 = Plant(
             id = plantId1,
+            nickname = "Jade Plant",
+            botanicalName = "Crassula ovata",
+            commonName = "Jade Plant",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(120),
+            careRequirements = CareRequirement(
+                sunlight = "Bright Indirect Sunlight",
+                idealTemperature = "18°C - 26°C",
+                idealHumidity = "40% - 60%",
+                waterIntervalDays = 14,
+                feedIntervalDays = 60,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 90,
+                careInsight = "The Jade Plant prefers well-draining soil to prevent root rot. Allow topsoil to dry completely between waterings."
+            ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.NEEDS_WATER,
+            healthStatusText = "Treatment Active",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_jade_1",
+                    plantId = plantId1,
+                    photoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(120),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        val p2 = Plant(
+            id = plantId2,
+            nickname = "Christmas Cactus",
+            botanicalName = "Schlumbergera bridgesii",
+            commonName = "Christmas Cactus",
+            primaryPhotoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
+            dateAdded = LocalDate.now().minusDays(90),
+            careRequirements = CareRequirement(
+                sunlight = "Bright Indirect Light",
+                idealTemperature = "18°C - 24°C",
+                idealHumidity = "50% - 70%",
+                waterIntervalDays = 10,
+                feedIntervalDays = 30,
+                rotateIntervalDays = 14,
+                trimIntervalDays = 60,
+                careInsight = "Prefers ambient daylight and moderate hydration. Protect from extreme heat drafts."
+            ),
+            location = "Indoor • Living Room",
+            healthStatusType = HealthStatusType.HEALTHY,
+            healthStatusText = "Healthy",
+            photos = listOf(
+                PlantPhoto(
+                    id = "photo_cactus_1",
+                    plantId = plantId2,
+                    photoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
+                    dateTaken = LocalDate.now().minusDays(90),
+                    ageInDays = 0,
+                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    isQuarterlyMilestone = true,
+                    milestoneTitle = "Day 0 - Baseline"
+                )
+            )
+        )
+
+        val p3 = Plant(
+            id = plantId3,
             nickname = "Monstera",
             botanicalName = "Monstera deliciosa",
             commonName = "Swiss Cheese Plant",
@@ -52,8 +123,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_test_1",
-                    plantId = plantId1,
+                    id = "photo_monstera_1",
+                    plantId = plantId3,
                     photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(90),
                     ageInDays = 0,
@@ -64,8 +135,8 @@ object PlantPersistenceManager {
             )
         )
 
-        val p2 = Plant(
-            id = plantId2,
+        val p4 = Plant(
+            id = plantId4,
             nickname = "Peace Lily",
             botanicalName = "Spathiphyllum wallisii",
             commonName = "Peace Lily",
@@ -86,8 +157,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_test_2",
-                    plantId = plantId2,
+                    id = "photo_peacelily_1",
+                    plantId = plantId4,
                     photoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(45),
                     ageInDays = 0,
@@ -98,14 +169,13 @@ object PlantPersistenceManager {
             )
         )
 
-        return listOf(p1, p2)
+        return listOf(p1, p2, p3, p4)
     }
 
     /**
-     * Saves the user's current plant sanctuary list, photos, and care completion logs isolated strictly by user account ID.
+     * Saves the user's current plant sanctuary list to both user account storage AND global master backup.
      */
     fun savePlantsLocally(context: Context, userId: String, plants: List<Plant>) {
-        if (userId.isBlank()) return
         try {
             val jsonArray = JSONArray()
             plants.forEach { plant ->
@@ -166,130 +236,160 @@ object PlantPersistenceManager {
                 jsonArray.put(plantJson)
             }
 
-            val fileName = getFileNameForUser(userId)
-            val file = File(context.filesDir, fileName)
-            file.writeText(jsonArray.toString())
-            Log.d(TAG, "Successfully persisted ${plants.size} plants for account [$userId] to $fileName.")
+            val jsonString = jsonArray.toString()
+
+            // 1. Save to User Account File
+            if (userId.isNotBlank()) {
+                val fileName = getFileNameForUser(userId)
+                val userFile = File(context.filesDir, fileName)
+                userFile.writeText(jsonString)
+            }
+
+            // 2. Save to Global Master Backup File
+            if (plants.isNotEmpty()) {
+                val masterFile = File(context.filesDir, MASTER_PLANTS_FILE)
+                masterFile.writeText(jsonString)
+            }
+
+            Log.d(TAG, "Successfully persisted ${plants.size} plants for account [$userId] and Master Backup.")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving plants for user [$userId]", e)
         }
     }
 
     /**
-     * Loads plants for a specific user account ID. All real user accounts start with an EMPTY sanctuary.
-     * Pre-seeds sample plants STRICTLY for the official Google Play Reviewer account (test@testaccount.com).
+     * Reads plants from file content string.
+     */
+    private fun parsePlantsFromJson(jsonString: String): List<Plant> {
+        if (jsonString.isBlank()) return emptyList()
+        val jsonArray = JSONArray(jsonString)
+        val plantList = mutableListOf<Plant>()
+
+        for (i in 0 until jsonArray.length()) {
+            val plantJson = jsonArray.getJSONObject(i)
+
+            val careJson = plantJson.getJSONObject("careRequirements")
+            val careRequirements = CareRequirement(
+                sunlight = careJson.optString("sunlight", "Bright Indirect Light"),
+                idealTemperature = careJson.optString("idealTemperature", "18°C - 27°C"),
+                idealHumidity = careJson.optString("idealHumidity", "50% - 70%"),
+                waterIntervalDays = careJson.optInt("waterIntervalDays", 7),
+                feedIntervalDays = careJson.optInt("feedIntervalDays", 30),
+                rotateIntervalDays = careJson.optInt("rotateIntervalDays", 14),
+                trimIntervalDays = careJson.optInt("trimIntervalDays", 60),
+                careInsight = careJson.optString("careInsight", "Thrives in ambient light.")
+            )
+
+            val photosArray = plantJson.optJSONArray("photos") ?: JSONArray()
+            val photosList = mutableListOf<PlantPhoto>()
+            for (j in 0 until photosArray.length()) {
+                val photoJson = photosArray.getJSONObject(j)
+                val photo = PlantPhoto(
+                    id = photoJson.optString("id", "p_$j"),
+                    plantId = photoJson.optString("plantId", plantJson.getString("id")),
+                    photoUrl = photoJson.optString("photoUrl", ""),
+                    dateTaken = LocalDate.parse(photoJson.optString("dateTaken", LocalDate.now().toString())),
+                    ageInDays = photoJson.optInt("ageInDays", 0),
+                    note = photoJson.optString("note", ""),
+                    isQuarterlyMilestone = photoJson.optBoolean("isQuarterlyMilestone", false),
+                    milestoneTitle = photoJson.optString("milestoneTitle", "")
+                )
+                photosList.add(photo)
+            }
+
+            val logsArray = plantJson.optJSONArray("recentLogs") ?: JSONArray()
+            val logsList = mutableListOf<CareLog>()
+            for (k in 0 until logsArray.length()) {
+                val logJson = logsArray.getJSONObject(k)
+                val taskType = try {
+                    CareTaskType.valueOf(logJson.getString("taskType"))
+                } catch (_: Exception) {
+                    CareTaskType.WATER
+                }
+                val completedAt = try {
+                    LocalDateTime.parse(logJson.getString("completedAtIso"))
+                } catch (_: Exception) {
+                    LocalDateTime.now()
+                }
+                logsList.add(
+                    CareLog(
+                        id = logJson.optString("id", "log_$k"),
+                        plantId = logJson.optString("plantId", plantJson.getString("id")),
+                        taskType = taskType,
+                        completedAt = completedAt
+                    )
+                )
+            }
+
+            val healthTypeString = plantJson.optString("healthStatusType", "HEALTHY")
+            val healthType = try {
+                HealthStatusType.valueOf(healthTypeString)
+            } catch (_: Exception) {
+                HealthStatusType.HEALTHY
+            }
+
+            val plant = Plant(
+                id = plantJson.getString("id"),
+                nickname = plantJson.getString("nickname"),
+                botanicalName = plantJson.optString("botanicalName", ""),
+                commonName = plantJson.optString("commonName", ""),
+                primaryPhotoUrl = plantJson.optString("primaryPhotoUrl", ""),
+                dateAdded = LocalDate.parse(plantJson.optString("dateAdded", LocalDate.now().toString())),
+                careRequirements = careRequirements,
+                location = plantJson.optString("location", "Indoor • Living Room"),
+                healthStatusType = healthType,
+                healthStatusText = plantJson.optString("healthStatusText", "Healthy"),
+                photos = photosList,
+                recentLogs = logsList
+            )
+            plantList.add(plant)
+        }
+        return plantList
+    }
+
+    /**
+     * Loads plants for a specific user account ID.
+     * Uses Master Backup and sample plants for wcsurface@gmail.com and test accounts so data is NEVER lost.
      */
     fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
         if (userId.isBlank()) return emptyList()
         try {
             val fileName = getFileNameForUser(userId)
-            val file = File(context.filesDir, fileName)
+            val userFile = File(context.filesDir, fileName)
 
-            if (!file.exists()) {
-                // Strict check: ONLY pre-seed for the official Google Play App Review test account
-                val isExactGoogleReviewerAccount = userId.equals("usr_test_testaccount_com", ignoreCase = true) ||
-                                                   userId.equals("test@testaccount.com", ignoreCase = true)
-
-                if (isExactGoogleReviewerAccount) {
-                    val samplePlants = getSampleTestPlants()
-                    savePlantsLocally(context, userId, samplePlants)
-                    return samplePlants
+            if (userFile.exists()) {
+                val jsonString = userFile.readText()
+                val plants = parsePlantsFromJson(jsonString)
+                if (plants.isNotEmpty()) {
+                    return plants
                 }
-
-                Log.d(TAG, "New real user account [$userId]. Returning empty sanctuary (0 plants).")
-                return emptyList()
             }
 
-            val jsonString = file.readText()
-            if (jsonString.isBlank()) {
-                return emptyList()
+            // Fallback 1: Try Global Master Backup File
+            val masterFile = File(context.filesDir, MASTER_PLANTS_FILE)
+            if (masterFile.exists()) {
+                val masterJson = masterFile.readText()
+                val masterPlants = parsePlantsFromJson(masterJson)
+                if (masterPlants.isNotEmpty()) {
+                    savePlantsLocally(context, userId, masterPlants)
+                    Log.d(TAG, "Restored ${masterPlants.size} plants for [$userId] from Master Backup File.")
+                    return masterPlants
+                }
             }
 
-            val jsonArray = JSONArray(jsonString)
-            val plantList = mutableListOf<Plant>()
+            // Fallback 2: Pre-seed sample plants for wcsurface@gmail.com or test accounts
+            val isSeedAccount = userId.contains("wcsurface", ignoreCase = true) ||
+                                userId.contains("test", ignoreCase = true)
 
-            for (i in 0 until jsonArray.length()) {
-                val plantJson = jsonArray.getJSONObject(i)
-
-                val careJson = plantJson.getJSONObject("careRequirements")
-                val careRequirements = CareRequirement(
-                    sunlight = careJson.optString("sunlight", "Bright Indirect Light"),
-                    idealTemperature = careJson.optString("idealTemperature", "18°C - 27°C"),
-                    idealHumidity = careJson.optString("idealHumidity", "50% - 70%"),
-                    waterIntervalDays = careJson.optInt("waterIntervalDays", 7),
-                    feedIntervalDays = careJson.optInt("feedIntervalDays", 30),
-                    rotateIntervalDays = careJson.optInt("rotateIntervalDays", 14),
-                    trimIntervalDays = careJson.optInt("trimIntervalDays", 60),
-                    careInsight = careJson.optString("careInsight", "Thrives in ambient light.")
-                )
-
-                val photosArray = plantJson.optJSONArray("photos") ?: JSONArray()
-                val photosList = mutableListOf<PlantPhoto>()
-                for (j in 0 until photosArray.length()) {
-                    val photoJson = photosArray.getJSONObject(j)
-                    val photo = PlantPhoto(
-                        id = photoJson.optString("id", "p_$j"),
-                        plantId = photoJson.optString("plantId", plantJson.getString("id")),
-                        photoUrl = photoJson.optString("photoUrl", ""),
-                        dateTaken = LocalDate.parse(photoJson.optString("dateTaken", LocalDate.now().toString())),
-                        ageInDays = photoJson.optInt("ageInDays", 0),
-                        note = photoJson.optString("note", ""),
-                        isQuarterlyMilestone = photoJson.optBoolean("isQuarterlyMilestone", false),
-                        milestoneTitle = photoJson.optString("milestoneTitle", "")
-                    )
-                    photosList.add(photo)
-                }
-
-                val logsArray = plantJson.optJSONArray("recentLogs") ?: JSONArray()
-                val logsList = mutableListOf<CareLog>()
-                for (k in 0 until logsArray.length()) {
-                    val logJson = logsArray.getJSONObject(k)
-                    val taskType = try {
-                        CareTaskType.valueOf(logJson.getString("taskType"))
-                    } catch (_: Exception) {
-                        CareTaskType.WATER
-                    }
-                    val completedAt = try {
-                        LocalDateTime.parse(logJson.getString("completedAtIso"))
-                    } catch (_: Exception) {
-                        LocalDateTime.now()
-                    }
-                    logsList.add(
-                        CareLog(
-                            id = logJson.optString("id", "log_$k"),
-                            plantId = logJson.optString("plantId", plantJson.getString("id")),
-                            taskType = taskType,
-                            completedAt = completedAt
-                        )
-                    )
-                }
-
-                val healthTypeString = plantJson.optString("healthStatusType", "HEALTHY")
-                val healthType = try {
-                    HealthStatusType.valueOf(healthTypeString)
-                } catch (_: Exception) {
-                    HealthStatusType.HEALTHY
-                }
-
-                val plant = Plant(
-                    id = plantJson.getString("id"),
-                    nickname = plantJson.getString("nickname"),
-                    botanicalName = plantJson.optString("botanicalName", ""),
-                    commonName = plantJson.optString("commonName", ""),
-                    primaryPhotoUrl = plantJson.optString("primaryPhotoUrl", ""),
-                    dateAdded = LocalDate.parse(plantJson.optString("dateAdded", LocalDate.now().toString())),
-                    careRequirements = careRequirements,
-                    location = plantJson.optString("location", "Indoor • Living Room"),
-                    healthStatusType = healthType,
-                    healthStatusText = plantJson.optString("healthStatusText", "Healthy"),
-                    photos = photosList,
-                    recentLogs = logsList
-                )
-                plantList.add(plant)
+            if (isSeedAccount) {
+                val samplePlants = getSampleTestPlants()
+                savePlantsLocally(context, userId, samplePlants)
+                Log.d(TAG, "Pre-seeded ${samplePlants.size} plants for account [$userId].")
+                return samplePlants
             }
 
-            Log.d(TAG, "Successfully restored ${plantList.size} plants for account [$userId] from $fileName.")
-            return plantList
+            Log.d(TAG, "New real user account [$userId]. Returning empty sanctuary (0 plants).")
+            return emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error restoring plants for user [$userId]", e)
             return emptyList()
