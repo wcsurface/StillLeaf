@@ -26,8 +26,8 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-// Direct High-Capacity Vision Endpoint
-app.post('/api/plants/identify-base64', async (req: Request, res: Response) => {
+// Dual-photo botanical vision handler
+const handleDualVision = async (req: Request, res: Response) => {
   try {
     const { base64CloseUp, base64Whole } = req.body;
     if (!base64CloseUp && !base64Whole) {
@@ -44,7 +44,11 @@ app.post('/api/plants/identify-base64', async (req: Request, res: Response) => {
     console.error('Error identifying plant via base64:', error);
     return res.status(500).json({ success: false, error: error?.message || 'Plant identification failed' });
   }
-});
+};
+
+// Register vision endpoints for both identify-dual and identify-base64
+app.post('/api/plants/identify-dual', handleDualVision);
+app.post('/api/plants/identify-base64', handleDualVision);
 
 // Route registration
 app.use('/api/auth', authRoutes);
