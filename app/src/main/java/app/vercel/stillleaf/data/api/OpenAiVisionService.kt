@@ -27,11 +27,11 @@ object OpenAiVisionService {
     private const val TAG = "OpenAiVision"
     private const val API_URL = "https://api.openai.com/v1/chat/completions"
 
-    private const val ENCODED_VISION_KEY = "c2stcHJvai1FTFlUM3A4TlE1c1lZSmRYNnpMc1lBVUlwUzFPdUc1Z3FXcXVZU3BJejVZR0tfbDJzUkp5Q0RSTFBMNTBqVVdWODZNRE1jTm5xS1QzQmxia0ZKaUxERWhuQ21PSjlkZUZ1azg1WlV2Rk9BUGNKZmhZaG43aHBiY3VCR2xzU1ljWWQ5NDQzTmFYTEQ1WUptRFl3ZUJaT21rRUFpY0E="
+    private const val ENCODED_VISION_KEY = "c2stcHJvai1oZGRKOFc3NmlGZDlYQ0VpM0pPekZlOGIyWDlmQVRFdjlyM3AzbWVnU3VETy1XTGVUU2FfOTl4cEdwckctSzJjR1g4MWpWdEp2VlQzQmxia0ZKWjh3TktYdVV0YWladVhya2VRUUxkcj\nlPenhnNU05UXg3MHJjYmpBTlJSR2Uyd29BYjl1R2NQQU1iTHhwOFdmNDNJSzVzWTlPQUE="
 
     private fun getActiveApiKey(): String {
         return try {
-            String(Base64.decode(ENCODED_VISION_KEY, Base64.DEFAULT), Charsets.UTF_8).trim()
+            String(Base64.decode(ENCODED_VISION_KEY, Base64.DEFAULT), Charsets.UTF_8).replace("\r", "").replace("\n", "").trim()
         } catch (_: Exception) {
             ""
         }
