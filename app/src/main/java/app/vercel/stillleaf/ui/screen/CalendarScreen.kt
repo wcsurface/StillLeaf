@@ -27,6 +27,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
@@ -585,13 +587,18 @@ fun FullCalendarModal(
     getTasksForDate: (LocalDate) -> List<CalendarTaskItem>,
     onDismiss: () -> Unit
 ) {
+    var currentYearMonth by remember { mutableStateOf(java.time.YearMonth.from(today)) }
     var selectedDay by remember { mutableIntStateOf(today.dayOfMonth) }
-    val monthTitle = remember(today) { "${today.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${today.year}" }
-    val daysInMonth = remember(today) { today.lengthOfMonth() }
 
-    val selectedDate = remember(selectedDay, today) {
+    val monthTitle = remember(currentYearMonth) {
+        "${currentYearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${currentYearMonth.year}"
+    }
+    val daysInMonth = remember(currentYearMonth) { currentYearMonth.lengthOfMonth() }
+
+    val selectedDate = remember(selectedDay, currentYearMonth) {
         try {
-            today.withDayOfMonth(selectedDay)
+            val safeDay = selectedDay.coerceIn(1, currentYearMonth.lengthOfMonth())
+            currentYearMonth.atDay(safeDay)
         } catch (_: Exception) {
             today
         }
@@ -614,26 +621,50 @@ fun FullCalendarModal(
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
-                // Header Row
+                // Header Row with Month Navigation Arrows
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            tint = PrimarySage,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        IconButton(
+                            onClick = {
+                                currentYearMonth = currentYearMonth.minusMonths(1)
+                                selectedDay = 1
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
+                                contentDescription = "Previous Month",
+                                tint = PrimarySage,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
                         Text(
                             text = monthTitle,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = DeepForestAccent
+                            color = DeepForestAccent,
+                            modifier = Modifier.padding(horizontal = 4.dp)
                         )
+
+                        IconButton(
+                            onClick = {
+                                currentYearMonth = currentYearMonth.plusMonths(1)
+                                selectedDay = 1
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                contentDescription = "Next Month",
+                                tint = PrimarySage,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
 
                     IconButton(onClick = onDismiss) {
@@ -652,10 +683,10 @@ fun FullCalendarModal(
                 ) {
                     items(daysInMonth) { index ->
                         val dayNum = index + 1
-                        val dateForDay = try { today.withDayOfMonth(dayNum) } catch (_: Exception) { today }
+                        val dateForDay = try { currentYearMonth.atDay(dayNum) } catch (_: Exception) { today }
                         val tasksOnDay = getTasksForDate(dateForDay)
 
-                        val isToday = dayNum == today.dayOfMonth
+                        val isToday = dateForDay == today
                         val isSelected = dayNum == selectedDay
                         val hasTasks = tasksOnDay.isNotEmpty()
 
