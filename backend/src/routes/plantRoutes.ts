@@ -59,10 +59,10 @@ router.post('/upload-url', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/plants/identify-base64
+ * POST /api/plants/identify-dual
  * Triggers OpenAI GPT-4o Vision analysis on dual base64 encoded photos via server side API key.
  */
-router.post('/identify-base64', async (req: Request, res: Response) => {
+router.post('/identify-dual', async (req: Request, res: Response) => {
   try {
     const { base64CloseUp, base64Whole } = req.body;
     if (!base64CloseUp && !base64Whole) {
@@ -75,9 +75,9 @@ router.post('/identify-base64', async (req: Request, res: Response) => {
       message: 'Dual-photo botanical vision analysis complete',
       data: visionResult
     });
-  } catch (error) {
-    console.error('Error identifying plant via base64:', error);
-    return res.status(500).json({ success: false, error: 'Plant identification failed' });
+  } catch (error: any) {
+    console.error('Error identifying plant via dual base64:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Plant identification failed' });
   }
 });
 
