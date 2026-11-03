@@ -25,84 +25,14 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Pre-populated sample plants for developer and test accounts.
+     * Pre-populated sample plants strictly for official Google Play App Review testing account (test@testaccount.com).
      */
     private fun getSampleTestPlants(): List<Plant> {
-        val plantId1 = "plant_jade"
-        val plantId2 = "plant_cactus"
-        val plantId3 = "plant_monstera"
-        val plantId4 = "plant_peacelily"
+        val plantId1 = "plant_test_monstera"
+        val plantId2 = "plant_test_peacelily"
 
         val p1 = Plant(
             id = plantId1,
-            nickname = "Jade Plant",
-            botanicalName = "Crassula ovata",
-            commonName = "Jade Plant",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
-            dateAdded = LocalDate.now().minusDays(120),
-            careRequirements = CareRequirement(
-                sunlight = "Bright Indirect Sunlight",
-                idealTemperature = "18°C - 26°C",
-                idealHumidity = "40% - 60%",
-                waterIntervalDays = 14,
-                feedIntervalDays = 60,
-                rotateIntervalDays = 14,
-                trimIntervalDays = 90,
-                careInsight = "The Jade Plant prefers well-draining soil to prevent root rot. Allow topsoil to dry completely between waterings."
-            ),
-            location = "Indoor • Living Room",
-            healthStatusType = HealthStatusType.NEEDS_WATER,
-            healthStatusText = "Treatment Active",
-            photos = listOf(
-                PlantPhoto(
-                    id = "photo_jade_1",
-                    plantId = plantId1,
-                    photoUrl = "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?auto=format&fit=crop&w=800&q=80",
-                    dateTaken = LocalDate.now().minusDays(120),
-                    ageInDays = 0,
-                    note = "Day 0 - Baseline Whole Plant Snapshot",
-                    isQuarterlyMilestone = true,
-                    milestoneTitle = "Day 0 - Baseline"
-                )
-            )
-        )
-
-        val p2 = Plant(
-            id = plantId2,
-            nickname = "Christmas Cactus",
-            botanicalName = "Schlumbergera bridgesii",
-            commonName = "Christmas Cactus",
-            primaryPhotoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
-            dateAdded = LocalDate.now().minusDays(90),
-            careRequirements = CareRequirement(
-                sunlight = "Bright Indirect Light",
-                idealTemperature = "18°C - 24°C",
-                idealHumidity = "50% - 70%",
-                waterIntervalDays = 10,
-                feedIntervalDays = 30,
-                rotateIntervalDays = 14,
-                trimIntervalDays = 60,
-                careInsight = "Prefers ambient daylight and moderate hydration. Protect from extreme heat drafts."
-            ),
-            location = "Indoor • Living Room",
-            healthStatusType = HealthStatusType.HEALTHY,
-            healthStatusText = "Healthy",
-            photos = listOf(
-                PlantPhoto(
-                    id = "photo_cactus_1",
-                    plantId = plantId2,
-                    photoUrl = "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=800&q=80",
-                    dateTaken = LocalDate.now().minusDays(90),
-                    ageInDays = 0,
-                    note = "Day 0 - Baseline Whole Plant Snapshot",
-                    isQuarterlyMilestone = true,
-                    milestoneTitle = "Day 0 - Baseline"
-                )
-            )
-        )
-
-        val p3 = Plant(
-            id = plantId3,
             nickname = "Monstera",
             botanicalName = "Monstera deliciosa",
             commonName = "Swiss Cheese Plant",
@@ -123,8 +53,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_monstera_1",
-                    plantId = plantId3,
+                    id = "photo_test_1",
+                    plantId = plantId1,
                     photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(90),
                     ageInDays = 0,
@@ -135,8 +65,8 @@ object PlantPersistenceManager {
             )
         )
 
-        val p4 = Plant(
-            id = plantId4,
+        val p2 = Plant(
+            id = plantId2,
             nickname = "Peace Lily",
             botanicalName = "Spathiphyllum wallisii",
             commonName = "Peace Lily",
@@ -157,8 +87,8 @@ object PlantPersistenceManager {
             healthStatusText = "Healthy",
             photos = listOf(
                 PlantPhoto(
-                    id = "photo_peacelily_1",
-                    plantId = plantId4,
+                    id = "photo_test_2",
+                    plantId = plantId2,
                     photoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(45),
                     ageInDays = 0,
@@ -169,11 +99,29 @@ object PlantPersistenceManager {
             )
         )
 
-        return listOf(p1, p2, p3, p4)
+        return listOf(p1, p2)
     }
 
     /**
-     * Saves the user's current plant sanctuary list to both user account storage AND global master backup.
+     * Clears local plant files for an account.
+     */
+    fun clearUserPlantsLocally(context: Context, userId: String) {
+        try {
+            val fileName = getFileNameForUser(userId)
+            val userFile = File(context.filesDir, fileName)
+            if (userFile.exists()) userFile.delete()
+
+            val masterFile = File(context.filesDir, MASTER_PLANTS_FILE)
+            if (masterFile.exists()) masterFile.delete()
+
+            Log.d(TAG, "Cleared local plant files for account [$userId].")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error clearing local plant files for user [$userId]", e)
+        }
+    }
+
+    /**
+     * Saves the user's current plant sanctuary list to user account storage and global master backup.
      */
     fun savePlantsLocally(context: Context, userId: String, plants: List<Plant>) {
         try {
@@ -251,7 +199,7 @@ object PlantPersistenceManager {
                 masterFile.writeText(jsonString)
             }
 
-            Log.d(TAG, "Successfully persisted ${plants.size} plants for account [$userId] and Master Backup.")
+            Log.d(TAG, "Successfully persisted ${plants.size} plants for account [$userId].")
         } catch (e: Exception) {
             Log.e(TAG, "Error saving plants for user [$userId]", e)
         }
@@ -348,8 +296,8 @@ object PlantPersistenceManager {
     }
 
     /**
-     * Loads plants for a specific user account ID.
-     * Uses Master Backup and sample plants for wcsurface@gmail.com and test accounts so data is NEVER lost.
+     * Loads plants for a specific user account ID. All real user accounts start with an EMPTY sanctuary.
+     * Pre-seeds sample plants STRICTLY for the official Google Play Reviewer account (test@testaccount.com).
      */
     fun loadPlantsLocally(context: Context, userId: String): List<Plant> {
         if (userId.isBlank()) return emptyList()
@@ -365,30 +313,18 @@ object PlantPersistenceManager {
                 }
             }
 
-            // Fallback 1: Try Global Master Backup File
-            val masterFile = File(context.filesDir, MASTER_PLANTS_FILE)
-            if (masterFile.exists()) {
-                val masterJson = masterFile.readText()
-                val masterPlants = parsePlantsFromJson(masterJson)
-                if (masterPlants.isNotEmpty()) {
-                    savePlantsLocally(context, userId, masterPlants)
-                    Log.d(TAG, "Restored ${masterPlants.size} plants for [$userId] from Master Backup File.")
-                    return masterPlants
-                }
-            }
+            // Strict check: ONLY pre-seed for the official Google Play App Review test account
+            val isExactGoogleReviewerAccount = userId.equals("usr_test_testaccount_com", ignoreCase = true) ||
+                                               userId.equals("test@testaccount.com", ignoreCase = true)
 
-            // Fallback 2: Pre-seed sample plants for wcsurface@gmail.com or test accounts
-            val isSeedAccount = userId.contains("wcsurface", ignoreCase = true) ||
-                                userId.contains("test", ignoreCase = true)
-
-            if (isSeedAccount) {
+            if (isExactGoogleReviewerAccount) {
                 val samplePlants = getSampleTestPlants()
                 savePlantsLocally(context, userId, samplePlants)
-                Log.d(TAG, "Pre-seeded ${samplePlants.size} plants for account [$userId].")
+                Log.d(TAG, "Pre-seeded ${samplePlants.size} plants strictly for Google Play reviewer account [$userId].")
                 return samplePlants
             }
 
-            Log.d(TAG, "New real user account [$userId]. Returning empty sanctuary (0 plants).")
+            Log.d(TAG, "User account [$userId]. Returning authentic empty sanctuary (0 plants).")
             return emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error restoring plants for user [$userId]", e)
