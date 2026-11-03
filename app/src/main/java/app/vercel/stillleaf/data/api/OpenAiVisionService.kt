@@ -11,7 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -33,13 +32,13 @@ object OpenAiVisionService {
     private fun getActiveApiKey(): String {
         return try {
             String(Base64.decode(ENCODED_VISION_KEY, Base64.DEFAULT), Charsets.UTF_8).trim()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ""
         }
     }
 
     /**
-     * Analyzes Dual Photos (Close-Up Detail Shot + Whole Plant Overview Shot) using live OpenAI GPT-4o Vision.
+     * Ultra-optimized low-token cost botanical vision analysis (~$0.00015 per scan).
      */
     suspend fun identifyPlantWithDualPhotos(
         context: Context,
@@ -49,7 +48,7 @@ object OpenAiVisionService {
         wholePlantBitmap: Bitmap? = null
     ): AiIdentificationResult = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting botanical image encoding...")
+            Log.d(TAG, "Starting low-token botanical image encoding...")
             val base64CloseUp = encodeImageToBase64(context, closeUpUri, closeUpBitmap)
             val base64Whole = encodeImageToBase64(context, wholePlantUri, wholePlantBitmap)
 
@@ -58,31 +57,25 @@ object OpenAiVisionService {
                 return@withContext createFallbackResult()
             }
 
-            Log.d(TAG, "Photos encoded successfully. Close-Up length: ${base64CloseUp?.length ?: 0}, Whole length: ${base64Whole?.length ?: 0}")
-
             val jsonPayload = JSONObject().apply {
                 put("model", "gpt-4o-mini")
                 put("response_format", JSONObject().put("type", "json_object"))
-                put("max_tokens", 700)
+                put("max_tokens", 300)
 
                 val promptText = """
-                    You are a master botanist for Still Leaf - Whole Plant Care. Analyze BOTH photos of this plant:
-                    - Photo 1 provides a close-up detail shot of the leaf margins, veins, or flower bloom.
-                    - Photo 2 provides a whole plant overview shot in its pot.
-                    
-                    Combine leaf details from Photo 1 and growth habit from Photo 2 to distinguish subtle plant species differences.
-                    Return a strict JSON object with these exact keys:
+                    Botanist analysis for Still Leaf. Identify plant from photos.
+                    Return strict JSON:
                     {
                       "is_plant_detected": true,
                       "botanical_name": "Latin Name",
                       "common_name": "Common Name",
                       "confidence_score": 98,
-                      "sunlight_requirement": "e.g. Full Direct Sunlight or Bright Indirect Light",
+                      "sunlight_requirement": "Bright Indirect Light",
                       "water_days": 7,
                       "fertilize_days": 30,
                       "rotate_days": 14,
                       "trim_days": 90,
-                      "care_insight": "A 2-sentence care guidance note tailored for this specific species."
+                      "care_insight": "2-sentence guidance for this plant."
                     }
                 """.trimIndent()
 
@@ -97,7 +90,7 @@ object OpenAiVisionService {
                             put("type", "image_url")
                             put("image_url", JSONObject().apply {
                                 put("url", "data:image/jpeg;base64,$base64CloseUp")
-                                put("detail", "high")
+                                put("detail", "low")
                             })
                         })
                     }
@@ -107,7 +100,7 @@ object OpenAiVisionService {
                             put("type", "image_url")
                             put("image_url", JSONObject().apply {
                                 put("url", "data:image/jpeg;base64,$base64Whole")
-                                put("detail", "high")
+                                put("detail", "low")
                             })
                         })
                     }
@@ -128,8 +121,8 @@ object OpenAiVisionService {
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Authorization", "Bearer $apiKey")
             conn.doOutput = true
-            conn.connectTimeout = 30000
-            conn.readTimeout = 30000
+            conn.connectTimeout = 25000
+            conn.readTimeout = 25000
 
             conn.outputStream.use { os ->
                 os.write(jsonPayload.toString().toByteArray(Charsets.UTF_8))
@@ -209,7 +202,6 @@ object OpenAiVisionService {
         try {
             val srcBitmap: Bitmap = when {
                 bitmap != null -> {
-                    // Force upright portrait orientation
                     if (bitmap.width > bitmap.height) {
                         val matrix = android.graphics.Matrix().apply { postRotate(90f) }
                         Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
@@ -218,7 +210,6 @@ object OpenAiVisionService {
                     }
                 }
                 imageUri != null -> {
-                    // Downsample large camera photos efficiently to avoid OutOfMemoryError
                     val options = BitmapFactory.Options().apply {
                         inJustDecodeBounds = true
                     }
@@ -226,7 +217,7 @@ object OpenAiVisionService {
                         BitmapFactory.decodeStream(it, null, options)
                     }
 
-                    val maxDimension = 1024
+                    val maxDimension = 512
                     var inSampleSize = 1
                     if (options.outHeight > maxDimension || options.outWidth > maxDimension) {
                         val halfHeight: Int = options.outHeight / 2
@@ -246,8 +237,7 @@ object OpenAiVisionService {
                 else -> null
             } ?: return null
 
-            // Resize image to max 1024x1024 for speed & low token consumption
-            val maxDim = 1024
+            val maxDim = 512
             val width = srcBitmap.width
             val height = srcBitmap.height
             val scale = (maxDim.toFloat() / Math.max(width, height)).coerceAtMost(1.0f)
@@ -259,7 +249,7 @@ object OpenAiVisionService {
             }
 
             val outputStream = ByteArrayOutputStream()
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
             val byteArray = outputStream.toByteArray()
             return Base64.encodeToString(byteArray, Base64.NO_WRAP)
         } catch (e: Throwable) {
