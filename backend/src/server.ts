@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import plantRoutes from './routes/plantRoutes';
 import billingRoutes from './routes/billingRoutes';
 import authRoutes from './routes/authRoutes';
+import { identifyPlantFromDualBase64 } from './services/plantVisionService';
 
 dotenv.config();
 
@@ -11,7 +12,10 @@ const app: Express = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+
+// Increase payload limits to 50MB for dual base64 camera photo payloads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Healthcheck endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -20,6 +24,26 @@ app.get('/health', (req: Request, res: Response) => {
     app: 'Still Leaf Backend Service',
     timestamp: new Date().toISOString()
   });
+});
+
+// Direct High-Capacity Vision Endpoint
+app.post('/api/plants/identify-base64', async (req: Request, res: Response) => {
+  try {
+    const { base64CloseUp, base64Whole } = req.body;
+    if (!base64CloseUp && !base64Whole) {
+      return res.status(400).json({ success: false, error: 'At least one base64 photo is required' });
+    }
+
+    const visionResult = await identifyPlantFromDualBase64(base64CloseUp, base64Whole);
+    return res.status(200).json({
+      success: true,
+      message: 'Dual-photo botanical vision analysis complete',
+      data: visionResult
+    });
+  } catch (error: any) {
+    console.error('Error identifying plant via base64:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Plant identification failed' });
+  }
 });
 
 // Route registration

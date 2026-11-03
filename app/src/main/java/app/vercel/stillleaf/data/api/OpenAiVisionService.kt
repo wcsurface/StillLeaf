@@ -25,7 +25,7 @@ data class AiIdentificationResult(
 object OpenAiVisionService {
 
     private const val TAG = "OpenAiVision"
-    private const val BACKEND_URL = "https://stillleaf-production.up.railway.app/api/plants/identify-base64"
+    private const val BACKEND_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants/identify-base64"
 
     /**
      * Dual-photo botanical vision analysis routed 100% server-side via Railway Backend Proxy.

@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 object PlantCloudSyncManager {
 
     private const val TAG = "PlantCloudSync"
-    private const val BASE_URL = "https://stillleaf-production.up.railway.app/api/plants"
+    private const val BASE_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants"
 
     /**
      * Fetches user's complete plant sanctuary from Railway PostgreSQL Database across all devices.
