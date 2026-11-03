@@ -27,7 +27,7 @@ object OpenAiVisionService {
     private const val TAG = "OpenAiVision"
     private const val API_URL = "https://api.openai.com/v1/chat/completions"
 
-    private const val ENCODED_VISION_KEY = "c2stcHJvai1oZGRKOFc3NmlGZDlYQ0VpM0pPekZlOGIyWDlmQVRFdjlyM3AzbWVnU3VETy1XTGVUU2FfOTl4cEdwckctSzJjR1g4MWpWdEp2VlQzQmxia0ZKWjh3TktYdVV0YWladVhya2VRUUxkcj\nlPenhnNU05UXg3MHJjYmpBTlJSR2Uyd29BYjl1R2NQQU1iTHhwOFdmNDNJSzVzWTlPQUE="
+    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV9FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
 
     private fun getActiveApiKey(): String {
         return try {
@@ -64,7 +64,7 @@ object OpenAiVisionService {
 
                 val promptText = """
                     Botanist analysis for Still Leaf. Identify plant from photos.
-                    Return strict JSON:
+                    Return strict json:
                     {
                       "is_plant_detected": true,
                       "botanical_name": "Latin Name",
