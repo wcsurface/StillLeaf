@@ -25,20 +25,11 @@ data class AiIdentificationResult(
 object OpenAiVisionService {
 
     private const val TAG = "OpenAiVision"
-    private const val API_URL = "https://api.openai.com/v1/chat/completions"
-
-    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV9FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
-
-    private fun getActiveApiKey(): String {
-        return try {
-            String(Base64.decode(ENCODED_VISION_KEY, Base64.DEFAULT), Charsets.UTF_8).replace("\r", "").replace("\n", "").trim()
-        } catch (_: Exception) {
-            ""
-        }
-    }
+    private const val BACKEND_URL = "https://stillleaf-production.up.railway.app/api/plants/identify-base64"
 
     /**
-     * Ultra-optimized low-token cost botanical vision analysis (~$0.00015 per scan).
+     * Ultra-optimized low-token cost botanical vision analysis (~$0.00015 per scan)
+     * routed through Railway Backend Server Proxy to protect API keys.
      */
     suspend fun identifyPlantWithDualPhotos(
         context: Context,
@@ -58,102 +49,44 @@ object OpenAiVisionService {
             }
 
             val jsonPayload = JSONObject().apply {
-                put("model", "gpt-4o-mini")
-                put("response_format", JSONObject().put("type", "json_object"))
-                put("max_tokens", 300)
-
-                val promptText = """
-                    Botanist analysis for Still Leaf. Identify plant from photos.
-                    Return strict json:
-                    {
-                      "is_plant_detected": true,
-                      "botanical_name": "Latin Name",
-                      "common_name": "Common Name",
-                      "confidence_score": 98,
-                      "sunlight_requirement": "Bright Indirect Light",
-                      "water_days": 7,
-                      "fertilize_days": 30,
-                      "rotate_days": 14,
-                      "trim_days": 90,
-                      "care_insight": "2-sentence guidance for this plant."
-                    }
-                """.trimIndent()
-
-                val contentArray = org.json.JSONArray().apply {
-                    put(JSONObject().apply {
-                        put("type", "text")
-                        put("text", promptText)
-                    })
-
-                    if (base64CloseUp != null) {
-                        put(JSONObject().apply {
-                            put("type", "image_url")
-                            put("image_url", JSONObject().apply {
-                                put("url", "data:image/jpeg;base64,$base64CloseUp")
-                                put("detail", "low")
-                            })
-                        })
-                    }
-
-                    if (base64Whole != null) {
-                        put(JSONObject().apply {
-                            put("type", "image_url")
-                            put("image_url", JSONObject().apply {
-                                put("url", "data:image/jpeg;base64,$base64Whole")
-                                put("detail", "low")
-                            })
-                        })
-                    }
-                }
-
-                val messageObject = JSONObject().apply {
-                    put("role", "user")
-                    put("content", contentArray)
-                }
-
-                put("messages", org.json.JSONArray().put(messageObject))
+                put("base64CloseUp", base64CloseUp ?: "")
+                put("base64Whole", base64Whole ?: "")
             }
 
-            val apiKey = getActiveApiKey()
-            val url = URL(API_URL)
+            val url = URL(BACKEND_URL)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
-            conn.setRequestProperty("Authorization", "Bearer $apiKey")
             conn.doOutput = true
-            conn.connectTimeout = 25000
-            conn.readTimeout = 25000
+            conn.connectTimeout = 30000
+            conn.readTimeout = 30000
 
             conn.outputStream.use { os ->
                 os.write(jsonPayload.toString().toByteArray(Charsets.UTF_8))
             }
 
             val responseCode = conn.responseCode
-            Log.d(TAG, "OpenAI Vision API HTTP response code: $responseCode")
+            Log.d(TAG, "Railway Vision Proxy HTTP response code: $responseCode")
 
             if (responseCode == 200) {
                 val responseString = conn.inputStream.bufferedReader().use { it.readText() }
                 val rootJson = JSONObject(responseString)
-                val choices = rootJson.getJSONArray("choices")
-                val firstChoice = choices.getJSONObject(0)
-                val messageContent = firstChoice.getJSONObject("message").getString("content")
+                val dataJson = rootJson.optJSONObject("data") ?: JSONObject()
 
-                val parsed = JSONObject(messageContent)
+                val commonName = dataJson.optString("common_name", dataJson.optString("commonName", "Wild Flora"))
+                val botanicalName = dataJson.optString("botanical_name", dataJson.optString("botanicalName", "Flora Incognita"))
+                val confidence = dataJson.optInt("confidence_score", dataJson.optInt("confidenceScore", 95))
+                val sunlight = dataJson.optString("sunlight_requirement", dataJson.optString("sunlightRequirement", "Bright Indirect Light"))
+                val waterDays = dataJson.optInt("water_days", dataJson.optInt("waterIntervalDays", 7))
+                val fertilizeDays = dataJson.optInt("fertilize_days", dataJson.optInt("feedIntervalDays", 30))
+                val rotateDays = dataJson.optInt("rotate_days", dataJson.optInt("rotateIntervalDays", 14))
+                val trimDays = dataJson.optInt("trim_days", dataJson.optInt("trimIntervalDays", 90))
+                val insight = dataJson.optString("care_insight", dataJson.optString("careInsight", "Requires gentle sunlight and well-draining soil."))
 
-                val commonName = parsed.optString("common_name", "Wild Flora")
-                val botanicalName = parsed.optString("botanical_name", "Flora Incognita")
-                val confidence = parsed.optInt("confidence_score", 95)
-                val sunlight = parsed.optString("sunlight_requirement", "Bright Indirect Light")
-                val waterDays = parsed.optInt("water_days", 7)
-                val fertilizeDays = parsed.optInt("fertilize_days", 30)
-                val rotateDays = parsed.optInt("rotate_days", 14)
-                val trimDays = parsed.optInt("trim_days", 90)
-                val insight = parsed.optString("care_insight", "Requires gentle sunlight and well-draining soil.")
-
-                Log.d(TAG, "Successfully identified species: $commonName ($botanicalName)")
+                Log.d(TAG, "Successfully identified species via Railway Vision: $commonName ($botanicalName)")
 
                 return@withContext AiIdentificationResult(
-                    isPlantDetected = parsed.optBoolean("is_plant_detected", true),
+                    isPlantDetected = dataJson.optBoolean("is_plant_detected", true),
                     botanicalName = botanicalName,
                     commonName = commonName,
                     confidenceScore = confidence,
@@ -170,11 +103,11 @@ object OpenAiVisionService {
                 )
             } else {
                 val errString = conn.errorStream?.bufferedReader()?.use { it.readText() } ?: "No error body"
-                Log.e(TAG, "OpenAI Vision API Error $responseCode: $errString")
+                Log.e(TAG, "Railway Vision Proxy Error $responseCode: $errString")
                 return@withContext createFallbackResult()
             }
         } catch (e: Throwable) {
-            Log.e(TAG, "Exception during dual-photo botanical identification", e)
+            Log.e(TAG, "Exception during Railway vision proxy botanical identification", e)
             return@withContext createFallbackResult()
         }
     }
