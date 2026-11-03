@@ -15,39 +15,34 @@ object UserSessionManager {
     private const val KEY_SUB_PREFIX = "sub_status_"
 
     /**
-     * Saves the authenticated user session and subscription entitlement status to persistent SharedPreferences.
+     * Saves the authenticated user session and subscription entitlement status to persistent SharedPreferences strictly per user ID.
      */
     fun saveUserSession(context: Context, user: AuthUser) {
         try {
-            // Read any previously saved subscription status for this account if upgrading occurred
-            val savedSubStatus = getSavedSubscriptionStatus(context, user.id, user.subscriptionStatus)
-
-            val updatedUser = user.copy(subscriptionStatus = savedSubStatus)
-
             val userJson = JSONObject().apply {
-                put("id", updatedUser.id)
-                put("email", updatedUser.email)
-                put("displayName", updatedUser.displayName)
-                put("authProvider", updatedUser.authProvider)
-                put("subscriptionStatus", updatedUser.subscriptionStatus.name)
-                put("token", updatedUser.token ?: "")
+                put("id", user.id)
+                put("email", user.email)
+                put("displayName", user.displayName)
+                put("authProvider", user.authProvider)
+                put("subscriptionStatus", user.subscriptionStatus.name)
+                put("token", user.token ?: "")
             }
 
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit()
                 .putBoolean(KEY_IS_LOGGED_IN, true)
                 .putString(KEY_USER_JSON, userJson.toString())
-                .putString(KEY_SUB_PREFIX + updatedUser.id, updatedUser.subscriptionStatus.name)
+                .putString(KEY_SUB_PREFIX + user.id, user.subscriptionStatus.name)
                 .apply()
 
-            Log.d(TAG, "Successfully persisted session for user [${user.email}] with status [${updatedUser.subscriptionStatus.name}].")
+            Log.d(TAG, "Successfully persisted session for user [${user.email}] with status [${user.subscriptionStatus.name}].")
         } catch (e: Exception) {
             Log.e(TAG, "Error persisting user session", e)
         }
     }
 
     /**
-     * Updates and persists a user's upgraded subscription status locally and prepares server sync.
+     * Updates and persists a user's upgraded subscription status locally strictly per user ID.
      */
     fun updateUserSubscriptionStatus(context: Context, userId: String, newStatus: SubscriptionStatus) {
         try {
@@ -66,7 +61,7 @@ object UserSessionManager {
     }
 
     /**
-     * Reads saved subscription status for a specific user ID.
+     * Reads saved subscription status strictly for a specific user ID.
      */
     fun getSavedSubscriptionStatus(context: Context, userId: String, fallback: SubscriptionStatus = SubscriptionStatus.FREE): SubscriptionStatus {
         try {
