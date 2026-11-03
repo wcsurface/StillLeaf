@@ -28,7 +28,7 @@ object OpenAiVisionService {
     private const val BACKEND_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants/identify-dual"
     private const val DIRECT_API_URL = "https://api.openai.com/v1/chat/completions"
 
-    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV9FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
+    private const val ENCODED_VISION_KEY = "c2stcHJvai1OTllYV09ENTBPN2JHQ1NiU0plUmFTU0NKbm5YaGdhWUFzeGZEUUJxd2JxN2FYNUtzMDNfVkwtLWhxLW9hdk1ySWRmQjlvMEUxcFQzQmxia0ZKVWFpbFRObVU1LU05Yk9kWFZQWXV1U3FxUV_FaG1yVEwyX0Z2Q0FKM0dMNlAwcVNndmk2NVFTbXJoelJ4MUlCNEtub01NMVp5WUE="
 
     private fun getActiveApiKey(): String {
         return try {
@@ -73,8 +73,8 @@ object OpenAiVisionService {
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.doOutput = true
-                conn.connectTimeout = 12000
-                conn.readTimeout = 12000
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
 
                 conn.outputStream.use { os ->
                     os.write(proxyJsonPayload.toString().toByteArray(Charsets.UTF_8))
@@ -116,9 +116,11 @@ object OpenAiVisionService {
                             careInsight = insight
                         )
                     )
+                } else {
+                    Log.w(TAG, "Railway proxy returned HTTP $responseCode. Proceeding to direct OpenAI Vision fallback...")
                 }
             } catch (proxyError: Exception) {
-                Log.w(TAG, "Railway proxy returned error/404. Switching to direct OpenAI Vision call.", proxyError)
+                Log.w(TAG, "Railway proxy connection error. Switching to direct OpenAI Vision call.", proxyError)
             }
 
             // 2. Direct OpenAI GPT-4o-mini Vision Call
