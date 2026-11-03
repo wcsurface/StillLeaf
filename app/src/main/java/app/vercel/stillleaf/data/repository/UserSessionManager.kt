@@ -19,23 +19,32 @@ object UserSessionManager {
      */
     fun saveUserSession(context: Context, user: AuthUser) {
         try {
+            val isDevAccount = user.email.contains("wcsurface", ignoreCase = true) ||
+                               user.email.contains("test", ignoreCase = true) ||
+                               user.id.contains("wcsurface", ignoreCase = true) ||
+                               user.id.contains("test", ignoreCase = true)
+
+            val effectiveStatus = if (isDevAccount) SubscriptionStatus.LIFETIME else user.subscriptionStatus
+
+            val updatedUser = user.copy(subscriptionStatus = effectiveStatus)
+
             val userJson = JSONObject().apply {
-                put("id", user.id)
-                put("email", user.email)
-                put("displayName", user.displayName)
-                put("authProvider", user.authProvider)
-                put("subscriptionStatus", user.subscriptionStatus.name)
-                put("token", user.token ?: "")
+                put("id", updatedUser.id)
+                put("email", updatedUser.email)
+                put("displayName", updatedUser.displayName)
+                put("authProvider", updatedUser.authProvider)
+                put("subscriptionStatus", updatedUser.subscriptionStatus.name)
+                put("token", updatedUser.token ?: "")
             }
 
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.edit()
                 .putBoolean(KEY_IS_LOGGED_IN, true)
                 .putString(KEY_USER_JSON, userJson.toString())
-                .putString(KEY_SUB_PREFIX + user.id, user.subscriptionStatus.name)
+                .putString(KEY_SUB_PREFIX + updatedUser.id, updatedUser.subscriptionStatus.name)
                 .apply()
 
-            Log.d(TAG, "Successfully persisted session for user [${user.email}] with status [${user.subscriptionStatus.name}].")
+            Log.d(TAG, "Successfully persisted session for user [${user.email}] with status [${updatedUser.subscriptionStatus.name}].")
         } catch (e: Exception) {
             Log.e(TAG, "Error persisting user session", e)
         }
@@ -62,9 +71,17 @@ object UserSessionManager {
 
     /**
      * Reads saved subscription status strictly for a specific user ID.
+     * Restores LIFETIME status for developer/tester accounts automatically.
      */
     fun getSavedSubscriptionStatus(context: Context, userId: String, fallback: SubscriptionStatus = SubscriptionStatus.FREE): SubscriptionStatus {
         try {
+            val isDevAccount = userId.contains("wcsurface", ignoreCase = true) ||
+                               userId.contains("test", ignoreCase = true)
+
+            if (isDevAccount) {
+                return SubscriptionStatus.LIFETIME
+            }
+
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val statusString = prefs.getString(KEY_SUB_PREFIX + userId, null) ?: return fallback
             return SubscriptionStatus.valueOf(statusString)
@@ -85,17 +102,22 @@ object UserSessionManager {
             val userJsonString = prefs.getString(KEY_USER_JSON, null) ?: return null
             val userJson = JSONObject(userJsonString)
             val userId = userJson.getString("id")
+            val email = userJson.optString("email", "")
 
-            val statusString = prefs.getString(KEY_SUB_PREFIX + userId, userJson.optString("subscriptionStatus", "FREE")) ?: "FREE"
-            val subscriptionStatus = try {
-                SubscriptionStatus.valueOf(statusString)
-            } catch (_: Exception) {
-                SubscriptionStatus.FREE
+            val isDevAccount = email.contains("wcsurface", ignoreCase = true) ||
+                               email.contains("test", ignoreCase = true) ||
+                               userId.contains("wcsurface", ignoreCase = true) ||
+                               userId.contains("test", ignoreCase = true)
+
+            val subscriptionStatus = if (isDevAccount) {
+                SubscriptionStatus.LIFETIME
+            } else {
+                getSavedSubscriptionStatus(context, userId, SubscriptionStatus.FREE)
             }
 
             return AuthUser(
                 id = userId,
-                email = userJson.getString("email"),
+                email = email,
                 displayName = userJson.getString("displayName"),
                 authProvider = userJson.optString("authProvider", "GOOGLE"),
                 subscriptionStatus = subscriptionStatus,
