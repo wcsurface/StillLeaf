@@ -60,3 +60,5 @@ export async function generatePreSignedReadUrl(imageKey: string): Promise<string
 
   return getSignedUrl(s3Client, command, { expiresIn: 1800 });
 }
+
+export const generateUploadUrl = generatePreSignedUploadUrl;

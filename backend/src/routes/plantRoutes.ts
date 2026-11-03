@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { identifyPlantFromImageKey, identifyPlantFromDualBase64 } from '../services/plantVisionService';
-import { generateUploadUrl } from '../services/r2Service';
+import { generatePreSignedUploadUrl as generateUploadUrl } from '../services/r2Service';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
