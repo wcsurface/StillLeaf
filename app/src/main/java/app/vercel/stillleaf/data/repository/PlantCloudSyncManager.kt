@@ -23,12 +23,13 @@ object PlantCloudSyncManager {
     private const val BASE_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants"
 
     /**
-     * Fetches user's complete plant sanctuary from Railway PostgreSQL Database across all devices.
+     * Fetches user's complete plant sanctuary from Railway PostgreSQL Database across all devices by userId or email.
      */
-    suspend fun fetchUserPlantsFromCloud(context: Context, userId: String): List<Plant> = withContext(Dispatchers.IO) {
-        if (userId.isBlank()) return@withContext emptyList()
+    suspend fun fetchUserPlantsFromCloud(context: Context, userId: String, email: String = ""): List<Plant> = withContext(Dispatchers.IO) {
+        if (userId.isBlank() && email.isBlank()) return@withContext emptyList()
         try {
-            val url = URL("$BASE_URL?userId=$userId")
+            val queryUrl = "$BASE_URL?userId=$userId&email=$email"
+            val url = URL(queryUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "GET"
             conn.connectTimeout = 10000
@@ -44,16 +45,22 @@ object PlantCloudSyncManager {
                 for (i in 0 until dataArray.length()) {
                     val plantJson = dataArray.getJSONObject(i)
 
-                    val careJson = plantJson.optJSONObject("careRequirements") ?: JSONObject()
+                    val sunlight = plantJson.optString("sunlightRequirement", "Bright Indirect Light")
+                    val waterInterval = plantJson.optInt("waterIntervalDays", 7)
+                    val feedInterval = plantJson.optInt("feedIntervalDays", 30)
+                    val rotateInterval = plantJson.optInt("rotateIntervalDays", 14)
+                    val trimInterval = plantJson.optInt("trimIntervalDays", 60)
+                    val careSummary = plantJson.optString("careSummary", "Thrives in ambient daylight.")
+
                     val careRequirements = CareRequirement(
-                        sunlight = careJson.optString("sunlight", "Bright Indirect Light"),
-                        idealTemperature = careJson.optString("idealTemperature", "18°C - 27°C"),
-                        idealHumidity = careJson.optString("idealHumidity", "50% - 70%"),
-                        waterIntervalDays = careJson.optInt("waterIntervalDays", 7),
-                        feedIntervalDays = careJson.optInt("feedIntervalDays", 30),
-                        rotateIntervalDays = careJson.optInt("rotateIntervalDays", 14),
-                        trimIntervalDays = careJson.optInt("trimIntervalDays", 60),
-                        careInsight = careJson.optString("careInsight", "Thrives in ambient daylight.")
+                        sunlight = sunlight,
+                        idealTemperature = plantJson.optString("idealTemperature", "18°C - 27°C"),
+                        idealHumidity = plantJson.optString("idealHumidity", "50% - 70%"),
+                        waterIntervalDays = waterInterval,
+                        feedIntervalDays = feedInterval,
+                        rotateIntervalDays = rotateInterval,
+                        trimIntervalDays = trimInterval,
+                        careInsight = careSummary
                     )
 
                     val photosArray = plantJson.optJSONArray("photos") ?: JSONArray()
@@ -110,7 +117,7 @@ object PlantCloudSyncManager {
 
                 if (cloudPlants.isNotEmpty()) {
                     PlantPersistenceManager.savePlantsLocally(context, userId, cloudPlants)
-                    Log.d(TAG, "Restored ${cloudPlants.size} cloud plants from Railway PostgreSQL for [$userId].")
+                    Log.d(TAG, "Restored ${cloudPlants.size} cloud plants from Railway PostgreSQL for [$userId / $email].")
                 }
                 return@withContext cloudPlants
             } else {
@@ -124,30 +131,34 @@ object PlantCloudSyncManager {
     }
 
     /**
-     * Backs up a newly added plant profile to Railway PostgreSQL Database.
+     * Backs up a plant profile to Railway PostgreSQL Database via auto-upsert /sync endpoint.
      */
-    suspend fun savePlantToCloud(userId: String, plant: Plant) = withContext(Dispatchers.IO) {
-        if (userId.isBlank()) return@withContext
+    suspend fun savePlantToCloud(userId: String, email: String, plant: Plant) = withContext(Dispatchers.IO) {
+        if (userId.isBlank() && email.isBlank()) return@withContext
         try {
             val jsonPayload = JSONObject().apply {
                 put("userId", userId)
-                put("plantId", plant.id)
-                put("nickname", plant.nickname)
-                put("botanicalName", plant.botanicalName)
-                put("commonName", plant.commonName)
-                put("location", plant.location)
-                put("primaryPhotoUrl", plant.primaryPhotoUrl)
-                put("careRequirements", JSONObject().apply {
-                    put("sunlight", plant.careRequirements.sunlight)
-                    put("waterIntervalDays", plant.careRequirements.waterIntervalDays)
-                    put("feedIntervalDays", plant.careRequirements.feedIntervalDays)
-                    put("rotateIntervalDays", plant.careRequirements.rotateIntervalDays)
-                    put("trimIntervalDays", plant.careRequirements.trimIntervalDays)
-                    put("careInsight", plant.careRequirements.careInsight)
+                put("email", email)
+                put("plant", JSONObject().apply {
+                    put("id", plant.id)
+                    put("nickname", plant.nickname)
+                    put("botanicalName", plant.botanicalName)
+                    put("commonName", plant.commonName)
+                    put("location", plant.location)
+                    put("primaryPhotoUrl", plant.primaryPhotoUrl)
+                    put("careRequirements", JSONObject().apply {
+                        put("sunlight", plant.careRequirements.sunlight)
+                        put("waterIntervalDays", plant.careRequirements.waterIntervalDays)
+                        put("feedIntervalDays", plant.careRequirements.feedIntervalDays)
+                        put("rotateIntervalDays", plant.careRequirements.rotateIntervalDays)
+                        put("trimIntervalDays", plant.careRequirements.trimIntervalDays)
+                        put("careInsight", plant.careRequirements.careInsight)
+                    })
                 })
             }
 
-            val url = URL(BASE_URL)
+            val syncUrl = "$BASE_URL/sync"
+            val url = URL(syncUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
@@ -159,9 +170,9 @@ object PlantCloudSyncManager {
             }
 
             val responseCode = conn.responseCode
-            Log.d(TAG, "Saved plant [${plant.nickname}] to Railway PostgreSQL (HTTP $responseCode).")
+            Log.d(TAG, "Backed up plant [${plant.nickname}] to Railway PostgreSQL (HTTP $responseCode).")
         } catch (e: Exception) {
-            Log.e(TAG, "Error saving plant to Railway PostgreSQL", e)
+            Log.e(TAG, "Error syncing plant to Railway PostgreSQL", e)
         }
     }
 }

@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
                     val activeUser = currentUser
                     if (activeUser != null) {
                         try {
-                            val cloudPlants = PlantCloudSyncManager.fetchUserPlantsFromCloud(applicationContext, activeUser.id)
+                            val cloudPlants = PlantCloudSyncManager.fetchUserPlantsFromCloud(applicationContext, activeUser.id, activeUser.email)
                             if (cloudPlants.isNotEmpty()) {
                                 plantList = cloudPlants
                             }
@@ -358,7 +358,7 @@ class MainActivity : ComponentActivity() {
                                                 if (currentUser != null) {
                                                     coroutineScope.launch {
                                                         try {
-                                                            PlantCloudSyncManager.savePlantToCloud(currentUser!!.id, newPlant)
+                                                            PlantCloudSyncManager.savePlantToCloud(currentUser!!.id, currentUser!!.email, newPlant)
                                                         } catch (e: Exception) {
                                                             Log.e("MainActivity", "Error saving plant to Railway", e)
                                                         }

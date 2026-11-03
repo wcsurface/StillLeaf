@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { identifyPlantFromImageKey, identifyPlantFromDualBase64 } from '../services/plantVisionService';
-import { generatePreSignedUploadUrl as generateUploadUrl } from '../services/r2Service';
+import { generateUploadUrl } from '../services/r2Service';
 import { PrismaClient } from '@prisma/client';
 
 const router = Router();
@@ -30,6 +30,90 @@ const handleDualVision = async (req: Request, res: Response) => {
 
 router.post('/identify-dual', handleDualVision);
 router.post('/identify-base64', handleDualVision);
+
+/**
+ * POST /api/plants/sync
+ * Auto-upserts User and backs up Plant profile to Railway PostgreSQL Database safely.
+ */
+router.post('/sync', async (req: Request, res: Response) => {
+  try {
+    const { userId, email, plant } = req.body;
+    if (!userId && !email) {
+      return res.status(400).json({ success: false, error: 'userId or email is required' });
+    }
+
+    const userEmail = (email || '').trim().toLowerCase() || `${userId}@stillleaf.app`;
+
+    // 1. Ensure User exists in PostgreSQL with upsert
+    const user = await prisma.user.upsert({
+      where: { email: userEmail },
+      update: { updatedAt: new Date() },
+      create: {
+        id: userId || `usr_${userEmail.replace(/[^a-z0-9]/g, '_')}`,
+        email: userEmail,
+        displayName: userEmail.split('@')[0],
+        tier: 'LIFETIME'
+      }
+    });
+
+    if (!plant || !plant.id) {
+      return res.status(200).json({ success: true, message: 'User synchronized successfully', user });
+    }
+
+    const careReq = plant.careRequirements || {};
+
+    // 2. Upsert Plant in PostgreSQL
+    const syncedPlant = await prisma.plant.upsert({
+      where: { id: plant.id },
+      update: {
+        nickname: plant.nickname || 'My Plant',
+        botanicalName: plant.botanicalName || '',
+        commonName: plant.commonName || '',
+        sunlightRequirement: careReq.sunlight || 'Bright Indirect Light',
+        waterIntervalDays: careReq.waterIntervalDays || 7,
+        feedIntervalDays: careReq.feedIntervalDays || 30,
+        rotateIntervalDays: careReq.rotateIntervalDays || 14,
+        trimIntervalDays: careReq.trimIntervalDays || 60,
+        careSummary: careReq.careInsight || '',
+        updatedAt: new Date()
+      },
+      create: {
+        id: plant.id,
+        userId: user.id,
+        nickname: plant.nickname || 'My Plant',
+        botanicalName: plant.botanicalName || '',
+        commonName: plant.commonName || '',
+        sunlightRequirement: careReq.sunlight || 'Bright Indirect Light',
+        waterIntervalDays: careReq.waterIntervalDays || 7,
+        feedIntervalDays: careReq.feedIntervalDays || 30,
+        rotateIntervalDays: careReq.rotateIntervalDays || 14,
+        trimIntervalDays: careReq.trimIntervalDays || 60,
+        careSummary: careReq.careInsight || ''
+      }
+    });
+
+    // 3. Upsert primary photo if available
+    if (plant.primaryPhotoUrl) {
+      await prisma.plantPhoto.create({
+        data: {
+          plantId: syncedPlant.id,
+          photoUrl: plant.primaryPhotoUrl,
+          isQuarterlyMilestone: true,
+          note: 'Day 0 - Sanctuary Plant Profile Photo'
+        }
+      }).catch(() => {});
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Plant backed up to Railway PostgreSQL successfully',
+      data: syncedPlant
+    });
+  } catch (error: any) {
+    console.error('Error syncing plant to Railway PostgreSQL:', error);
+    return res.status(500).json({ success: false, error: error?.message || 'Plant sync failed' });
+  }
+});
 
 /**
  * DELETE /api/plants/user/clear
@@ -156,13 +240,29 @@ router.post('/identify', async (req: Request, res: Response) => {
 
 /**
  * GET /api/plants
- * Fetches all plants for a user.
+ * Fetches all plants for a user by userId or email.
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = (req.query.userId as string) || 'demo-user-123';
+    const userId = (req.query.userId as string) || '';
+    const email = (req.query.email as string) || '';
+
+    const userIds: string[] = [];
+    if (userId) userIds.push(userId);
+
+    if (email) {
+      const users = await prisma.user.findMany({
+        where: { email: { contains: email, mode: 'insensitive' } }
+      });
+      users.forEach(u => userIds.push(u.id));
+    }
+
+    if (userIds.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
     const plants = await prisma.plant.findMany({
-      where: { userId },
+      where: { userId: { in: userIds } },
       include: {
         photos: { orderBy: { takenAt: 'asc' } },
         careLogs: { orderBy: { completedAt: 'desc' }, take: 10 }
