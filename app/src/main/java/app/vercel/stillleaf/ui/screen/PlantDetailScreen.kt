@@ -1319,8 +1319,7 @@ fun CareTaskActionCard(
                         color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                         shape = CircleShape
                     )
-                    .background(if (isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onCompleteToggle() },
+                    .background(if (isCompleted) MaterialTheme.colorScheme.primary else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
                 if (isCompleted) {
