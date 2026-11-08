@@ -38,6 +38,11 @@ class CareNotificationReceiver : BroadcastReceiver() {
         )
 
         when (action) {
+            Intent.ACTION_BOOT_COMPLETED -> {
+                Log.d(TAG, "Device boot completed. Rescheduling daily care morning alarm.")
+                CareNotificationManager.scheduleDailyMorningAlarm(context)
+            }
+
             ACTION_DAILY_REMINDER -> {
                 val plants = PlantPersistenceManager.loadAllLocalPlants(context)
                 if (plants.isEmpty()) return

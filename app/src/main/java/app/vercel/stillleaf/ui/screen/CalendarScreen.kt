@@ -108,85 +108,76 @@ fun CalendarScreen(
 
     val selectedDate = weekDays.getOrElse(selectedDayIndex) { today }
 
-    // Helper to calculate last completed date for a plant task
-    fun getLastCompletedDate(plant: Plant, taskType: CareTaskType): LocalDate {
-        return plant.recentLogs
-            .filter { it.taskType == taskType }
-            .maxByOrNull { it.completedAt }
-            ?.completedAt
-            ?.toLocalDate() ?: plant.dateAdded
-    }
-
-    // Helper to test if a task is completed today
-    fun isTaskCompletedToday(plant: Plant, taskType: CareTaskType): Boolean {
-        return plant.recentLogs.any { log ->
-            log.taskType == taskType && log.completedAt.toLocalDate() == today
-        }
-    }
-
-    // Helper to calculate next due date for a task type
-    fun getNextDueDate(plant: Plant, taskType: CareTaskType): LocalDate {
-        val lastDate = getLastCompletedDate(plant, taskType)
-        val interval = when (taskType) {
+    // Helper to get interval for a task type
+    fun getIntervalForTask(plant: Plant, taskType: CareTaskType): Int {
+        return when (taskType) {
             CareTaskType.WATER -> plant.careRequirements.waterIntervalDays
             CareTaskType.FEED -> plant.careRequirements.feedIntervalDays
             CareTaskType.ROTATE -> plant.careRequirements.rotateIntervalDays
             CareTaskType.TRIM -> plant.careRequirements.trimIntervalDays
             else -> 14
         }
-        val isDoneToday = isTaskCompletedToday(plant, taskType)
-        return if (isDoneToday) {
-            today.plusDays(interval.toLong())
-        } else {
-            val scheduledDate = lastDate.plusDays(interval.toLong())
-            if (scheduledDate.isBefore(today)) today else scheduledDate
-        }
     }
 
-    // Dynamic tasks due TODAY (for weekly strip view)
-    val todayTasks = remember(plants) {
+    // Helper to check if task was completed in the current active cycle
+    fun isTaskCompletedInActiveCycle(plant: Plant, taskType: CareTaskType, targetDate: LocalDate = today): Boolean {
+        val interval = getIntervalForTask(plant, taskType)
+        val latestLogDate = plant.recentLogs
+            .filter { it.taskType == taskType }
+            .maxByOrNull { it.completedAt }
+            ?.completedAt
+            ?.toLocalDate() ?: return false
+
+        val daysSinceLog = java.time.temporal.ChronoUnit.DAYS.between(latestLogDate, targetDate)
+        return daysSinceLog in 0 until interval
+    }
+
+    // Helper to check if task is due on or before target date
+    fun isTaskDueOnDate(plant: Plant, taskType: CareTaskType, targetDate: LocalDate = today): Boolean {
+        val interval = getIntervalForTask(plant, taskType)
+        val latestLogDate = plant.recentLogs
+            .filter { it.taskType == taskType }
+            .maxByOrNull { it.completedAt }
+            ?.completedAt
+            ?.toLocalDate() ?: return true
+
+        val nextDueDate = latestLogDate.plusDays(interval.toLong())
+        return nextDueDate <= targetDate
+    }
+
+    // Dynamic tasks due TODAY (Clears from list once completed for current cycle)
+    val todayTasks = remember(plants, selectedDate) {
         plants.flatMap { plant ->
             val tasksList = mutableListOf<CalendarTaskItem>()
 
-            // Water Task
-            tasksList.add(
-                CalendarTaskItem(
-                    id = "task_water_${plant.id}",
-                    plant = plant,
-                    taskType = CareTaskType.WATER,
-                    taskName = "Water ${plant.nickname}",
-                    location = plant.location,
-                    dueDate = getNextDueDate(plant, CareTaskType.WATER),
-                    isCompleted = isTaskCompletedToday(plant, CareTaskType.WATER)
-                )
-            )
+            CareTaskType.entries.forEach { taskType ->
+                if (taskType == CareTaskType.WATER || taskType == CareTaskType.FEED || taskType == CareTaskType.ROTATE || taskType == CareTaskType.TRIM) {
+                    val isDue = isTaskDueOnDate(plant, taskType, selectedDate)
+                    val isCompleted = isTaskCompletedInActiveCycle(plant, taskType, selectedDate)
 
-            // Feed Task
-            tasksList.add(
-                CalendarTaskItem(
-                    id = "task_feed_${plant.id}",
-                    plant = plant,
-                    taskType = CareTaskType.FEED,
-                    taskName = "Nourish ${plant.nickname}",
-                    location = plant.location,
-                    dueDate = getNextDueDate(plant, CareTaskType.FEED),
-                    isCompleted = isTaskCompletedToday(plant, CareTaskType.FEED)
-                )
-            )
-
-            // Rotate Task
-            tasksList.add(
-                CalendarTaskItem(
-                    id = "task_rotate_${plant.id}",
-                    plant = plant,
-                    taskType = CareTaskType.ROTATE,
-                    taskName = "Rotate ${plant.nickname} 90°",
-                    location = plant.location,
-                    dueDate = getNextDueDate(plant, CareTaskType.ROTATE),
-                    isCompleted = isTaskCompletedToday(plant, CareTaskType.ROTATE)
-                )
-            )
-
+                    // Display task in Today's Tasks ONLY if due or if completed today on selectedDate
+                    if (isDue || isCompleted) {
+                        val taskTitle = when (taskType) {
+                            CareTaskType.WATER -> "Water ${plant.nickname}"
+                            CareTaskType.FEED -> "Nourish ${plant.nickname}"
+                            CareTaskType.ROTATE -> "Rotate ${plant.nickname} 90°"
+                            CareTaskType.TRIM -> "Prune ${plant.nickname}"
+                            else -> "Care for ${plant.nickname}"
+                        }
+                        tasksList.add(
+                            CalendarTaskItem(
+                                id = "task_${taskType.name}_${plant.id}_${selectedDate}",
+                                plant = plant,
+                                taskType = taskType,
+                                taskName = taskTitle,
+                                location = plant.location,
+                                dueDate = selectedDate,
+                                isCompleted = isCompleted
+                            )
+                        )
+                    }
+                }
+            }
             tasksList
         }
     }
@@ -197,9 +188,11 @@ fun CalendarScreen(
             val dueForPlant = mutableListOf<CalendarTaskItem>()
 
             CareTaskType.entries.forEach { taskType ->
-                if (taskType == CareTaskType.WATER || taskType == CareTaskType.FEED || taskType == CareTaskType.ROTATE) {
-                    val nextDue = getNextDueDate(plant, taskType)
-                    if (nextDue == targetDate || (targetDate == today && !isTaskCompletedToday(plant, taskType) && nextDue <= today)) {
+                if (taskType == CareTaskType.WATER || taskType == CareTaskType.FEED || taskType == CareTaskType.ROTATE || taskType == CareTaskType.TRIM) {
+                    val isDue = isTaskDueOnDate(plant, taskType, targetDate)
+                    val isCompleted = isTaskCompletedInActiveCycle(plant, taskType, targetDate)
+
+                    if (isDue || isCompleted) {
                         dueForPlant.add(
                             CalendarTaskItem(
                                 id = "task_${taskType.name}_${plant.id}_${targetDate}",
@@ -208,7 +201,7 @@ fun CalendarScreen(
                                 taskName = "${taskType.name.lowercase().replaceFirstChar { it.uppercase() }} ${plant.nickname}",
                                 location = plant.location,
                                 dueDate = targetDate,
-                                isCompleted = isTaskCompletedToday(plant, taskType)
+                                isCompleted = isCompleted
                             )
                         )
                     }

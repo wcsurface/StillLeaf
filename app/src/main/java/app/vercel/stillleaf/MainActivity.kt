@@ -74,9 +74,10 @@ class MainActivity : ComponentActivity() {
             Log.e("MainActivity", "Error applying edge to edge or window insets", e)
         }
 
-        // Initialize Notification Channels for Daily Care Reminders & 90-Day Milestones
+        // Initialize Notification Channels & Daily Care Alarms
         try {
             app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
+            app.vercel.stillleaf.util.CareNotificationManager.scheduleDailyMorningAlarm(applicationContext)
         } catch (e: Exception) {
             Log.e("MainActivity", "Error creating notification channels", e)
         }

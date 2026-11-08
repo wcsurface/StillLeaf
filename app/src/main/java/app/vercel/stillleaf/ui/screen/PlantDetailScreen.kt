@@ -106,11 +106,28 @@ fun PlantDetailScreen(
     val scrollState = rememberScrollState()
     val today = remember { LocalDate.now() }
 
-    // Unified helper reading persisted CareLogs from plant
-    fun isTaskCompletedToday(taskType: CareTaskType): Boolean {
-        return plant.recentLogs.any { log ->
-            log.taskType == taskType && log.completedAt.toLocalDate() == today
+    // Helper to get interval for a task type
+    fun getIntervalForTask(taskType: CareTaskType): Int {
+        return when (taskType) {
+            CareTaskType.WATER -> plant.careRequirements.waterIntervalDays
+            CareTaskType.FEED -> plant.careRequirements.feedIntervalDays
+            CareTaskType.ROTATE -> plant.careRequirements.rotateIntervalDays
+            CareTaskType.TRIM -> plant.careRequirements.trimIntervalDays
+            else -> 14
         }
+    }
+
+    // Helper checking if task is within active completed care cycle
+    fun isTaskCompletedInActiveCycle(taskType: CareTaskType): Boolean {
+        val interval = getIntervalForTask(taskType)
+        val latestLogDate = plant.recentLogs
+            .filter { it.taskType == taskType }
+            .maxByOrNull { it.completedAt }
+            ?.completedAt
+            ?.toLocalDate() ?: return false
+
+        val daysSinceLog = java.time.temporal.ChronoUnit.DAYS.between(latestLogDate, today)
+        return daysSinceLog in 0 until interval
     }
 
     var selectedComparisonPhoto by remember { mutableStateOf<PlantPhoto?>(null) }
@@ -316,10 +333,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.WaterDrop,
                 title = "Water Plant",
                 subtitle = "Keep topsoil evenly moist",
-                isCompleted = isTaskCompletedToday(CareTaskType.WATER),
+                isCompleted = isTaskCompletedInActiveCycle(CareTaskType.WATER),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTaskToggled(plant.id, CareTaskType.WATER, !isTaskCompletedToday(CareTaskType.WATER))
+                    onTaskToggled(plant.id, CareTaskType.WATER, !isTaskCompletedInActiveCycle(CareTaskType.WATER))
                 }
             )
 
@@ -330,10 +347,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.Spa,
                 title = "Nourish & Feed",
                 subtitle = "Apply diluted organic fertilizer (Tap for info)",
-                isCompleted = isTaskCompletedToday(CareTaskType.FEED),
+                isCompleted = isTaskCompletedInActiveCycle(CareTaskType.FEED),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTaskToggled(plant.id, CareTaskType.FEED, !isTaskCompletedToday(CareTaskType.FEED))
+                    onTaskToggled(plant.id, CareTaskType.FEED, !isTaskCompletedInActiveCycle(CareTaskType.FEED))
                 }
             )
 
@@ -344,10 +361,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.Refresh,
                 title = "Rotate Pot 90°",
                 subtitle = "Promote balanced leaf growth",
-                isCompleted = isTaskCompletedToday(CareTaskType.ROTATE),
+                isCompleted = isTaskCompletedInActiveCycle(CareTaskType.ROTATE),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTaskToggled(plant.id, CareTaskType.ROTATE, !isTaskCompletedToday(CareTaskType.ROTATE))
+                    onTaskToggled(plant.id, CareTaskType.ROTATE, !isTaskCompletedInActiveCycle(CareTaskType.ROTATE))
                 }
             )
 
@@ -358,10 +375,10 @@ fun PlantDetailScreen(
                 icon = Icons.Default.ContentCut,
                 title = "Prune & Clean Leaves",
                 subtitle = "Remove yellowing foliage",
-                isCompleted = isTaskCompletedToday(CareTaskType.TRIM),
+                isCompleted = isTaskCompletedInActiveCycle(CareTaskType.TRIM),
                 onCompleteToggle = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTaskToggled(plant.id, CareTaskType.TRIM, !isTaskCompletedToday(CareTaskType.TRIM))
+                    onTaskToggled(plant.id, CareTaskType.TRIM, !isTaskCompletedInActiveCycle(CareTaskType.TRIM))
                 }
             )
         }
