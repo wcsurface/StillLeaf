@@ -250,11 +250,14 @@ router.get('/', async (req: Request, res: Response) => {
     const userIds: string[] = [];
     if (userId) userIds.push(userId);
 
-    if (email) {
+    if (email && email.trim()) {
+      const normalizedEmail = email.trim().toLowerCase();
       const users = await prisma.user.findMany({
-        where: { email: { contains: email, mode: 'insensitive' } }
+        where: { email: { contains: normalizedEmail, mode: 'insensitive' } }
       });
       users.forEach(u => userIds.push(u.id));
+      userIds.push(`usr_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`);
+      userIds.push(`usr_google_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`);
     }
 
     if (userIds.length === 0) {
@@ -268,10 +271,11 @@ router.get('/', async (req: Request, res: Response) => {
         careLogs: { orderBy: { completedAt: 'desc' }, take: 10 }
       }
     });
+
     return res.status(200).json({ success: true, data: plants });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching plants:', error);
-    return res.status(500).json({ success: false, error: 'Failed to fetch plants' });
+    return res.status(500).json({ success: false, error: error?.message || 'Failed to fetch plants' });
   }
 });
 
