@@ -87,12 +87,17 @@ import app.vercel.stillleaf.ui.theme.PrimarySage
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
+import android.graphics.BitmapFactory
+import android.util.Base64
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.LocalDate
 
 fun saveBitmapToCacheUri(context: Context, bitmap: Bitmap): Uri? {
     return try {
-        // Enforce upright portrait orientation: if width > height, rotate 90 degrees
+        val photosDir = File(context.filesDir, "plant_photos")
+        if (!photosDir.exists()) photosDir.mkdirs()
+
         val portraitBitmap = if (bitmap.width > bitmap.height) {
             val matrix = android.graphics.Matrix().apply { postRotate(90f) }
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
@@ -100,13 +105,69 @@ fun saveBitmapToCacheUri(context: Context, bitmap: Bitmap): Uri? {
             bitmap
         }
 
-        val file = File(context.cacheDir, "captured_plant_${System.currentTimeMillis()}.jpg")
+        val file = File(photosDir, "captured_plant_${System.currentTimeMillis()}.jpg")
         file.outputStream().use { out ->
-            portraitBitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            portraitBitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
         }
         Uri.fromFile(file)
     } catch (e: Exception) {
         null
+    }
+}
+
+fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String {
+    try {
+        val photosDir = File(context.filesDir, "plant_photos")
+        if (!photosDir.exists()) photosDir.mkdirs()
+
+        val srcBitmap: Bitmap? = when {
+            bitmap != null -> {
+                if (bitmap.width > bitmap.height) {
+                    val matrix = android.graphics.Matrix().apply { postRotate(90f) }
+                    Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+                } else {
+                    bitmap
+                }
+            }
+            uri != null -> {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return uri.toString()
+                val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+
+                val maxDim = 1024
+                var inSampleSize = 1
+                if (options.outHeight > maxDim || options.outWidth > maxDim) {
+                    val halfHeight = options.outHeight / 2
+                    val halfWidth = options.outWidth / 2
+                    while (halfHeight / inSampleSize >= maxDim && halfWidth / inSampleSize >= maxDim) {
+                        inSampleSize *= 2
+                    }
+                }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { this.inSampleSize = inSampleSize })
+            }
+            else -> null
+        }
+
+        if (srcBitmap != null) {
+            val maxDim = 800
+            val width = srcBitmap.width
+            val height = srcBitmap.height
+            val scale = (maxDim.toFloat() / Math.max(width, height)).coerceAtMost(1.0f)
+            val scaledBitmap = if (scale < 1.0f) {
+                Bitmap.createScaledBitmap(srcBitmap, (width * scale).toInt(), (height * scale).toInt(), true)
+            } else {
+                srcBitmap
+            }
+
+            val baos = ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos)
+            val base64String = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+            return "data:image/jpeg;base64,$base64String"
+        }
+
+        return uri?.toString() ?: ""
+    } catch (e: Exception) {
+        return uri?.toString() ?: ""
     }
 }
 
@@ -587,13 +648,8 @@ fun AddPlantScreen(
 
                                     val plantId = "plant_${System.currentTimeMillis()}"
 
-                                    val closeUpUrl = detailImageUri?.toString()
-                                        ?: (if (detailCapturedBitmap != null) saveBitmapToCacheUri(context, detailCapturedBitmap!!)?.toString() else null)
-                                        ?: defaultSamplePhoto
-
-                                    val wholePlantUrl = wholePlantImageUri?.toString()
-                                        ?: (if (wholePlantCapturedBitmap != null) saveBitmapToCacheUri(context, wholePlantCapturedBitmap!!)?.toString() else null)
-                                        ?: closeUpUrl
+                                    val closeUpUrl = savePersistentPhotoUrl(context, detailImageUri, detailCapturedBitmap).ifBlank { defaultSamplePhoto }
+                                    val wholePlantUrl = savePersistentPhotoUrl(context, wholePlantImageUri, wholePlantCapturedBitmap).ifBlank { closeUpUrl }
 
                                     val detailPhotoObj = PlantPhoto(
                                         id = "photo_detail_${System.currentTimeMillis()}",
