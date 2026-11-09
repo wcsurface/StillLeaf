@@ -1,6 +1,7 @@
 package app.vercel.stillleaf.util
 
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.util.Base64
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -16,7 +17,20 @@ fun rememberImageModel(photoUrl: String): Any {
             photoUrl.startsWith("file://") -> {
                 val filePath = photoUrl.removePrefix("file://")
                 val file = File(filePath)
-                if (file.exists()) file else photoUrl
+                if (file.exists() && file.length() > 0) file else photoUrl
+            }
+            photoUrl.startsWith("content://") -> {
+                try {
+                    val uri = Uri.parse(photoUrl)
+                    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    if (bytes != null && bytes.isNotEmpty()) {
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: photoUrl
+                    } else {
+                        photoUrl
+                    }
+                } catch (_: Exception) {
+                    photoUrl
+                }
             }
             photoUrl.startsWith("data:image/jpeg;base64,") || photoUrl.startsWith("data:image/png;base64,") -> {
                 try {
