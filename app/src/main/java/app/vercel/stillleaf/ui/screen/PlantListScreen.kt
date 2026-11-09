@@ -3,6 +3,7 @@ package app.vercel.stillleaf.ui.screen
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -292,7 +293,7 @@ fun MockupPlantCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .aspectRatio(9f / 16f)
                     .clip(RoundedCornerShape(16.dp))
             ) {
                 AsyncImage(
