@@ -57,6 +57,7 @@ import app.vercel.stillleaf.data.model.HealthStatusType
 import app.vercel.stillleaf.data.model.Plant
 import app.vercel.stillleaf.data.model.SubscriptionStatus
 import app.vercel.stillleaf.ui.component.StillLeafFooter
+import app.vercel.stillleaf.util.rememberImageModel
 import app.vercel.stillleaf.ui.component.StillLeafTopBar
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.CreamyOffWhite
@@ -295,7 +296,7 @@ fun MockupPlantCard(
                     .clip(RoundedCornerShape(16.dp))
             ) {
                 AsyncImage(
-                    model = plant.primaryPhotoUrl,
+                    model = rememberImageModel(plant.primaryPhotoUrl),
                     contentDescription = plant.nickname,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

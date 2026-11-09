@@ -87,6 +87,7 @@ import app.vercel.stillleaf.ui.component.ZenAffiliateCard
 import app.vercel.stillleaf.ui.theme.AttentionTerracotta
 import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.PillShape
+import app.vercel.stillleaf.util.rememberImageModel
 import coil.compose.AsyncImage
 import java.time.LocalDate
 
@@ -160,7 +161,7 @@ fun PlantDetailScreen(
                 .height(420.dp)
         ) {
             AsyncImage(
-                model = plant.primaryPhotoUrl,
+                model = rememberImageModel(plant.primaryPhotoUrl),
                 contentDescription = plant.nickname,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -1368,7 +1369,7 @@ fun GrowthMilestoneCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
-                model = photo.photoUrl,
+                model = rememberImageModel(photo.photoUrl),
                 contentDescription = photo.milestoneTitle ?: "Growth photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -1466,7 +1467,7 @@ fun MilestoneComparisonDialog(
                             .clip(MaterialTheme.shapes.medium)
                     ) {
                         AsyncImage(
-                            model = initialPhoto.photoUrl,
+                            model = rememberImageModel(initialPhoto.photoUrl),
                             contentDescription = "Baseline Photo",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -1495,7 +1496,7 @@ fun MilestoneComparisonDialog(
                             .clip(MaterialTheme.shapes.medium)
                     ) {
                         AsyncImage(
-                            model = milestonePhoto.photoUrl,
+                            model = rememberImageModel(milestonePhoto.photoUrl),
                             contentDescription = "Milestone Photo",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()

@@ -71,6 +71,7 @@ import app.vercel.stillleaf.ui.theme.DeepForestAccent
 import app.vercel.stillleaf.ui.theme.PillShape
 import app.vercel.stillleaf.ui.theme.PrimarySage
 import app.vercel.stillleaf.ui.theme.SurfaceWhite
+import app.vercel.stillleaf.util.rememberImageModel
 import coil.compose.AsyncImage
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -519,7 +520,7 @@ fun CalendarTaskCard(
                         .background(MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     AsyncImage(
-                        model = task.plant.primaryPhotoUrl,
+                        model = rememberImageModel(task.plant.primaryPhotoUrl),
                         contentDescription = task.plant.nickname,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
