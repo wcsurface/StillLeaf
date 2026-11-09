@@ -96,9 +96,10 @@ fun CalendarScreen(
     pendingTasksCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
-    var selectedDayIndex by remember { mutableIntStateOf(2) }
-    var showFullCalendarModal by remember { mutableStateOf(false) }
     val today = remember { LocalDate.now() }
+    val todayDayIndex = remember(today) { (today.dayOfWeek.value - 1).coerceIn(0, 6) }
+    var selectedDayIndex by remember { mutableIntStateOf(todayDayIndex) }
+    var showFullCalendarModal by remember { mutableStateOf(false) }
 
     // Generate 7 days for the weekly strip
     val weekDays = remember(today) {
@@ -155,8 +156,8 @@ fun CalendarScreen(
                     val isDue = isTaskDueOnDate(plant, taskType, selectedDate)
                     val isCompleted = isTaskCompletedInActiveCycle(plant, taskType, selectedDate)
 
-                    // Display task in Today's Tasks ONLY if due or if completed today on selectedDate
-                    if (isDue || isCompleted) {
+                    // Display task in Today's Tasks ONLY if due AND not yet completed for current active cycle
+                    if (isDue && !isCompleted) {
                         val taskTitle = when (taskType) {
                             CareTaskType.WATER -> "Water ${plant.nickname}"
                             CareTaskType.FEED -> "Nourish ${plant.nickname}"

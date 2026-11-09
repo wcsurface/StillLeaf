@@ -271,6 +271,8 @@ class BillingManager(
     }
 
     fun endConnection() {
-        billingClient.endConnection()
+        try {
+            billingClient.endConnection()
+        } catch (_: Exception) {}
     }
 }

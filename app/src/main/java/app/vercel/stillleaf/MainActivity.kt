@@ -334,9 +334,6 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 }
                                                 updateAndPersistPlants(updatedList)
-                                                if (targetUpdatedPlant != null) {
-                                                    selectedPlant = targetUpdatedPlant
-                                                }
                                             }
                                         )
                                     }
@@ -412,9 +409,6 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 }
                                                 updateAndPersistPlants(updatedList)
-                                                if (targetUpdatedPlant != null) {
-                                                    selectedPlant = targetUpdatedPlant
-                                                }
                                             }
                                         )
                                     }
