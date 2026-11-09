@@ -120,6 +120,8 @@ fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String
         val photosDir = File(context.filesDir, "plant_photos")
         if (!photosDir.exists()) photosDir.mkdirs()
 
+        val destFile = File(photosDir, "plant_photo_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg")
+
         val srcBitmap: Bitmap? = when {
             bitmap != null -> {
                 if (bitmap.width > bitmap.height) {
@@ -149,7 +151,7 @@ fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String
         }
 
         if (srcBitmap != null) {
-            val maxDim = 800
+            val maxDim = 1024
             val width = srcBitmap.width
             val height = srcBitmap.height
             val scale = (maxDim.toFloat() / Math.max(width, height)).coerceAtMost(1.0f)
@@ -159,10 +161,10 @@ fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String
                 srcBitmap
             }
 
-            val baos = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos)
-            val base64String = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-            return "data:image/jpeg;base64,$base64String"
+            destFile.outputStream().use { out ->
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+            }
+            return Uri.fromFile(destFile).toString()
         }
 
         return uri?.toString() ?: ""

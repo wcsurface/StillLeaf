@@ -1,6 +1,10 @@
 package app.vercel.stillleaf.data.repository
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import app.vercel.stillleaf.data.model.CareLog
 import app.vercel.stillleaf.data.model.CareRequirement
@@ -12,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.LocalDate
@@ -21,6 +27,60 @@ object PlantCloudSyncManager {
 
     private const val TAG = "PlantCloudSync"
     private const val BASE_URL = "https://stillleaf-production-d8f2.up.railway.app/api/plants"
+
+    private fun resolveLocalPhotoUrl(context: Context, rawUrl: String, plantId: String): String {
+        if (rawUrl.isBlank()) return ""
+
+        if (rawUrl.startsWith("data:image/jpeg;base64,")) {
+            try {
+                val photosDir = File(context.filesDir, "plant_photos")
+                if (!photosDir.exists()) photosDir.mkdirs()
+
+                val destFile = File(photosDir, "restored_${plantId}.jpg")
+                val base64Data = rawUrl.substringAfter("data:image/jpeg;base64,")
+                val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                destFile.writeBytes(bytes)
+                return Uri.fromFile(destFile).toString()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving restored cloud photo to local file", e)
+                return rawUrl
+            }
+        }
+
+        return rawUrl
+    }
+
+    private fun convertLocalPhotoToBase64(context: Context, photoUrl: String): String {
+        if (photoUrl.isBlank()) return ""
+        if (photoUrl.startsWith("data:image/jpeg;base64,")) return photoUrl
+
+        try {
+            val uri = Uri.parse(photoUrl)
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return photoUrl
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+
+            val maxDim = 800
+            var inSampleSize = 1
+            if (options.outHeight > maxDim || options.outWidth > maxDim) {
+                val halfHeight = options.outHeight / 2
+                val halfWidth = options.outWidth / 2
+                while (halfHeight / inSampleSize >= maxDim && halfWidth / inSampleSize >= maxDim) {
+                    inSampleSize *= 2
+                }
+            }
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { this.inSampleSize = inSampleSize })
+            if (bitmap != null) {
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 75, baos)
+                val base64Str = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                return "data:image/jpeg;base64,$base64Str"
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error converting local photo to base64 for cloud backup", e)
+        }
+        return photoUrl
+    }
 
     /**
      * Fetches user's complete plant sanctuary from Railway PostgreSQL Database across all devices by userId or email.
@@ -67,11 +127,14 @@ object PlantCloudSyncManager {
                     val photosList = mutableListOf<PlantPhoto>()
                     for (j in 0 until photosArray.length()) {
                         val photoJson = photosArray.getJSONObject(j)
+                        val rawPhotoUrl = photoJson.optString("photoUrl", "")
+                        val localPhotoUrl = resolveLocalPhotoUrl(context, rawPhotoUrl, plantJson.getString("id"))
+
                         photosList.add(
                             PlantPhoto(
                                 id = photoJson.optString("id", "p_$j"),
                                 plantId = plantJson.getString("id"),
-                                photoUrl = photoJson.optString("photoUrl", ""),
+                                photoUrl = localPhotoUrl,
                                 dateTaken = LocalDate.parse(photoJson.optString("takenAt", LocalDate.now().toString()).take(10)),
                                 ageInDays = photoJson.optInt("ageInDays", 0),
                                 note = photoJson.optString("note", ""),
@@ -98,12 +161,14 @@ object PlantCloudSyncManager {
                     val healthTypeString = plantJson.optString("healthStatusType", "HEALTHY")
                     val healthType = try { HealthStatusType.valueOf(healthTypeString) } catch (_: Exception) { HealthStatusType.HEALTHY }
 
+                    val firstPhotoUrl = photosList.firstOrNull()?.photoUrl ?: ""
+
                     val plant = Plant(
                         id = plantJson.getString("id"),
                         nickname = plantJson.getString("nickname"),
                         botanicalName = plantJson.optString("botanicalName", ""),
                         commonName = plantJson.optString("commonName", ""),
-                        primaryPhotoUrl = photosList.firstOrNull()?.photoUrl ?: "",
+                        primaryPhotoUrl = firstPhotoUrl,
                         dateAdded = LocalDate.now(),
                         careRequirements = careRequirements,
                         location = plantJson.optString("location", "Indoor • Living Room"),
@@ -133,9 +198,11 @@ object PlantCloudSyncManager {
     /**
      * Backs up a plant profile to Railway PostgreSQL Database via auto-upsert /sync endpoint.
      */
-    suspend fun savePlantToCloud(userId: String, email: String, plant: Plant) = withContext(Dispatchers.IO) {
+    suspend fun savePlantToCloud(context: Context, userId: String, email: String, plant: Plant) = withContext(Dispatchers.IO) {
         if (userId.isBlank() && email.isBlank()) return@withContext
         try {
+            val persistentPhotoUrl = convertLocalPhotoToBase64(context, plant.primaryPhotoUrl)
+
             val jsonPayload = JSONObject().apply {
                 put("userId", userId)
                 put("email", email)
@@ -145,7 +212,7 @@ object PlantCloudSyncManager {
                     put("botanicalName", plant.botanicalName)
                     put("commonName", plant.commonName)
                     put("location", plant.location)
-                    put("primaryPhotoUrl", plant.primaryPhotoUrl)
+                    put("primaryPhotoUrl", persistentPhotoUrl)
                     put("careRequirements", JSONObject().apply {
                         put("sunlight", plant.careRequirements.sunlight)
                         put("waterIntervalDays", plant.careRequirements.waterIntervalDays)

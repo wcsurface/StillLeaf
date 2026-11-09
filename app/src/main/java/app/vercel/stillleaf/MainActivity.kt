@@ -356,7 +356,7 @@ class MainActivity : ComponentActivity() {
                                                 if (currentUser != null) {
                                                     coroutineScope.launch {
                                                         try {
-                                                            PlantCloudSyncManager.savePlantToCloud(currentUser!!.id, currentUser!!.email, newPlant)
+                                                            PlantCloudSyncManager.savePlantToCloud(applicationContext, currentUser!!.id, currentUser!!.email, newPlant)
                                                         } catch (e: Exception) {
                                                             Log.e("MainActivity", "Error saving plant to Railway", e)
                                                         }
