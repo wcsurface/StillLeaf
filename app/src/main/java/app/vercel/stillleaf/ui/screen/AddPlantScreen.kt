@@ -204,8 +204,6 @@ fun AddPlantScreen(
     var isOutdoorEnv by remember { mutableStateOf(false) } // false = Indoor, true = Outdoor
     var locationDetailInput by remember { mutableStateOf("") } // MUST BE COMPLETED
     var locationError by remember { mutableStateOf<String?>(null) }
-
-    val defaultSamplePhoto = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80"
     val scrollState = rememberScrollState()
 
     // Automatically trigger Botanical Identification whenever BOTH photos are captured
@@ -650,7 +648,7 @@ fun AddPlantScreen(
 
                                     val plantId = "plant_${System.currentTimeMillis()}"
 
-                                    val closeUpUrl = savePersistentPhotoUrl(context, detailImageUri, detailCapturedBitmap).ifBlank { defaultSamplePhoto }
+                                    val closeUpUrl = savePersistentPhotoUrl(context, detailImageUri, detailCapturedBitmap)
                                     val wholePlantUrl = savePersistentPhotoUrl(context, wholePlantImageUri, wholePlantCapturedBitmap).ifBlank { closeUpUrl }
 
                                     val detailPhotoObj = PlantPhoto(
