@@ -115,6 +115,22 @@ fun saveBitmapToCacheUri(context: Context, bitmap: Bitmap): Uri? {
     }
 }
 
+fun getExifRotationDegrees(context: Context, uri: Uri): Float {
+    return try {
+        context.contentResolver.openInputStream(uri)?.use { stream ->
+            val exif = android.media.ExifInterface(stream)
+            when (exif.getAttributeInt(android.media.ExifInterface.TAG_ORIENTATION, android.media.ExifInterface.ORIENTATION_NORMAL)) {
+                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+                else -> 0f
+            }
+        } ?: 0f
+    } catch (_: Exception) {
+        0f
+    }
+}
+
 fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String {
     try {
         val photosDir = File(context.filesDir, "plant_photos")
@@ -122,15 +138,8 @@ fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String
 
         val destFile = File(photosDir, "plant_photo_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg")
 
-        val srcBitmap: Bitmap? = when {
-            bitmap != null -> {
-                if (bitmap.width > bitmap.height) {
-                    val matrix = android.graphics.Matrix().apply { postRotate(90f) }
-                    Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                } else {
-                    bitmap
-                }
-            }
+        val rawBitmap: Bitmap? = when {
+            bitmap != null -> bitmap
             uri != null -> {
                 val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return uri.toString()
                 val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -150,15 +159,29 @@ fun savePersistentPhotoUrl(context: Context, uri: Uri?, bitmap: Bitmap?): String
             else -> null
         }
 
-        if (srcBitmap != null) {
+        if (rawBitmap != null) {
+            val exifRotation = if (uri != null) getExifRotationDegrees(context, uri) else 0f
+            var uprightBitmap = if (exifRotation != 0f) {
+                val matrix = android.graphics.Matrix().apply { postRotate(exifRotation) }
+                Bitmap.createBitmap(rawBitmap, 0, 0, rawBitmap.width, rawBitmap.height, matrix, true)
+            } else {
+                rawBitmap
+            }
+
+            // Guarantee upright portrait orientation: if width > height, rotate 90 degrees
+            if (uprightBitmap.width > uprightBitmap.height) {
+                val matrix = android.graphics.Matrix().apply { postRotate(90f) }
+                uprightBitmap = Bitmap.createBitmap(uprightBitmap, 0, 0, uprightBitmap.width, uprightBitmap.height, matrix, true)
+            }
+
             val maxDim = 1024
-            val width = srcBitmap.width
-            val height = srcBitmap.height
+            val width = uprightBitmap.width
+            val height = uprightBitmap.height
             val scale = (maxDim.toFloat() / Math.max(width, height)).coerceAtMost(1.0f)
             val scaledBitmap = if (scale < 1.0f) {
-                Bitmap.createScaledBitmap(srcBitmap, (width * scale).toInt(), (height * scale).toInt(), true)
+                Bitmap.createScaledBitmap(uprightBitmap, (width * scale).toInt(), (height * scale).toInt(), true)
             } else {
-                srcBitmap
+                uprightBitmap
             }
 
             destFile.outputStream().use { out ->
