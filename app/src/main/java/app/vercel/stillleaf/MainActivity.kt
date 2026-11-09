@@ -1,5 +1,6 @@
 package app.vercel.stillleaf
 
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -78,6 +79,12 @@ class MainActivity : ComponentActivity() {
         try {
             app.vercel.stillleaf.util.CareNotificationManager.createNotificationChannels(applicationContext)
             app.vercel.stillleaf.util.CareNotificationManager.scheduleDailyMorningAlarm(applicationContext)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+                }
+            }
         } catch (e: Exception) {
             Log.e("MainActivity", "Error creating notification channels", e)
         }
