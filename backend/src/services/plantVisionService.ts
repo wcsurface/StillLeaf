@@ -71,12 +71,22 @@ export async function identifyPlantFromDualBase64(
     });
   }
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    response_format: { type: 'json_object' },
-    max_tokens: 700,
-    messages: [{ role: 'user', content: contentArray }]
-  });
+  let completion;
+  try {
+    completion = await openai.chat.completions.create({
+      model: 'chatgpt-4o-latest',
+      response_format: { type: 'json_object' },
+      max_tokens: 700,
+      messages: [{ role: 'user', content: contentArray }]
+    });
+  } catch (_: any) {
+    completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      response_format: { type: 'json_object' },
+      max_tokens: 700,
+      messages: [{ role: 'user', content: contentArray }]
+    });
+  }
 
   const rawJson = completion.choices[0]?.message?.content || '{}';
   return JSON.parse(rawJson);

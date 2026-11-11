@@ -129,7 +129,7 @@ object OpenAiVisionService {
 
             if (apiKey.isNotBlank()) {
                 val directJsonPayload = JSONObject().apply {
-                    put("model", "gpt-4o-mini")
+                    put("model", "chatgpt-4o-latest")
                     put("response_format", JSONObject().put("type", "json_object"))
                     put("max_tokens", 300)
 
