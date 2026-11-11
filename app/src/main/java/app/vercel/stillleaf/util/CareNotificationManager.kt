@@ -123,13 +123,21 @@ object CareNotificationManager {
                 }
             }
 
-            alarmManager.setInexactRepeating(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            )
-            Log.d(TAG, "Daily 8:00 AM Care Alarm scheduled successfully.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setInexactRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+                )
+            }
+            Log.d(TAG, "Daily 8:00 AM Care Alarm scheduled for ${calendar.time} successfully.")
         } catch (e: Exception) {
             Log.e(TAG, "Error scheduling daily morning alarm", e)
         }

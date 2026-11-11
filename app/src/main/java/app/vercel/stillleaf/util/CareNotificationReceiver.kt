@@ -11,6 +11,11 @@ import app.vercel.stillleaf.MainActivity
 import app.vercel.stillleaf.R
 import app.vercel.stillleaf.data.repository.PlantPersistenceManager
 
+import app.vercel.stillleaf.data.model.CareTaskType
+import app.vercel.stillleaf.data.model.Plant
+import java.time.LocalDate
+import java.time.LocalDateTime
+
 class CareNotificationReceiver : BroadcastReceiver() {
 
     companion object {
@@ -44,23 +49,27 @@ class CareNotificationReceiver : BroadcastReceiver() {
             }
 
             ACTION_DAILY_REMINDER -> {
+                // Automatically reschedule tomorrow's 8:00 AM alarm first
+                CareNotificationManager.scheduleDailyMorningAlarm(context)
+
                 val plants = PlantPersistenceManager.loadAllLocalPlants(context)
                 if (plants.isEmpty()) return
 
                 val firstPlant = plants.first()
                 val plantCount = plants.size
+
                 val bodyText = if (plantCount == 1) {
-                    "Your ${firstPlant.nickname} could use a drink and care check today!"
+                    "Your ${firstPlant.nickname} has care tasks scheduled for today!"
                 } else {
                     "Your ${firstPlant.nickname} and ${plantCount - 1} other plants have care tasks due today."
                 }
 
                 val notification = NotificationCompat.Builder(context, CareNotificationManager.CHANNEL_CARE_REMINDERS)
                     .setSmallIcon(R.drawable.ic_notification)
-                    .setContentTitle("🌿 Plant Care")
+                    .setContentTitle("🌿 Plant Care Reminders")
                     .setContentText(bodyText)
                     .setStyle(NotificationCompat.BigTextStyle().bigText(bodyText))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setContentIntent(pendingIntent)
                     .setAutoCancel(true)
                     .build()
