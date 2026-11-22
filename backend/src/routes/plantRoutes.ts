@@ -99,7 +99,7 @@ router.post('/sync', async (req: Request, res: Response) => {
           plantId: syncedPlant.id,
           photoUrl: plant.primaryPhotoUrl,
           isQuarterlyMilestone: true,
-          note: 'Day 0 - Sanctuary Plant Profile Photo'
+          note: 'Day 1 - Sanctuary Plant Profile Photo'
         }
       }).catch(() => {});
     }
@@ -217,7 +217,7 @@ router.post('/identify', async (req: Request, res: Response) => {
           create: {
             photoUrl: publicPhotoUrl,
             isQuarterlyMilestone: true,
-            note: 'Day 0 - Initial AI Botanical Identification'
+            note: 'Day 1 - Initial Botanical Identification'
           }
         }
       },

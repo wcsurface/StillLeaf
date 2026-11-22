@@ -159,6 +159,9 @@ class MainActivity : ComponentActivity() {
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var showPaywallSheet by remember { mutableStateOf(false) }
                 var showRatePrompt by remember { mutableStateOf(false) }
+                var showWalkthroughModal by remember {
+                    mutableStateOf(!app.vercel.stillleaf.ui.component.WalkthroughManager.hasSeenWalkthrough(applicationContext))
+                }
                 var activeLegalTab by remember { mutableStateOf<LegalTab?>(null) }
 
                 // Calculate total pending care tasks due today across sanctuary
@@ -538,6 +541,13 @@ class MainActivity : ComponentActivity() {
                     app.vercel.stillleaf.ui.component.RateAppModal(
                         plantCount = plantList.size,
                         onDismiss = { showRatePrompt = false }
+                    )
+                }
+
+                // New User Walkthrough Modal
+                if (showWalkthroughModal) {
+                    app.vercel.stillleaf.ui.component.WalkthroughModal(
+                        onDismiss = { showWalkthroughModal = false }
                     )
                 }
             }

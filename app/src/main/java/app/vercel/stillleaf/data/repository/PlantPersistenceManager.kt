@@ -58,9 +58,9 @@ object PlantPersistenceManager {
                     photoUrl = "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(90),
                     ageInDays = 0,
-                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    note = "Day 1 - Baseline Whole Plant Snapshot",
                     isQuarterlyMilestone = true,
-                    milestoneTitle = "Day 0 - Baseline"
+                    milestoneTitle = "Day 1 - Baseline"
                 )
             )
         )
@@ -92,9 +92,9 @@ object PlantPersistenceManager {
                     photoUrl = "https://images.unsplash.com/photo-1593691509543-c55fb32e7355?auto=format&fit=crop&w=800&q=80",
                     dateTaken = LocalDate.now().minusDays(45),
                     ageInDays = 0,
-                    note = "Day 0 - Baseline Whole Plant Snapshot",
+                    note = "Day 1 - Baseline Whole Plant Snapshot",
                     isQuarterlyMilestone = true,
-                    milestoneTitle = "Day 0 - Baseline"
+                    milestoneTitle = "Day 1 - Baseline"
                 )
             )
         )

@@ -143,7 +143,7 @@ fun PlantDetailScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
-    // Filter photos specifically for Quarterly Growth Journal milestones (Day 0 Whole Plant, Day 90, etc.)
+    // Filter photos specifically for Quarterly Growth Journal milestones (Day 1 Whole Plant, Day 90, etc.)
     val milestonePhotos = remember(plant.photos) {
         plant.photos.filter { it.isQuarterlyMilestone }
     }

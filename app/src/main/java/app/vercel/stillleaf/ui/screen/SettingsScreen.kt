@@ -93,6 +93,7 @@ fun SettingsScreen(
     var milestoneRemindersEnabled by remember {
         mutableStateOf(CareNotificationManager.isMilestoneRemindersEnabled(context))
     }
+    var showWalkthroughModal by remember { mutableStateOf(false) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -449,7 +450,30 @@ fun SettingsScreen(
                                 Text("Rate App ⭐", fontWeight = FontWeight.Bold)
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedButton(
+                            onClick = { showWalkthroughModal = true },
+                            shape = PillShape,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(42.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.Spa, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("View App Walkthrough 🌿", fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
+                }
+
+                if (showWalkthroughModal) {
+                    app.vercel.stillleaf.ui.component.WalkthroughModal(
+                        onDismiss = { showWalkthroughModal = false }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

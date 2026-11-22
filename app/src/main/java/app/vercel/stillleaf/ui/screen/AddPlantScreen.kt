@@ -396,7 +396,7 @@ fun AddPlantScreen(
                         CaptureSlotCard(
                             stepNumber = "2",
                             title = "Photo 2: Whole Plant Snapshot",
-                            description = "Full shot of the plant in its pot (Sets Day 0 Growth Timeline).",
+                            description = "Full shot of the plant in its pot (Sets Day 1 Growth Timeline).",
                             uri = wholePlantImageUri,
                             bitmap = wholePlantCapturedBitmap,
                             onTakeCamera = { startCameraForTarget(2) },
@@ -680,7 +680,7 @@ fun AddPlantScreen(
                                         photoUrl = closeUpUrl,
                                         dateTaken = LocalDate.now(),
                                         ageInDays = 0,
-                                        note = "Day 0 - Close-Up Identification Detail",
+                                        note = "Day 1 - Close-Up Identification Detail",
                                         isQuarterlyMilestone = false
                                     )
 
@@ -690,9 +690,9 @@ fun AddPlantScreen(
                                         photoUrl = wholePlantUrl,
                                         dateTaken = LocalDate.now(),
                                         ageInDays = 0,
-                                        note = "Day 0 - Baseline Whole Plant Snapshot",
+                                        note = "Day 1 - Baseline Whole Plant Snapshot",
                                         isQuarterlyMilestone = true,
-                                        milestoneTitle = "Day 0 - Baseline"
+                                        milestoneTitle = "Day 1 - Baseline"
                                     )
 
                                     val newPlant = Plant(
