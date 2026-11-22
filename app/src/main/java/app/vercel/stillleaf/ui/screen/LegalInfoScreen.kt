@@ -96,6 +96,7 @@ fun LegalInfoScreen(
                         LegalTab.TERMS -> "Terms of Service"
                         LegalTab.PRIVACY -> "Privacy Policy"
                         LegalTab.FAQ -> "Frequently Asked Questions"
+                        else -> "Feedback"
                     },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
@@ -184,6 +185,7 @@ fun LegalInfoScreen(
                             LegalTab.TERMS -> TermsOfServiceContent()
                             LegalTab.PRIVACY -> PrivacyPolicyContent()
                             LegalTab.FAQ -> FaqContent()
+                            else -> TermsOfServiceContent()
                         }
                     }
                 }

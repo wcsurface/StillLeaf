@@ -103,3 +103,13 @@ model AffiliateProduct {
 
   @@index([category])
 }
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userEmail String
+  category  String
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userEmail])
+}

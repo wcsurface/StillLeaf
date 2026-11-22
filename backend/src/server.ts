@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import plantRoutes from './routes/plantRoutes';
 import billingRoutes from './routes/billingRoutes';
 import authRoutes from './routes/authRoutes';
+import feedbackRoutes from './routes/feedbackRoutes';
 import { identifyPlantFromDualBase64 } from './services/plantVisionService';
 
 dotenv.config();
@@ -54,6 +55,7 @@ app.post('/api/plants/identify-base64', handleDualVision);
 app.use('/api/auth', authRoutes);
 app.use('/api/plants', plantRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 app.listen(PORT, () => {
   console.log(`Still Leaf Backend Server running on port ${PORT}`);

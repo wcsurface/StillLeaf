@@ -23,7 +23,8 @@ import java.time.Year
 enum class LegalTab {
     TERMS,
     PRIVACY,
-    FAQ
+    FAQ,
+    FEEDBACK
 }
 
 @Composable
@@ -84,6 +85,23 @@ fun StillLeafFooter(
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
                     .clickable { onLegalRequested(LegalTab.FAQ) }
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+            )
+
+            Text(
+                text = " • ",
+                style = MaterialTheme.typography.labelMedium,
+                color = CreamyOffWhite.copy(alpha = 0.7f)
+            )
+
+            Text(
+                text = "Feedback",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = CreamyOffWhite,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .clickable { onLegalRequested(LegalTab.FEEDBACK) }
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }

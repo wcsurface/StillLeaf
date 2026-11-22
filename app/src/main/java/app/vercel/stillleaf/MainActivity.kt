@@ -256,6 +256,11 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     }
+                } else if (activeLegalTab == app.vercel.stillleaf.ui.component.LegalTab.FEEDBACK) {
+                    app.vercel.stillleaf.ui.component.FeedbackModal(
+                        userEmail = currentUser?.email ?: "",
+                        onDismiss = { activeLegalTab = null }
+                    )
                 } else if (activeLegalTab != null) {
                     // Legal Info Screen (Terms, Privacy, FAQ)
                     LegalInfoScreen(
