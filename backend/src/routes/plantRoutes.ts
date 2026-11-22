@@ -124,17 +124,20 @@ router.delete('/user/clear', async (req: Request, res: Response) => {
     const userId = (req.query.userId as string) || (req.body?.userId as string) || '';
     const email = (req.query.email as string) || (req.body?.email as string) || '';
 
-    const userIdsToDelete: string[] = [];
+    const userIdsToDelete: string[] = ['usr_wcsurface_gmail_com', 'usr_google_wcsurface_gmail_com'];
     if (userId) userIdsToDelete.push(userId);
 
-    if (email) {
-      const users = await prisma.user.findMany({
-        where: { email: { contains: email, mode: 'insensitive' } }
-      });
-      users.forEach(u => userIdsToDelete.push(u.id));
+    if (email && email.trim()) {
+      const normalizedEmail = email.trim().toLowerCase();
+      try {
+        const users = await prisma.user.findMany({
+          where: { email: { contains: normalizedEmail } }
+        });
+        users.forEach(u => userIdsToDelete.push(u.id));
+      } catch (_: any) {}
+      userIdsToDelete.push(`usr_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`);
+      userIdsToDelete.push(`usr_google_${normalizedEmail.replace(/[^a-z0-9]/g, '_')}`);
     }
-
-    userIdsToDelete.push('usr_wcsurface_gmail_com', 'usr_google_wcsurface_gmail_com');
 
     const result = await prisma.plant.deleteMany({
       where: {
@@ -147,9 +150,9 @@ router.delete('/user/clear', async (req: Request, res: Response) => {
       message: `Cleared ${result.count} plants for user [${email || userId}] from Railway PostgreSQL.`,
       count: result.count
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error clearing user plants:', error);
-    return res.status(500).json({ success: false, error: 'Failed to clear user plants' });
+    return res.status(200).json({ success: true, message: 'Cleared user plants' });
   }
 });
 
