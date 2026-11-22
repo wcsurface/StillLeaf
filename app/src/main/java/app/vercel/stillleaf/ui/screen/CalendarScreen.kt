@@ -134,17 +134,31 @@ fun CalendarScreen(
         return daysSinceLog in 0 until interval
     }
 
-    // Helper to check if task is due on or before target date
-    fun isTaskDueOnDate(plant: Plant, taskType: CareTaskType, targetDate: LocalDate = today): Boolean {
+    // Helper to calculate next exact due date for a plant care task
+    fun getNextDueDateForTask(plant: Plant, taskType: CareTaskType): LocalDate {
         val interval = getIntervalForTask(plant, taskType)
         val latestLogDate = plant.recentLogs
             .filter { it.taskType == taskType }
             .maxByOrNull { it.completedAt }
             ?.completedAt
-            ?.toLocalDate() ?: return true
+            ?.toLocalDate()
 
-        val nextDueDate = latestLogDate.plusDays(interval.toLong())
-        return nextDueDate <= targetDate
+        return if (latestLogDate != null) {
+            latestLogDate.plusDays(interval.toLong())
+        } else {
+            // First cycle: due interval days after plant was added
+            plant.dateAdded.plusDays(interval.toLong())
+        }
+    }
+
+    // Helper to check if task is due on target date
+    fun isTaskDueOnDate(plant: Plant, taskType: CareTaskType, targetDate: LocalDate = today): Boolean {
+        val nextDue = getNextDueDateForTask(plant, taskType)
+        return if (targetDate == today) {
+            nextDue <= today
+        } else {
+            nextDue == targetDate
+        }
     }
 
     // Dynamic tasks due TODAY (Clears from list once completed for current cycle)
