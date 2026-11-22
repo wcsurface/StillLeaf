@@ -158,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 var selectedPlant by remember { mutableStateOf<Plant?>(null) }
                 var currentTab by remember { mutableStateOf(NavTab.HOME) }
                 var showPaywallSheet by remember { mutableStateOf(false) }
+                var showRatePrompt by remember { mutableStateOf(false) }
                 var activeLegalTab by remember { mutableStateOf<LegalTab?>(null) }
 
                 // Calculate total pending care tasks due today across sanctuary
@@ -375,6 +376,9 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 }
                                                 currentTab = NavTab.HOME
+                                                if (updatedList.size == 3) {
+                                                    showRatePrompt = true
+                                                }
                                                 Toast.makeText(
                                                     this@MainActivity,
                                                     "“${newPlant.nickname}” saved to your Sanctuary!",
@@ -526,6 +530,14 @@ class MainActivity : ComponentActivity() {
                             billingManager.queryExistingPurchases()
                             Toast.makeText(this@MainActivity, "Restoring Google Play purchases...", Toast.LENGTH_SHORT).show()
                         }
+                    )
+                }
+
+                // In-App Rate App Prompt Modal
+                if (showRatePrompt) {
+                    app.vercel.stillleaf.ui.component.RateAppModal(
+                        plantCount = plantList.size,
+                        onDismiss = { showRatePrompt = false }
                     )
                 }
             }

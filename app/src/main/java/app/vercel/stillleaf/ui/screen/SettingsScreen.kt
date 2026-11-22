@@ -386,6 +386,72 @@ fun SettingsScreen(
                     }
                 )
 
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // App Support & Rating Section
+                Text(
+                    text = "App Support & Community",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = CreamyOffWhite
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Surface(
+                    color = SurfaceWhite.copy(alpha = 0.95f),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Rate Still Leaf on Google Play",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Enjoying your digital greenhouse? Your 5-star review helps other plant lovers discover Still Leaf.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = {
+                                app.vercel.stillleaf.ui.component.launchPlayStoreRating(context)
+                            },
+                            shape = PillShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(42.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Rate App ⭐", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Footer Links & Copyright
