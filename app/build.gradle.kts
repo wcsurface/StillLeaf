@@ -13,8 +13,8 @@ android {
         applicationId = "app.vercel.stillleaf"
         minSdk = 26
         targetSdk = 37
-        versionCode = 44
-        versionName = "5.3"
+        versionCode = 45
+        versionName = "6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
